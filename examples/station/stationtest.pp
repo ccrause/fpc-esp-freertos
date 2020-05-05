@@ -114,7 +114,7 @@ begin
           portMAX_DELAY);
 
   if (bits and WIFI_CONNECTED_BIT) = WIFI_CONNECTED_BIT then
-    writeln('Connected to ap')
+    writeln('Connected. Test connection by pinging the above IP address from the same network')
   else if (bits and WIFI_FAIL_BIT) = WIFI_FAIL_BIT then
     writeln('### Failed to connect')
   else
@@ -143,5 +143,10 @@ begin
 
   // Now set ESP32 to station mode and connect to access point
   wifi_init_sta;
-  // Now do nothing, please check on wifi router if this device MAC is connected
+
+  // Now do nothing, check on wifi router if this device MAC is connected
+  // or try pinging this IP address
+  repeat
+    vTaskDelay(10);
+  until false;
 end.
