@@ -1,0 +1,7 @@
+*.ignore
+*.bin
+*.elf
+*.ld
+**/lib
+**/backup
+*.bak
