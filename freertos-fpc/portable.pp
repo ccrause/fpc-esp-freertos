@@ -1,6 +1,7 @@
 unit portable;
 
 {$include sdkconfig.inc}
+{$inline on}
 
 // pull in malloc
 {$linklib c, static}
@@ -88,7 +89,7 @@ procedure uxPortCompareSetExtram(addr: PUint32; compare: uint32; set_: PUint32);
 implementation
 
 function malloc(size: uint32): pointer; external;
-procedure Free(APointer: pointer); external;
+procedure free(APointer: pointer); external;
 
 function pvPortMalloc(size: uint32): pointer; inline;
 begin
@@ -97,7 +98,7 @@ end;
 
 procedure vPortFree(APointer: pointer); inline;
 begin
-  Free(Apointer);
+  free(Apointer);
 end;
 
 function xPortGetFreeHeapSize: uint32; inline;
