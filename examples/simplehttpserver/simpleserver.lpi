@@ -72,11 +72,10 @@
         <CustomConfigFile Value="True"/>
         <ConfigFilePath Value="~/fpc/3.3.1/fpc.cfg"/>
       </ConfigFile>
-      <CustomOptions Value="-Tfreertos 
--Wpesp32 
--Cawindowed 
--XP/home/christo/.espressif/tools/xtensa-esp32-elf/esp-2020r1-8.2.0/xtensa-esp32-elf/bin/xtensa-esp32-elf-
--alr"/>
+      <CustomOptions Value="-Tfreertos
+-Wpesp32
+-Cawindowed
+-XPxtensa-esp32-elf-"/>
       <CompilerPath Value="/home/christo/fpc/3.3.1/compiler/ppcrossxtensa"/>
       <ExecuteBefore>
         <CompileReasons Run="False"/>
