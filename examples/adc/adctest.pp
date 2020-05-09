@@ -1,6 +1,6 @@
 program adctest;
 
-{$include /home/christo/fpc/avr-new/rtl/freertos/xtensa/sdkconfig.inc}
+{$include sdkconfig.inc}
 
 uses
   esp_err, gpio, adc, esp_adc_cal, adc_types, freertos;
@@ -93,25 +93,9 @@ begin
     //Convert adc_reading to voltage in mV
     voltage := esp_adc_cal_raw_to_voltage(adc_reading, @adc_chars);
     writeln('Raw: ', adc_reading, #9'Voltage: ',voltage, 'mV');
-    //writeln('Raw: %d\tVoltage: %dmV\n', adc_reading, voltage);
 {$elseif defined(CONFIG_IDF_TARGET_ESP32S2BETA)}
     writeln('ADC', unit_, ' CH', channel, ' Raw: ', adc_reading);
-    //writeln('ADC%d CH%d Raw: %d\t\n', unit_, channel, adc_reading);
 {$endif}
     vTaskDelay(1000 div portTICK_PERIOD_MS);
   until false;
 end.
-
-
-(***Compile program with
-~/fpc/avr-new/compiler/xtensa/pp -Fu~/fpc/avr-new/rtl/units/xtensa-freertos/ -Tfreertos -Cawindowed -XPxtensa-esp32-elf- -al -Wpesp32 -Fl~/xtensa/esp-idf/libs -Fl$HOME/.espressif/tools/xtensa-esp32-elf/esp-2019r2-8.2.0/xtensa-esp32-elf/xtensa-esp32-elf/lib/ adc.pp
-
- ***Flash to esp32 with:
-
- - Assuming boot & partition for this sdk has been flashed before, only this app needs to be flashed:
-$ python /home/christo/xtensa/esp-idf/components/esptool_py/esptool/esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 115200 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0x10000 /home/christo/fpc/xtensa/adc/adc.bin
-
-- If this is the first time a project with this IDF is built, also flash boot loader and partitions:
-$ python /home/christo/xtensa/esp-idf/components/esptool_py/esptool/esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 115200 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0x1000 /home/christo/fpc/xtensa/helloworld/bootloader.bin 0x10000 /home/christo/fpc/xtensa/adc/adc.bin 0x8000 /home/christo/fpc/xtensa/helloworld/partitions_singleapp.bin
-
-*)

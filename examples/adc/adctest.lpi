@@ -36,8 +36,8 @@
       <Filename Value="adctest"/>
     </Target>
     <SearchPaths>
-      <IncludeFiles Value="$(ProjOutDir)"/>
-      <Libraries Value="/home/christo/xtensa/esp-idf/libs/;../../../.espressif/tools/xtensa-esp32-elf/esp-2019r2-8.2.0/xtensa-esp32-elf/xtensa-esp32-elf/lib;../../../.espressif/tools/xtensa-esp32-elf/esp-2019r2-8.2.0/xtensa-esp32-elf/lib/gcc/xtensa-esp32-elf/8.2.0"/>
+      <IncludeFiles Value="$(ProjOutDir);../../freertos-fpc"/>
+      <Libraries Value="/home/christo/xtensa/esp-idf/libs/;../../../../.espressif/tools/xtensa-esp32-elf/esp-2019r2-8.2.0/xtensa-esp32-elf/xtensa-esp32-elf/lib;../../../../.espressif/tools/xtensa-esp32-elf/esp-2019r2-8.2.0/xtensa-esp32-elf/lib/gcc/xtensa-esp32-elf/8.2.0"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Linking>
@@ -54,7 +54,7 @@
       <CustomOptions Value="-Tfreertos 
 -Wpesp32 
 -Cawindowed 
--XP/home/christo/.espressif/tools/xtensa-esp32-elf/esp-2020r1-8.2.0/xtensa-esp32-elf/bin/xtensa-esp32-elf-"/>
+-XPxtensa-esp32-elf-"/>
       <CompilerPath Value="/home/christo/fpc/avr-new/compiler/ppcrossxtensa"/>
     </Other>
   </CompilerOptions>
