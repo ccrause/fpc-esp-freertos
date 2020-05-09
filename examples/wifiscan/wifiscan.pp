@@ -3,7 +3,7 @@ program wifiscan;
 {$include sdkconfig.inc}
 
 uses
-  esp_err, esp_wifi, esp_wifi_types, esp_netif, esp_netif_types, esp_event,
+  esp_err, esp_wifi, esp_wifi_types, esp_netif, esp_event,
   esp_wifi_default, nvs;
 
 procedure printAPInfo(const AP: Twifi_ap_record_t);
@@ -106,17 +106,4 @@ begin
   end;
   wifi_scan();
 end.
-
-(***Compile program with
-~/fpc/avr-new/compiler/xtensa/pp -Fu~/fpc/avr-new/rtl/units/xtensa-freertos/ -Tfreertos -Cawindowed -XPxtensa-esp32-elf- -al -Wpesp32 -Fl~/xtensa/esp-idf/libs -Fl$HOME/.espressif/tools/xtensa-esp32-elf/esp-2019r2-8.2.0/xtensa-esp32-elf/xtensa-esp32-elf/lib/ adc.pp
-
- ***Flash to esp32 with:
-
- - Assuming boot & partition for this sdk has been flashed before, only this app needs to be flashed:
-$ python /home/christo/xtensa/esp-idf/components/esptool_py/esptool/esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 115200 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0x10000 /home/christo/fpc/xtensa/adc/adc.bin
-
-- If this is the first time a project with this IDF is built, also flash boot loader and partitions:
-$ python /home/christo/xtensa/esp-idf/components/esptool_py/esptool/esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 115200 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0x1000 /home/christo/fpc/xtensa/helloworld/bootloader.bin 0x10000 /home/christo/fpc/xtensa/adc/adc.bin 0x8000 /home/christo/fpc/xtensa/helloworld/partitions_singleapp.bin
-
-*)
 
