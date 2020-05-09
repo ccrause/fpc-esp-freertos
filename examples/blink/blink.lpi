@@ -9,7 +9,7 @@
         <MainUnitHasScaledStatement Value="False"/>
       </Flags>
       <SessionStorage Value="InProjectDir"/>
-      <Title Value="helloworld"/>
+      <Title Value="blink"/>
       <UseAppBundle Value="False"/>
       <ResourceType Value="res"/>
     </General>
@@ -25,7 +25,7 @@
     </RunParams>
     <Units>
       <Unit>
-        <Filename Value="helloworld.pp"/>
+        <Filename Value="blink.pp"/>
         <IsPartOfProject Value="True"/>
       </Unit>
     </Units>
@@ -33,11 +33,12 @@
   <CompilerOptions>
     <Version Value="11"/>
     <Target>
-      <Filename Value="helloworld"/>
+      <Filename Value="blink"/>
     </Target>
     <SearchPaths>
-      <IncludeFiles Value="$(ProjOutDir)"/>
-      <Libraries Value="/home/christo/xtensa/esp-idf/libs/;../../../.espressif/tools/xtensa-esp32-elf/esp-2019r2-8.2.0/xtensa-esp32-elf/xtensa-esp32-elf/lib;../../../.espressif/tools/xtensa-esp32-elf/esp-2019r2-8.2.0/xtensa-esp32-elf/lib/gcc/xtensa-esp32-elf/8.2.0"/>
+      <IncludeFiles Value="$(ProjOutDir);../../freertos-fpc"/>
+      <Libraries Value="/home/christo/xtensa/esp-idf/libs/;../../../../.espressif/tools/xtensa-esp32-elf/esp-2019r2-8.2.0/xtensa-esp32-elf/xtensa-esp32-elf/lib;../../../../.espressif/tools/xtensa-esp32-elf/esp-2019r2-8.2.0/xtensa-esp32-elf/lib/gcc/xtensa-esp32-elf/8.2.0"/>
+      <OtherUnitFiles Value="../../freertos-fpc"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Linking>
@@ -49,13 +50,13 @@
       <ConfigFile>
         <DontUseConfigFile Value="True"/>
         <CustomConfigFile Value="True"/>
-        <ConfigFilePath Value="~/fpc/avr-new/fpc.cfg"/>
+        <ConfigFilePath Value="~/fpc/3.3.1/fpc.cfg"/>
       </ConfigFile>
       <CustomOptions Value="-Tfreertos 
 -Wpesp32 
 -Cawindowed 
 -XP/home/christo/.espressif/tools/xtensa-esp32-elf/esp-2020r1-8.2.0/xtensa-esp32-elf/bin/xtensa-esp32-elf-"/>
-      <CompilerPath Value="/home/christo/fpc/avr-new/compiler/ppcrossxtensa"/>
+      <CompilerPath Value="/home/christo/fpc/3.3.1/compiler/ppcrossxtensa"/>
     </Other>
   </CompilerOptions>
   <Debugging>
