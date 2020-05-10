@@ -68,7 +68,7 @@ type
 	  xCoreID: TBaseType_t;
 {$endif}
   end;
-  PTaskStatus_t = TTaskStatus_t;
+  PTaskStatus_t = ^TTaskStatus_t;
 
 //typedef struct xTASK_SNAPSHOT
   TTaskSnapshot_t = record
