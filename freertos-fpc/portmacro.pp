@@ -1,13 +1,5 @@
 unit portmacro;
 
-//{ $include <xtensa/hal.h>
-//{ $include <xtensa/config/core.h>
-//{ $include <xtensa/config/system.h>	/* required for XSHAL_CLIB */
-//{ $include <xtensa/xtruntime.h>
-//{ $include "esp_private/crosscore_int}
-//{ $include "esp_timer}              /* required for FreeRTOS run time stats */
-//{ $include <esp_heap_caps.h>
-
 {$include sdkconfig.inc}
 {$inline on}
 

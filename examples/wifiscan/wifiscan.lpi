@@ -38,7 +38,7 @@
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir);../../freertos-fpc"/>
       <Libraries Value="/home/christo/xtensa/esp-idf/libs/;../../../../.espressif/tools/xtensa-esp32-elf/esp-2019r2-8.2.0/xtensa-esp32-elf/xtensa-esp32-elf/lib;../../../../.espressif/tools/xtensa-esp32-elf/esp-2019r2-8.2.0/xtensa-esp32-elf/lib/gcc/xtensa-esp32-elf/8.2.0"/>
-      <OtherUnitFiles Value="../../freertos-fpc"/>
+      <OtherUnitFiles Value="../../freertos-fpc;../../freertos-fpc/esp-idf"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-freertos"/>
     </SearchPaths>
     <Linking>
