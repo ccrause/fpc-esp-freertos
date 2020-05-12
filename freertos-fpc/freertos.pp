@@ -1,6 +1,7 @@
 unit FreeRTOS;
 
 {$include freertosconfig.inc}
+{$linklib freertos, static}
 
 interface
 
