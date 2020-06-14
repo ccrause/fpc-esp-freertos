@@ -44,22 +44,22 @@ type
     revision: byte;
   end;
 
-function esp_register_shutdown_handler(handle: Tshutdown_handler_t): Tesp_err_t;
+function esp_register_shutdown_handler(handle: Tshutdown_handler_t): Tesp_err;
   cdecl; external;
-function esp_unregister_shutdown_handler(handle: Tshutdown_handler_t): Tesp_err_t;
+function esp_unregister_shutdown_handler(handle: Tshutdown_handler_t): Tesp_err;
   cdecl; external;
 procedure esp_restart; noreturn; external;
 function esp_reset_reason: Tesp_reset_reason_t; cdecl; external;
 function esp_get_free_heap_size: uint32; cdecl; external;
 function esp_get_minimum_free_heap_size: uint32; cdecl; external;
 function esp_random: uint32; cdecl; external;
-procedure esp_fill_random(buf: pointer; len: Tsize_t); cdecl; external;
-function esp_base_mac_addr_set(mac: PByte): Tesp_err_t; cdecl; external;
-function esp_base_mac_addr_get(mac: PByte): Tesp_err_t; cdecl; external;
-function esp_efuse_mac_get_custom(mac: PByte): Tesp_err_t; cdecl; external;
-function esp_efuse_mac_get_default(mac: PByte): Tesp_err_t; cdecl; external;
-function esp_read_mac(mac: PByte; _type: Tesp_mac_type_t): Tesp_err_t; cdecl; external;
-function esp_derive_local_mac(local_mac: PByte; universal_mac: PByte): Tesp_err_t;
+procedure esp_fill_random(buf: pointer; len: Tsize); cdecl; external;
+function esp_base_mac_addr_set(mac: PByte): Tesp_err; cdecl; external;
+function esp_base_mac_addr_get(mac: PByte): Tesp_err; cdecl; external;
+function esp_efuse_mac_get_custom(mac: PByte): Tesp_err; cdecl; external;
+function esp_efuse_mac_get_default(mac: PByte): Tesp_err; cdecl; external;
+function esp_read_mac(mac: PByte; _type: Tesp_mac_type_t): Tesp_err; cdecl; external;
+function esp_derive_local_mac(local_mac: PByte; universal_mac: PByte): Tesp_err;
   cdecl; external;
 procedure esp_chip_info(out_info: Pesp_chip_info_t); cdecl; external;
 
