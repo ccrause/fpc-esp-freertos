@@ -49,41 +49,40 @@ use of FreeRTOS.*)
 type
 //struct xLIST_ITEM
   // Removed  references, FPC doesn't require volatile anyway
-  PListItem_t = ^TListItem_t;
+  PListItem = ^TListItem_t;
   TListItem_t = record
-  {$if not (configUSE_LIST_DATA_INTEGRITY_CHECK_BYTES =  0)}
-	  listFIRST_LIST_ITEM_INTEGRITY_CHECK_VALUE
+  {$if defined(configUSE_LIST_DATA_INTEGRITY_CHECK_BYTES) and (configUSE_LIST_DATA_INTEGRITY_CHECK_BYTES = 1)}
+	  xListItemIntegrityValue1: TTickType;
   {$endif}
-	  xItemValue: TTickType_t;
-	  pxNext: PListItem_t;
-	  pxPrevious: PListItem_t;
+	  xItemValue: TTickType;
+	  pxNext: PListItem;
+	  pxPrevious: PListItem;
 	  pvOwner: pointer;
 	  pvContainer: pointer;
-  {$if not (configUSE_LIST_DATA_INTEGRITY_CHECK_BYTES =  0)}
-	  listSECOND_LIST_ITEM_INTEGRITY_CHECK_VALUE
+  {$if defined(configUSE_LIST_DATA_INTEGRITY_CHECK_BYTES) and (configUSE_LIST_DATA_INTEGRITY_CHECK_BYTES = 1)}
+	  xListItemIntegrityValue2: TTickType;
   {$endif}
   end;
 
 //struct xMINI_LIST_ITEM
-  TMiniListItem_t = record
+  TMiniListItem = record
   {$if not (configUSE_LIST_DATA_INTEGRITY_CHECK_BYTES =  0)}
 	  listFIRST_LIST_ITEM_INTEGRITY_CHECK_VALUE
   {$endif}
-    xItemValue: TTickType_t;
-	  pxNext: PListItem_t;
-	  pxPrevious: PListItem_t;
+    xItemValue: TTickType;
+	  pxNext: PListItem;
+	  pxPrevious: PListItem;
   end;
-  PList_t = ^TList_t;
 
-
+  PList = ^TList;
 //struct xLIST
-  TList_t = record
+  TList = record
   {$if not (configUSE_LIST_DATA_INTEGRITY_CHECK_BYTES =  0)}
     listFIRST_LIST_ITEM_INTEGRITY_CHECK_VALUE
   {$endif}
-	  uxNumberOfItems: TUBaseType_t;
-	  pxIndex: PListItem_t;
-	  xListEnd: TMiniListItem_t;
+	  uxNumberOfItems: TUBaseType;
+	  pxIndex: PListItem;
+	  xListEnd: TMiniListItem;
   {$if not (configUSE_LIST_DATA_INTEGRITY_CHECK_BYTES =  0)}
 	  listSECOND_LIST_ITEM_INTEGRITY_CHECK_VALUE
   {$endif}
@@ -119,13 +118,13 @@ List_t * const pxConstList = ( pxList );													\
 #define listLIST_IS_INITIALISED( pxList ) ( ( pxList )->xListEnd.xItemValue =  portMAX_DELAY )
 *)
 
-procedure vListInitialise(pxList: PList_t); external;
+procedure vListInitialise(pxList: PList); external;
 
-procedure vListInitialiseItem(pxItem: PListItem_t); external;
-procedure vListInsert(pxList: PList_t; pxNewListItem: PListItem_t); external;
+procedure vListInitialiseItem(pxItem: PListItem); external;
+procedure vListInsert(pxList: PList; pxNewListItem: PListItem); external;
 
-procedure vListInsertEnd(pxList: PList_t; pxNewListItem: PListItem_t); external;
-function uxListRemove(pxItemToRemove: PListItem_t): TUBaseType_t; external;
+procedure vListInsertEnd(pxList: PList; pxNewListItem: PListItem); external;
+function uxListRemove(pxItemToRemove: PListItem): TUBaseType; external;
 
 
 implementation
