@@ -14,7 +14,41 @@
       <ResourceType Value="res"/>
     </General>
     <BuildModes>
-      <Item Name="Default" Default="True"/>
+      <Item Name="ESP32" Default="True"/>
+      <Item Name="ESP8266">
+        <CompilerOptions>
+          <Version Value="11"/>
+          <Target>
+            <Filename Value="adctest"/>
+          </Target>
+          <SearchPaths>
+            <IncludeFiles Value="$(ProjOutDir);../../freertos-fpc;../../freertos-fpc/esp8266-idf"/>
+            <Libraries Value="../../../../xtensa/ESP8266_RTOS_SDK/libs"/>
+            <OtherUnitFiles Value="../../freertos-fpc;../../freertos-fpc/esp8266-idf"/>
+            <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
+          </SearchPaths>
+          <Linking>
+            <Debugging>
+              <UseLineInfoUnit Value="False"/>
+            </Debugging>
+          </Linking>
+          <Other>
+            <Verbosity>
+              <ShowUsedFiles Value="True"/>
+            </Verbosity>
+            <ConfigFile>
+              <DontUseConfigFile Value="True"/>
+              <CustomConfigFile Value="True"/>
+              <ConfigFilePath Value="~/fpc/cc/fpc.cfg"/>
+            </ConfigFile>
+            <CustomOptions Value="-Tfreertos 
+-Wpesp32 
+-Cawindowed 
+-XPxtensa-esp32-elf-"/>
+            <CompilerPath Value="/home/christo/fpc/cc/compiler/ppcrossxtensa"/>
+          </Other>
+        </CompilerOptions>
+      </Item>
     </BuildModes>
     <PublishOptions>
       <Version Value="2"/>
@@ -36,7 +70,7 @@
       <Filename Value="adctest"/>
     </Target>
     <SearchPaths>
-      <IncludeFiles Value="$(ProjOutDir);../../freertos-fpc"/>
+      <IncludeFiles Value="$(ProjOutDir);../../freertos-fpc;../../freertos-fpc/esp-idf"/>
       <Libraries Value="/home/christo/xtensa/esp-idf/libs/;../../../../.espressif/tools/xtensa-esp32-elf/esp-2019r2-8.2.0/xtensa-esp32-elf/xtensa-esp32-elf/lib;../../../../.espressif/tools/xtensa-esp32-elf/esp-2019r2-8.2.0/xtensa-esp32-elf/lib/gcc/xtensa-esp32-elf/8.2.0"/>
       <OtherUnitFiles Value="../../freertos-fpc;../../freertos-fpc/esp-idf"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
@@ -53,13 +87,13 @@
       <ConfigFile>
         <DontUseConfigFile Value="True"/>
         <CustomConfigFile Value="True"/>
-        <ConfigFilePath Value="~/fpc/3.3.1/fpc.cfg"/>
+        <ConfigFilePath Value="~/fpc/cc/fpc.cfg"/>
       </ConfigFile>
       <CustomOptions Value="-Tfreertos 
 -Wpesp32 
 -Cawindowed 
 -XPxtensa-esp32-elf-"/>
-      <CompilerPath Value="/home/christo/fpc/3.3.1/compiler/ppcrossxtensa"/>
+      <CompilerPath Value="/home/christo/fpc/cc/compiler/ppcrossxtensa"/>
     </Other>
   </CompilerOptions>
   <Debugging>
