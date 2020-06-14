@@ -8,8 +8,8 @@ uses
   esp_bit_defs, io_mux_reg, gpio_caps;
 
 type
-  Pgpio_port_t = ^Tgpio_port_t;
-  Tgpio_port_t = (GPIO_PORT_0 = 0, GPIO_PORT_MAX);
+  Pgpio_port = ^Tgpio_port;
+  Tgpio_port = (GPIO_PORT_0 = 0, GPIO_PORT_MAX);
 
 const
   GPIO_SEL_0              = BIT0;
@@ -116,8 +116,8 @@ const
 {$endif}
 
 type
-  Pgpio_num_t = ^Tgpio_num_t;
-  Tgpio_num_t = (GPIO_NUM_NC = -(1), GPIO_NUM_0 = 0, GPIO_NUM_1 = 1,
+  Pgpio_num = ^Tgpio_num;
+  Tgpio_num = (GPIO_NUM_NC = -(1), GPIO_NUM_0 = 0, GPIO_NUM_1 = 1,
     GPIO_NUM_2 = 2, GPIO_NUM_3 = 3, GPIO_NUM_4 = 4,
     GPIO_NUM_5 = 5, GPIO_NUM_6 = 6, GPIO_NUM_7 = 7,
     GPIO_NUM_8 = 8, GPIO_NUM_9 = 9, GPIO_NUM_10 = 10,
@@ -142,14 +142,14 @@ type
     {$endif}
     GPIO_NUM_MAX);
 
-  Pgpio_int_type_t = ^Tgpio_int_type_t;
-  Tgpio_int_type_t = (GPIO_INTR_DISABLE = 0, GPIO_INTR_POSEDGE = 1,
+  Pgpio_int_type = ^Tgpio_int_type;
+  Tgpio_int_type = (GPIO_INTR_DISABLE = 0, GPIO_INTR_POSEDGE = 1,
     GPIO_INTR_NEGEDGE = 2, GPIO_INTR_ANYEDGE = 3,
     GPIO_INTR_LOW_LEVEL = 4, GPIO_INTR_HIGH_LEVEL = 5,
     GPIO_INTR_MAX);
 
-  Pgpio_mode_t = ^Tgpio_mode_t;
-  Tgpio_mode_t = (GPIO_MODE_DISABLE = GPIO_MODE_DEF_DISABLE, GPIO_MODE_INPUT =
+  Pgpio_mode = ^Tgpio_mode;
+  Tgpio_mode = (GPIO_MODE_DISABLE = GPIO_MODE_DEF_DISABLE, GPIO_MODE_INPUT =
     GPIO_MODE_DEF_INPUT,
     GPIO_MODE_OUTPUT = GPIO_MODE_DEF_OUTPUT, GPIO_MODE_OUTPUT_OD =
     GPIO_MODE_DEF_OUTPUT or GPIO_MODE_DEF_OD,
@@ -157,31 +157,31 @@ type
     GPIO_MODE_DEF_OD, GPIO_MODE_INPUT_OUTPUT = GPIO_MODE_DEF_INPUT or GPIO_MODE_DEF_OUTPUT
     );
 
-  Pgpio_pullup_t = ^Tgpio_pullup_t;
-  Tgpio_pullup_t = (GPIO_PULLUP_DISABLE = $0, GPIO_PULLUP_ENABLE = $1);
+  Pgpio_pullup = ^Tgpio_pullup;
+  Tgpio_pullup = (GPIO_PULLUP_DISABLE = $0, GPIO_PULLUP_ENABLE = $1);
 
-  Pgpio_pulldown_t = ^Tgpio_pulldown_t;
-  Tgpio_pulldown_t = (GPIO_PULLDOWN_DISABLE = $0, GPIO_PULLDOWN_ENABLE = $1);
+  Pgpio_pulldown = ^Tgpio_pulldown;
+  Tgpio_pulldown = (GPIO_PULLDOWN_DISABLE = $0, GPIO_PULLDOWN_ENABLE = $1);
 
-  Pgpio_config_t = ^Tgpio_config_t;
-  Tgpio_config_t = record
+  Pgpio_config = ^Tgpio_config;
+  Tgpio_config = record
     pin_bit_mask: uint64;
-    mode: Tgpio_mode_t;
-    pull_up_en: Tgpio_pullup_t;
-    pull_down_en: Tgpio_pulldown_t;
-    intr_type: Tgpio_int_type_t;
+    mode: Tgpio_mode;
+    pull_up_en: Tgpio_pullup;
+    pull_down_en: Tgpio_pulldown;
+    intr_type: Tgpio_int_type;
   end;
 
-  Pgpio_pull_mode_t = ^Tgpio_pull_mode_t;
-  Tgpio_pull_mode_t = (GPIO_PULLUP_ONLY, GPIO_PULLDOWN_ONLY, GPIO_PULLUP_PULLDOWN,
+  Pgpio_pull_mode = ^Tgpio_pull_mode;
+  Tgpio_pull_mode = (GPIO_PULLUP_ONLY, GPIO_PULLDOWN_ONLY, GPIO_PULLUP_PULLDOWN,
     GPIO_FLOATING);
 
-  Pgpio_drive_cap_t = ^Tgpio_drive_cap_t;
-  Tgpio_drive_cap_t = (GPIO_DRIVE_CAP_0 = 0, GPIO_DRIVE_CAP_1 = 1,
+  Pgpio_drive_cap = ^Tgpio_drive_cap;
+  Tgpio_drive_cap = (GPIO_DRIVE_CAP_0 = 0, GPIO_DRIVE_CAP_1 = 1,
     GPIO_DRIVE_CAP_2 = 2, GPIO_DRIVE_CAP_DEFAULT = 2,
     GPIO_DRIVE_CAP_3 = 3, GPIO_DRIVE_CAP_MAX);
 
-  Tgpio_isr_t = procedure(para1: pointer); cdecl;
+  Tgpio_isr = procedure(para1: pointer); cdecl;
 
 implementation
 
