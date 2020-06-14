@@ -3,9 +3,9 @@ unit esp_err;
 interface
 
 type
-  Pesp_err_t = ^Tesp_err_t;
-  Tesp_err_t = int32;
-  Tsize_t = int32;
+  Pesp_err = ^Tesp_err;
+  Tesp_err = int32;
+  Tsize = int32;
 
 const
   ESP_OK = 0;
@@ -25,22 +25,19 @@ const
   ESP_ERR_MESH_BASE = $4000;
   ESP_ERR_FLASH_BASE = $6000;
 
-function esp_err_to_name(code: Tesp_err_t): PChar; cdecl; external;
-
-function esp_err_to_name_r(code: Tesp_err_t; buf: PChar; buflen: Tsize_t): PChar;
+function esp_err_to_name(code: Tesp_err): PChar; cdecl; external;
+function esp_err_to_name_r(code: Tesp_err; buf: PChar; buflen: Tsize): PChar;
   cdecl; external;
-
-procedure _esp_error_check_failed(rc: Tesp_err_t; afile: PChar; line: integer; afunction: PChar; expression: PChar); cdecl; external; noreturn;
-
-procedure _esp_error_check_failed_without_abort(rc: Tesp_err_t;
+procedure _esp_error_check_failed(rc: Tesp_err; afile: PChar; line: integer; afunction: PChar; expression: PChar); cdecl; external; noreturn;
+procedure _esp_error_check_failed_without_abort(rc: Tesp_err;
   afile: PChar; line: int32; _function: PChar; expression: PChar); cdecl; external;
 
-procedure EspErrorCheck(code: longint);
+procedure EspErrorCheck(code: Tesp_err);
 
 implementation
 
 // Non-aborting version, just print an error message
-procedure EspErrorCheck(code: longint);
+procedure EspErrorCheck(code: Tesp_err);
 begin
   if not(code = ESP_OK) then
   begin
