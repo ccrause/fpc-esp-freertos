@@ -20,9 +20,9 @@ const
   errQUEUE_YIELD	= -5;
 
 type
-  TTaskFunction_t = procedure(para1: pointer); cdecl;
+  TTaskFunction = procedure(para1: pointer); cdecl;
 
-function pdMS_TO_TICKS(xTimeInMs: TTickType_t): uint32;
+function pdMS_TO_TICKS(xTimeInMs: TTickType): uint32;
 function pdTICKS_TO_MS(xTicks: uint32): uint32;
 
 {$ifndef configUSE_LIST_DATA_INTEGRITY_CHECK_BYTES}
@@ -40,7 +40,7 @@ const
 
 implementation
 
-function pdMS_TO_TICKS(xTimeInMs: TTickType_t): uint32;
+function pdMS_TO_TICKS(xTimeInMs: TTickType): uint32;
 begin
    pdMS_TO_TICKS := xTimeInMs * configTICK_RATE_HZ div 1000;
 end;
