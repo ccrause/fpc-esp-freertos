@@ -26,7 +26,6 @@ type
   Tgpio_intr_handler_fn_t = procedure(intr_mask: uint32; high: longbool;
     arg: pointer); cdecl;
 
-
 procedure gpio_init; cdecl; external;
 
 procedure gpio_output_set(set_mask: uint32; clear_mask: uint32;
@@ -73,65 +72,65 @@ procedure gpio_pad_hold(gpio_num: byte); cdecl; external;
 
 // Translation of driver/include/driver/gpio.h
 type
-  Tgpio_isr_handle_t = pointer;
-  Pgpio_isr_handle_t = ^Tgpio_isr_handle_t;
+  Tgpio_isr_handle = pointer;
+  Pgpio_isr_handle = ^Tgpio_isr_handle;
   TIsrProc = procedure(para: pointer); cdecl;
 
-function gpio_config(pGPIOConfig: Pgpio_config_t): Tesp_err_t; cdecl; external;
+function gpio_config(constref GPIOConfig: Tgpio_config): Tesp_err; cdecl; external;
 
-function gpio_reset_pin(gpio_num: Tgpio_num_t): Tesp_err_t; cdecl; external;
+function gpio_reset_pin(gpio_num: Tgpio_num): Tesp_err; cdecl; external;
 
-function gpio_set_intr_type(gpio_num: Tgpio_num_t;
-  intr_type: Tgpio_int_type_t): Tesp_err_t; cdecl; external;
+function gpio_set_intr_type(gpio_num: Tgpio_num;
+  intr_type: Tgpio_int_type): Tesp_err; cdecl; external;
 
-function gpio_intr_enable(gpio_num: Tgpio_num_t): Tesp_err_t; cdecl; external;
+function gpio_intr_enable(gpio_num: Tgpio_num): Tesp_err; cdecl; external;
 
-function gpio_intr_disable(gpio_num: Tgpio_num_t): Tesp_err_t; cdecl; external;
+function gpio_intr_disable(gpio_num: Tgpio_num): Tesp_err; cdecl; external;
 
-function gpio_set_level(gpio_num: Tgpio_num_t; level: uint32): Tesp_err_t; cdecl; external;
+function gpio_set_level(gpio_num: Tgpio_num; level: uint32): Tesp_err; cdecl; external;
 
-function gpio_get_level(gpio_num: Tgpio_num_t): int32; cdecl; external;
+function gpio_get_level(gpio_num: Tgpio_num): int32; cdecl; external;
 
-function gpio_set_direction(gpio_num: Tgpio_num_t; mode: Tgpio_mode_t): Tesp_err_t;
+function gpio_set_direction(gpio_num: Tgpio_num; mode: Tgpio_mode): Tesp_err;
   cdecl; external;
 
-function gpio_set_pull_mode(gpio_num: Tgpio_num_t; pull: Tgpio_pull_mode_t): Tesp_err_t;
+function gpio_set_pull_mode(gpio_num: Tgpio_num; pull: Tgpio_pull_mode): Tesp_err;
   cdecl; external;
 
-function gpio_wakeup_enable(gpio_num: Tgpio_num_t;
-  intr_type: Tgpio_int_type_t): Tesp_err_t; cdecl; external;
+function gpio_wakeup_enable(gpio_num: Tgpio_num;
+  intr_type: Tgpio_int_type): Tesp_err; cdecl; external;
 
-function gpio_wakeup_disable(gpio_num: Tgpio_num_t): Tesp_err_t; cdecl; external;
+function gpio_wakeup_disable(gpio_num: Tgpio_num): Tesp_err; cdecl; external;
 
 function gpio_isr_register(fn: TIsrProc; arg: pointer;
-  intr_alloc_flags: int32; handle: Pgpio_isr_handle_t): Tesp_err_t; cdecl; external;
+  intr_alloc_flags: int32; handle: Pgpio_isr_handle): Tesp_err; cdecl; external;
 
-function gpio_pullup_en(gpio_num: Tgpio_num_t): Tesp_err_t; cdecl; external;
+function gpio_pullup_en(gpio_num: Tgpio_num): Tesp_err; cdecl; external;
 
-function gpio_pullup_dis(gpio_num: Tgpio_num_t): Tesp_err_t; cdecl; external;
+function gpio_pullup_dis(gpio_num: Tgpio_num): Tesp_err; cdecl; external;
 
-function gpio_pulldown_en(gpio_num: Tgpio_num_t): Tesp_err_t; cdecl; external;
+function gpio_pulldown_en(gpio_num: Tgpio_num): Tesp_err; cdecl; external;
 
-function gpio_pulldown_dis(gpio_num: Tgpio_num_t): Tesp_err_t; cdecl; external;
+function gpio_pulldown_dis(gpio_num: Tgpio_num): Tesp_err; cdecl; external;
 
-function gpio_install_isr_service(intr_alloc_flags: int32): Tesp_err_t; cdecl; external;
+function gpio_install_isr_service(intr_alloc_flags: int32): Tesp_err; cdecl; external;
 
 procedure gpio_uninstall_isr_service; cdecl; external;
 
-function gpio_isr_handler_add(gpio_num: Tgpio_num_t; isr_handler: Tgpio_isr_t;
-  args: pointer): Tesp_err_t; cdecl; external;
+function gpio_isr_handler_add(gpio_num: Tgpio_num; isr_handler: Tgpio_isr;
+  args: pointer): Tesp_err; cdecl; external;
 
-function gpio_isr_handler_remove(gpio_num: Tgpio_num_t): Tesp_err_t; cdecl; external;
+function gpio_isr_handler_remove(gpio_num: Tgpio_num): Tesp_err; cdecl; external;
 
-function gpio_set_drive_capability(gpio_num: Tgpio_num_t;
-  strength: Tgpio_drive_cap_t): Tesp_err_t; cdecl; external;
+function gpio_set_drive_capability(gpio_num: Tgpio_num;
+  strength: Tgpio_drive_cap): Tesp_err; cdecl; external;
 
-function gpio_get_drive_capability(gpio_num: Tgpio_num_t;
-  strength: Pgpio_drive_cap_t): Tesp_err_t; cdecl; external;
+function gpio_get_drive_capability(gpio_num: Tgpio_num;
+  strength: Pgpio_drive_cap): Tesp_err; cdecl; external;
 
-function gpio_hold_en(gpio_num: Tgpio_num_t): Tesp_err_t; cdecl; external;
+function gpio_hold_en(gpio_num: Tgpio_num): Tesp_err; cdecl; external;
 
-function gpio_hold_dis(gpio_num: Tgpio_num_t): Tesp_err_t; cdecl; external;
+function gpio_hold_dis(gpio_num: Tgpio_num): Tesp_err; cdecl; external;
 
 procedure gpio_deep_sleep_hold_en; cdecl; external;
 
@@ -142,8 +141,8 @@ procedure gpio_iomux_in(gpio_num: uint32; signal_idx: uint32); cdecl; external;
 procedure gpio_iomux_out(gpio_num: byte; func: int32; oen_inv: longbool); cdecl; external;
 
 {$ifdef GPIO_SUPPORTS_FORCE_HOLD}
-function gpio_force_hold_all: Tesp_err_t; cdecl; external;
-function gpio_force_unhold_all: Tesp_err_t; cdecl; external;
+function gpio_force_hold_all: Tesp_err; cdecl; external;
+function gpio_force_unhold_all: Tesp_err; cdecl; external;
 {$endif}
 
 //function GPIO_REG_READ(reg: longint): longint;
