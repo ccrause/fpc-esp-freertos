@@ -90,6 +90,7 @@ type
 
 const
   tskIDLE_PRIORITY = 0;
+  tskNO_AFFINITY = CONFIG_FREERTOS_NO_AFFINITY; // not used in ESP8266, define for compatibility with ESP32 code
 
 procedure taskYIELD; inline;
 procedure taskENTER_CRITICAL; inline;

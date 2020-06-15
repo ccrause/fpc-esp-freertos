@@ -246,7 +246,7 @@ type
     xDummy1: TTickType;
     pvDummy2: array[0..3] of pointer;
   end;
-  TStaticListItem_t = TxSTATIC_LIST_ITEM ;
+  TStaticListItem = TxSTATIC_LIST_ITEM ;
 
   PxSTATIC_MINI_LIST_ITEM = ^TxSTATIC_MINI_LIST_ITEM;
   TxSTATIC_MINI_LIST_ITEM = record
@@ -261,15 +261,15 @@ type
     pvDummy2: pointer;
     xDummy3: TStaticMiniListItem_t;
   end;
-  TStaticList_t = TxSTATIC_LIST;
-  PStaticList_t = ^TStaticList_t;
+  TStaticList = TxSTATIC_LIST;
+  PStaticList_t = ^TStaticList;
 
 type
   PxSTATIC_TCB = ^TxSTATIC_TCB;
   TxSTATIC_TCB = record
   end;
-  TStaticTask_t = TxSTATIC_TCB;
-  PStaticTask_t = ^TStaticTask_t;
+  TStaticTask = TxSTATIC_TCB;
+  PStaticTask = ^TStaticTask;
 
   PxSTATIC_QUEUE = ^TxSTATIC_QUEUE;
   TxSTATIC_QUEUE = record
@@ -279,7 +279,7 @@ type
         0: (pvDummy2: pointer);
         1: (uxDummy2: uint32);
     end;
-    xDummy3: array[0..1] of TStaticList_t;
+    xDummy3: array[0..1] of TStaticList;
     uxDummy4: array[0..2] of uint32;
     ucDummy6: byte;
     pvDummy7: pointer;
@@ -287,27 +287,27 @@ type
     ucDummy9: byte;
     muxDummy: TportMUX_TYPE;
   end;
-  TStaticQueue_t = TxSTATIC_QUEUE;
-  PStaticQueue_t = ^TStaticQueue_t;
+  TStaticQueue = TxSTATIC_QUEUE;
+  PStaticQueue = ^TStaticQueue;
 
-  PStaticSemaphore_t = ^TStaticSemaphore_t;
-  TStaticSemaphore_t = TStaticQueue_t;
+  PStaticSemaphore = ^TStaticSemaphore;
+  TStaticSemaphore = TStaticQueue;
 
   PxSTATIC_EVENT_GROUP = ^TxSTATIC_EVENT_GROUP;
   TxSTATIC_EVENT_GROUP = record
     xDummy1: TTickType;
-    xDummy2: TStaticList_t;
+    xDummy2: TStaticList;
     uxDummy3: uint32;
     ucDummy4: byte;
     muxDummy: TportMUX_TYPE;
   end;
-  TStaticEventGroup_t = TxSTATIC_EVENT_GROUP;
-  PStaticEventGroup_t = ^TStaticEventGroup_t;
+  TStaticEventGroup = TxSTATIC_EVENT_GROUP;
+  PStaticEventGroup = ^TStaticEventGroup;
 
   PxSTATIC_TIMER = ^TxSTATIC_TIMER;
   TxSTATIC_TIMER = record
     pvDummy1: pointer;
-    xDummy2: TStaticListItem_t;
+    xDummy2: TStaticListItem;
     xDummy3: TTickType;
     uxDummy4: uint32;
     pvDummy5: array[0..1] of pointer;

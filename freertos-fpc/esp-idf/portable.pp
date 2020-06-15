@@ -94,6 +94,7 @@ procedure uxPortCompareSetExtram(addr: PUint32; compare: uint32; set_: PUint32);
 implementation
 
 function malloc(size: uint32): pointer; external;
+
 procedure free(APointer: pointer); external;
 
 function pvPortMalloc(size: uint32): pointer; inline;

@@ -20,7 +20,7 @@ const
   errQUEUE_YIELD	= -5;
 
 type
-  TTaskFunction = procedure(para1: pointer); cdecl;
+  TTaskFunction = procedure(para1: pointer);
 
 function pdMS_TO_TICKS(xTimeInMs: TTickType): uint32;
 function pdTICKS_TO_MS(xTicks: uint32): uint32;

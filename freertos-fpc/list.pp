@@ -66,8 +66,8 @@ type
 
 //struct xMINI_LIST_ITEM
   TMiniListItem = record
-  {$if not (configUSE_LIST_DATA_INTEGRITY_CHECK_BYTES =  0)}
-	  listFIRST_LIST_ITEM_INTEGRITY_CHECK_VALUE
+  {$if defined(configUSE_LIST_DATA_INTEGRITY_CHECK_BYTES) and (configUSE_LIST_DATA_INTEGRITY_CHECK_BYTES = 1)}
+  xListItemIntegrityValue1: TTickType;
   {$endif}
     xItemValue: TTickType;
 	  pxNext: PListItem;
@@ -77,15 +77,15 @@ type
   PList = ^TList;
 //struct xLIST
   TList = record
-  {$if not (configUSE_LIST_DATA_INTEGRITY_CHECK_BYTES =  0)}
-    listFIRST_LIST_ITEM_INTEGRITY_CHECK_VALUE
-  {$endif}
+    {$if defined(configUSE_LIST_DATA_INTEGRITY_CHECK_BYTES) and (configUSE_LIST_DATA_INTEGRITY_CHECK_BYTES = 1)}
+    xListItemIntegrityValue1: TTickType;
+    {$endif}
 	  uxNumberOfItems: TUBaseType;
 	  pxIndex: PListItem;
 	  xListEnd: TMiniListItem;
-  {$if not (configUSE_LIST_DATA_INTEGRITY_CHECK_BYTES =  0)}
-	  listSECOND_LIST_ITEM_INTEGRITY_CHECK_VALUE
-  {$endif}
+    {$if defined(configUSE_LIST_DATA_INTEGRITY_CHECK_BYTES) and (configUSE_LIST_DATA_INTEGRITY_CHECK_BYTES = 1)}
+    xListItemIntegrityValue2: TTickType;
+    {$endif}
   end ;
 
 (* Not sure these macros needs to be translated to FPC
