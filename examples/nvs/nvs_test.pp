@@ -5,7 +5,7 @@ uses
 
 var
   err: longint;
-  my_handle: Tnvs_handle_t;
+  my_handle: Tnvs_handle;
   restart_counter: int32 = 0; // value will default to 0, if not set yet in NVS
 
 begin
