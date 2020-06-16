@@ -23,7 +23,7 @@
           </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir);../../freertos-fpc;../../freertos-fpc/esp8266-idf"/>
-            <Libraries Value="../../../../xtensa/ESP8266_RTOS_SDK/libs;../../../../xtensa/xtensa-lx106-elf/xtensa-lx106-elf/sysroot/lib"/>
+            <Libraries Value="../../../../xtensa/ESP8266_RTOS_SDK_V3_3/libs;../../../../xtensa/xtensa-lx106-elf/xtensa-lx106-elf/sysroot/lib"/>
             <OtherUnitFiles Value="../../freertos-fpc;../../freertos-fpc/esp8266-idf;../common"/>
             <UnitOutputDirectory Value="lib/$(TargetCPU)-freertos"/>
           </SearchPaths>

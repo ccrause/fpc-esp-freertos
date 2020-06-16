@@ -148,7 +148,6 @@ begin
     vTaskDelay(pdMS_TO_TICKS(1000));  // slow down task activation for printing
   end;
 
-  //esp_log_write(ESP_LOG_INFO, TAG, 'statstask running on core ID %d', xPortGetCoreID);
   writeln('statstask running on core ID ', xPortGetCoreID);
 
   //Print real time stats periodically
