@@ -107,22 +107,22 @@ const
     CONFIG_FEATURE_WPA3_SAE_BIT = 1 shl 0;
 
 var
-  g_wifi_default_wpa_crypto_funcs: Twpa_crypto_funcs_t; cvar; external;
+  g_wifi_default_wpa_crypto_funcs: Twpa_crypto_funcs; cvar; external;
   g_wifi_feature_caps: uint64; cvar; external;
 
 type
   TMac = array[0..5] of byte;
   Pbool = ^longbool;
-  Pint8_t = ^int8;
-  Puint16 = ^uint16;
-  Puint32 = ^uint32;
-  Tbool = longbool;
+  Pint8 = ^int8;
+  //Puint16 = ^uint16;
+  //Puint32 = ^uint32;
+  //longbool = longbool;
 
-  Pwifi_init_config_t = ^Twifi_init_config_t;
-  Twifi_init_config_t = record
-    event_handler: Tsystem_event_handler_t;
-    osi_funcs: Pwifi_osi_funcs_t;
-    wpa_crypto_funcs: Twpa_crypto_funcs_t;
+  Pwifi_init_config = ^Twifi_init_config;
+  Twifi_init_config = record
+    event_handler: Tsystem_event_handler;
+    osi_funcs: Pwifi_osi_funcs;
+    wpa_crypto_funcs: Twpa_crypto_funcs;
     static_rx_buf_num: int32;
     dynamic_rx_buf_num: int32;
     tx_buf_type: int32;
@@ -142,147 +142,95 @@ type
     magic: int32;
   end;
 
-  Twifi_promiscuous_cb_t = procedure(buf: pointer;
-    _type: Twifi_promiscuous_pkt_type_t); cdecl;
+  Twifi_promiscuous_cb = procedure(buf: pointer;
+    _type: Twifi_promiscuous_pkt_type); cdecl;
 
-  Tesp_vendor_ie_cb_t = procedure(ctx: pointer; _type: Twifi_vendor_ie_type_t;
-    sa: TMac; vnd_ie: Pvendor_ie_data_t; rssi: int32); cdecl;
+  Tesp_vendor_ie_cb = procedure(ctx: pointer; _type: Twifi_vendor_ie_type;
+    sa: TMac; vnd_ie: Pvendor_ie_data; rssi: int32); cdecl;
 
-  Twifi_csi_cb_t = procedure(ctx: pointer; Data: Pwifi_csi_info_t); cdecl;
+  Twifi_csi_cb = procedure(ctx: pointer; Data: Pwifi_csi_info); cdecl;
 
 
-procedure WIFI_INIT_CONFIG_DEFAULT(var data: Twifi_init_config_t);
+procedure WIFI_INIT_CONFIG_DEFAULT(var data: Twifi_init_config);
 
-function esp_wifi_init(config: Pwifi_init_config_t): Tesp_err_t; cdecl; external;
-
-function esp_wifi_deinit: Tesp_err_t; cdecl; external;
-
-function esp_wifi_set_mode(mode: Twifi_mode_t): Tesp_err_t; cdecl; external;
-
-function esp_wifi_get_mode(mode: Pwifi_mode_t): Tesp_err_t; cdecl; external;
-
-function esp_wifi_start: Tesp_err_t; cdecl; external;
-
-function esp_wifi_stop: Tesp_err_t; cdecl; external;
-
-function esp_wifi_restore: Tesp_err_t; cdecl; external;
-
-function esp_wifi_connect: Tesp_err_t; cdecl; external;
-
-function esp_wifi_disconnect: Tesp_err_t; cdecl; external;
-
-function esp_wifi_clear_fast_connect: Tesp_err_t; cdecl; external;
-
-function esp_wifi_deauth_sta(aid: uint16): Tesp_err_t; cdecl; external;
-
-function esp_wifi_scan_start(config: Pwifi_scan_config_t;
-  block: Tbool): Tesp_err_t; cdecl; external;
-
-function esp_wifi_scan_stop: Tesp_err_t; cdecl; external;
-
-function esp_wifi_scan_get_ap_num(number: Puint16): Tesp_err_t; cdecl; external;
-
+function esp_wifi_init(config: Pwifi_init_config): Tesp_err; cdecl; external;
+function esp_wifi_deinit: Tesp_err; cdecl; external;
+function esp_wifi_set_mode(mode: Twifi_mode): Tesp_err; cdecl; external;
+function esp_wifi_get_mode(mode: Pwifi_mode): Tesp_err; cdecl; external;
+function esp_wifi_start: Tesp_err; cdecl; external;
+function esp_wifi_stop: Tesp_err; cdecl; external;
+function esp_wifi_restore: Tesp_err; cdecl; external;
+function esp_wifi_connect: Tesp_err; cdecl; external;
+function esp_wifi_disconnect: Tesp_err; cdecl; external;
+function esp_wifi_clear_fast_connect: Tesp_err; cdecl; external;
+function esp_wifi_deauth_sta(aid: uint16): Tesp_err; cdecl; external;
+function esp_wifi_scan_start(config: Pwifi_scan_config;
+  block: longbool): Tesp_err; cdecl; external;
+function esp_wifi_scan_stop: Tesp_err; cdecl; external;
+function esp_wifi_scan_get_ap_num(number: Puint16): Tesp_err; cdecl; external;
 function esp_wifi_scan_get_ap_records(number: Puint16;
-  ap_records: Pwifi_ap_record_t): Tesp_err_t; cdecl; external;
-
-function esp_wifi_sta_get_ap_info(ap_info: Pwifi_ap_record_t): Tesp_err_t; cdecl; external;
-
-function esp_wifi_set_ps(_type: Twifi_ps_type_t): Tesp_err_t; cdecl; external;
-
-function esp_wifi_get_ps(_type: Pwifi_ps_type_t): Tesp_err_t; cdecl; external;
-
-function esp_wifi_set_protocol(ifx: Twifi_interface_t;
-  protocol_bitmap: byte): Tesp_err_t; cdecl; external;
-
-function esp_wifi_get_protocol(ifx: Twifi_interface_t;
-  protocol_bitmap: PByte): Tesp_err_t; cdecl; external;
-
-function esp_wifi_set_bandwidth(ifx: Twifi_interface_t;
-  bw: Twifi_bandwidth_t): Tesp_err_t; cdecl; external;
-
-function esp_wifi_get_bandwidth(ifx: Twifi_interface_t;
-  bw: Pwifi_bandwidth_t): Tesp_err_t; cdecl; external;
-
-function esp_wifi_set_channel(primary: byte; second: Twifi_second_chan_t): Tesp_err_t;
+  ap_records: Pwifi_ap_record): Tesp_err; cdecl; external;
+function esp_wifi_sta_get_ap_info(ap_info: Pwifi_ap_record): Tesp_err; cdecl; external;
+function esp_wifi_set_ps(_type: Twifi_ps_type): Tesp_err; cdecl; external;
+function esp_wifi_get_ps(_type: Pwifi_ps_type): Tesp_err; cdecl; external;
+function esp_wifi_set_protocol(ifx: Twifi_interface;
+  protocol_bitmap: byte): Tesp_err; cdecl; external;
+function esp_wifi_get_protocol(ifx: Twifi_interface;
+  protocol_bitmap: PByte): Tesp_err; cdecl; external;
+function esp_wifi_set_bandwidth(ifx: Twifi_interface;
+  bw: Twifi_bandwidth): Tesp_err; cdecl; external;
+function esp_wifi_get_bandwidth(ifx: Twifi_interface;
+  bw: Pwifi_bandwidth): Tesp_err; cdecl; external;
+function esp_wifi_set_channel(primary: byte; second: Twifi_second_chan): Tesp_err;
   cdecl; external;
-
-function esp_wifi_get_channel(primary: PByte; second: Pwifi_second_chan_t): Tesp_err_t;
+function esp_wifi_get_channel(primary: PByte; second: Pwifi_second_chan): Tesp_err;
   cdecl; external;
-
-function esp_wifi_set_country(country: Pwifi_country_t): Tesp_err_t; cdecl; external;
-
-function esp_wifi_get_country(country: Pwifi_country_t): Tesp_err_t; cdecl; external;
-
-function esp_wifi_set_mac(ifx: Twifi_interface_t; mac: TMac): Tesp_err_t; cdecl; external;
-
-function esp_wifi_get_mac(ifx: Twifi_interface_t; mac: TMac): Tesp_err_t; cdecl; external;
-
-function esp_wifi_set_promiscuous_rx_cb(cb: Twifi_promiscuous_cb_t): Tesp_err_t;
+function esp_wifi_set_country(country: Pwifi_country): Tesp_err; cdecl; external;
+function esp_wifi_get_country(country: Pwifi_country): Tesp_err; cdecl; external;
+function esp_wifi_set_mac(ifx: Twifi_interface; mac: TMac): Tesp_err; cdecl; external;
+function esp_wifi_get_mac(ifx: Twifi_interface; mac: TMac): Tesp_err; cdecl; external;
+function esp_wifi_set_promiscuous_rx_cb(cb: Twifi_promiscuous_cb): Tesp_err;
   cdecl; external;
-
-function esp_wifi_set_promiscuous(en: Tbool): Tesp_err_t; cdecl; external;
-
-function esp_wifi_get_promiscuous(en: Pbool): Tesp_err_t; cdecl; external;
-
-function esp_wifi_set_promiscuous_filter(filter: Pwifi_promiscuous_filter_t): Tesp_err_t;
+function esp_wifi_set_promiscuous(en: longbool): Tesp_err; cdecl; external;
+function esp_wifi_get_promiscuous(en: Pbool): Tesp_err; cdecl; external;
+function esp_wifi_set_promiscuous_filter(filter: Pwifi_promiscuous_filter): Tesp_err;
   cdecl; external;
-
-function esp_wifi_get_promiscuous_filter(filter: Pwifi_promiscuous_filter_t): Tesp_err_t;
+function esp_wifi_get_promiscuous_filter(filter: Pwifi_promiscuous_filter): Tesp_err;
   cdecl; external;
-
 function esp_wifi_set_promiscuous_ctrl_filter(
-  filter: Pwifi_promiscuous_filter_t): Tesp_err_t;
+  filter: Pwifi_promiscuous_filter): Tesp_err;
   cdecl; external;
-
 function esp_wifi_get_promiscuous_ctrl_filter(
-  filter: Pwifi_promiscuous_filter_t): Tesp_err_t;
+  filter: Pwifi_promiscuous_filter): Tesp_err;
   cdecl; external;
-
-function esp_wifi_set_config(interface_: Twifi_interface_t;
-  conf: Pwifi_config_t): Tesp_err_t; cdecl; external;
-
-function esp_wifi_get_config(interface_: Twifi_interface_t;
-  conf: Pwifi_config_t): Tesp_err_t; cdecl; external;
-
-function esp_wifi_ap_get_sta_list(sta: Pwifi_sta_list_t): Tesp_err_t; cdecl; external;
-
-function esp_wifi_set_storage(storage: Twifi_storage_t): Tesp_err_t; cdecl; external;
-
-function esp_wifi_set_vendor_ie(enable: Tbool; _type: Twifi_vendor_ie_type_t;
-  idx: Twifi_vendor_ie_id_t; vnd_ie: pointer): Tesp_err_t; cdecl; external;
-
-function esp_wifi_set_vendor_ie_cb(cb: Tesp_vendor_ie_cb_t;
-  ctx: pointer): Tesp_err_t; cdecl; external;
-
-function esp_wifi_set_max_tx_power(power: int8): Tesp_err_t; cdecl; external;
-
-function esp_wifi_get_max_tx_power(power: Pint8): Tesp_err_t; cdecl; external;
-
-function esp_wifi_set_event_mask(mask: uint32): Tesp_err_t; cdecl; external;
-
-function esp_wifi_get_event_mask(mask: Puint32): Tesp_err_t; cdecl; external;
-
-function esp_wifi_80211_tx(ifx: Twifi_interface_t; buffer: pointer;
-  len: int32; en_sys_seq: Tbool): Tesp_err_t; cdecl; external;
-
-function esp_wifi_set_csi_rx_cb(cb: Twifi_csi_cb_t; ctx: pointer): Tesp_err_t;
+function esp_wifi_set_config(interface_: Twifi_interface;
+  conf: Pwifi_config): Tesp_err; cdecl; external;
+function esp_wifi_get_config(interface_: Twifi_interface;
+  conf: Pwifi_config): Tesp_err; cdecl; external;
+function esp_wifi_ap_get_sta_list(sta: Pwifi_sta_list): Tesp_err; cdecl; external;
+function esp_wifi_set_storage(storage: Twifi_storage): Tesp_err; cdecl; external;
+function esp_wifi_set_vendor_ie(enable: longbool; _type: Twifi_vendor_ie_type;
+  idx: Twifi_vendor_ie_id; vnd_ie: pointer): Tesp_err; cdecl; external;
+function esp_wifi_set_vendor_ie_cb(cb: Tesp_vendor_ie_cb;
+  ctx: pointer): Tesp_err; cdecl; external;
+function esp_wifi_set_max_tx_power(power: int8): Tesp_err; cdecl; external;
+function esp_wifi_get_max_tx_power(power: Pint8): Tesp_err; cdecl; external;
+function esp_wifi_set_event_mask(mask: uint32): Tesp_err; cdecl; external;
+function esp_wifi_get_event_mask(mask: Puint32): Tesp_err; cdecl; external;
+function esp_wifi_80211_tx(ifx: Twifi_interface; buffer: pointer;
+  len: int32; en_sys_seq: longbool): Tesp_err; cdecl; external;
+function esp_wifi_set_csi_rx_cb(cb: Twifi_csi_cb; ctx: pointer): Tesp_err;
   cdecl; external;
-
-function esp_wifi_set_csi_config(config: Pwifi_csi_config_t): Tesp_err_t; cdecl; external;
-
-function esp_wifi_set_csi(en: Tbool): Tesp_err_t; cdecl; external;
-
-function esp_wifi_set_ant_gpio(config: Pwifi_ant_gpio_config_t): Tesp_err_t; cdecl; external;
-
-function esp_wifi_get_ant_gpio(config: Pwifi_ant_gpio_config_t): Tesp_err_t; cdecl; external;
-
-function esp_wifi_set_ant(config: Pwifi_ant_config_t): Tesp_err_t; cdecl; external;
-
-function esp_wifi_get_ant(config: Pwifi_ant_config_t): Tesp_err_t; cdecl; external;
+function esp_wifi_set_csi_config(config: Pwifi_csi_config): Tesp_err; cdecl; external;
+function esp_wifi_set_csi(en: longbool): Tesp_err; cdecl; external;
+function esp_wifi_set_ant_gpio(config: Pwifi_ant_gpio_config): Tesp_err; cdecl; external;
+function esp_wifi_get_ant_gpio(config: Pwifi_ant_gpio_config): Tesp_err; cdecl; external;
+function esp_wifi_set_ant(config: Pwifi_ant_config): Tesp_err; cdecl; external;
+function esp_wifi_get_ant(config: Pwifi_ant_config): Tesp_err; cdecl; external;
 
 implementation
 
-procedure WIFI_INIT_CONFIG_DEFAULT(var data: Twifi_init_config_t);
+procedure WIFI_INIT_CONFIG_DEFAULT(var data: Twifi_init_config);
 begin
   with data do
   begin

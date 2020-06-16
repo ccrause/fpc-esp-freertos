@@ -17,25 +17,25 @@ type
     addr: array[0..3] of uint32;
     zone: byte;
   end;
-  Tesp_ip6_addr_t = Tesp_ip6_addr;
+  //Tesp_ip6_addr_t = Tesp_ip6_addr;
 
   Pesp_ip4_addr = ^Tesp_ip4_addr;
   Tesp_ip4_addr = record
     addr: uint32;
   end;
-  Tesp_ip4_addr_t = Tesp_ip4_addr;
+  //Tesp_ip4_addr = Tesp_ip4_addr;
 
   Pip_addr = ^Tip_addr;
   Tip_addr = record
     u_addr: record
       case longint of
-        0: (ip6: Tesp_ip6_addr_t);
-        1: (ip4: Tesp_ip4_addr_t);
+        0: (ip6: Tesp_ip6_addr);
+        1: (ip4: Tesp_ip4_addr);
     end;
     _type: byte;
   end;
-  Tesp_ip_addr_t = Tip_addr;
-  Pesp_ip_addr_t = ^Tesp_ip_addr_t;
+  Tesp_ip_addr = Tip_addr;
+  Pesp_ip_addr = ^Tesp_ip_addr;
 
 {$if defined(BYTE_ORDER) and (BYTE_ORDER = BIG_ENDIAN)}
 function esp_netif_htonl(x: longint): uint32;

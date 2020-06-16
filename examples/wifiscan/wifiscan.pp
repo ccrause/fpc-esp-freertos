@@ -4,9 +4,9 @@ program wifiscan;
 
 uses
   esp_err, esp_wifi, esp_wifi_types, esp_netif, esp_event,
-  esp_wifi_default, nvs;
+  esp_wifi_default, nvs, xtensa_api, xtensa_context;
 
-procedure printAPInfo(const AP: Twifi_ap_record_t);
+procedure printAPInfo(const AP: Twifi_ap_record);
 var
   pb: PByte;
 begin
@@ -66,11 +66,11 @@ end;
 
 procedure wifi_scan;
 const
-  number = 6;
+  number = 1;
 var
-  sta_netif: Pesp_netif_t;
-  cfg: Twifi_init_config_t;
-  ap_info: array[0..number-1] of Twifi_ap_record_t;
+  sta_netif: Pesp_netif;
+  cfg: Twifi_init_config;
+  ap_info: array[0..number-1] of Twifi_ap_record;
   ap_info_len: uint16 = number;
   i: integer;
 begin

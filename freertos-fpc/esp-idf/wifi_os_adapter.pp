@@ -22,8 +22,8 @@ type
   Pint32 = ^int32;
 
 type
-  Pwifi_osi_funcs_t = ^Twifi_osi_funcs_t;
-  Twifi_osi_funcs_t = record
+  Pwifi_osi_funcs = ^Twifi_osi_funcs;
+  Twifi_osi_funcs = record
     _version: int32;
     _set_isr: procedure(n: int32; f: pointer; arg: pointer); cdecl;
     _ints_on: procedure(mask: uint32); cdecl;
@@ -77,7 +77,7 @@ type
     _malloc: function(size: uint32): pointer; cdecl;
     _free: procedure(p: pointer); cdecl;
     _event_post: function(event_base: PChar; event_id: int32;
-        event_data: pointer; event_data_size: Tsize_t; ticks_to_wait: uint32): int32; cdecl;
+        event_data: pointer; event_data_size: Tsize; ticks_to_wait: uint32): int32; cdecl;
     _get_free_heap_size: function: uint32; cdecl;
     _rand: function: uint32; cdecl;
     _dport_access_stall_other_cpu_start_wrap: procedure; cdecl;
@@ -113,11 +113,11 @@ type
     _nvs_close: procedure(handle: uint32); cdecl;
     _nvs_commit: function(handle: uint32): int32; cdecl;
     _nvs_set_blob: function(handle: uint32; key: PChar; Value: pointer;
-        length: Tsize_t): int32; cdecl;
+        length: Tsize): int32; cdecl;
     _nvs_get_blob: function(handle: uint32; key: PChar;
         out_value: pointer; length: Pint32): int32; cdecl;
     _nvs_erase_key: function(handle: uint32; key: PChar): int32; cdecl;
-    _get_random: function(buf: PByte; len: Tsize_t): int32; cdecl;
+    _get_random: function(buf: PByte; len: Tsize): int32; cdecl;
     _get_time: function(t: pointer): int32; cdecl;
     _random: function: uint32; cdecl;
     {$ifdef CONFIG_IDF_TARGET_ESP32S2BETA}
@@ -126,14 +126,14 @@ type
     _log_write: procedure(level: uint32; tag: PChar; format: PChar); varargs; cdecl;
     _log_writev: procedure(level: uint32; tag: PChar; format: PChar); varargs; cdecl;
     _log_timestamp: function: uint32; cdecl;
-    _malloc_internal: function(size: Tsize_t): pointer; cdecl;
-    _realloc_internal: function(ptr: pointer; size: Tsize_t): pointer; cdecl;
-    _calloc_internal: function(n: Tsize_t; size: Tsize_t): pointer; cdecl;
-    _zalloc_internal: function(size: Tsize_t): pointer; cdecl;
-    _wifi_malloc: function(size: Tsize_t): pointer; cdecl;
-    _wifi_realloc: function(ptr: pointer; size: Tsize_t): pointer; cdecl;
-    _wifi_calloc: function(n: Tsize_t; size: Tsize_t): pointer; cdecl;
-    _wifi_zalloc: function(size: Tsize_t): pointer; cdecl;
+    _malloc_internal: function(size: Tsize): pointer; cdecl;
+    _realloc_internal: function(ptr: pointer; size: Tsize): pointer; cdecl;
+    _calloc_internal: function(n: Tsize; size: Tsize): pointer; cdecl;
+    _zalloc_internal: function(size: Tsize): pointer; cdecl;
+    _wifi_malloc: function(size: Tsize): pointer; cdecl;
+    _wifi_realloc: function(ptr: pointer; size: Tsize): pointer; cdecl;
+    _wifi_calloc: function(n: Tsize; size: Tsize): pointer; cdecl;
+    _wifi_zalloc: function(size: Tsize): pointer; cdecl;
     _wifi_create_queue: function(queue_len: int32;
         item_size: int32): pointer; cdecl;
     _wifi_delete_queue: procedure(queue: pointer); cdecl;
@@ -150,7 +150,7 @@ type
   end;
 
 var
-  g_wifi_osi_funcs: Twifi_osi_funcs_t; cvar; external;
+  g_wifi_osi_funcs: Twifi_osi_funcs; cvar; external;
 
 implementation
 

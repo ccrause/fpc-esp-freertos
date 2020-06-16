@@ -14,11 +14,11 @@ type
     ppp_phase_event_enabled: longbool;
     ppp_error_event_enabled: longbool;
   end;
-  Tesp_netif_ppp_config_t = Tesp_netif_ppp_config;
-  Pesp_netif_ppp_config_t = ^Tesp_netif_ppp_config_t;
+  //Tesp_netif_ppp_config = Tesp_netif_ppp_config;
+  //Pesp_netif_ppp_config = ^Tesp_netif_ppp_config;
 
-  Pesp_netif_ppp_status_event_t = ^Tesp_netif_ppp_status_event_t;
-  Tesp_netif_ppp_status_event_t = (NETIF_PPP_ERRORNONE = 0, NETIF_PPP_ERRORPARAM = 1,
+  Pesp_netif_ppp_status_event = ^Tesp_netif_ppp_status_event;
+  Tesp_netif_ppp_status_event = (NETIF_PPP_ERRORNONE = 0, NETIF_PPP_ERRORPARAM = 1,
     NETIF_PPP_ERROROPEN = 2, NETIF_PPP_ERRORDEVICE = 3,
     NETIF_PPP_ERRORALLOC = 4, NETIF_PPP_ERRORUSER = 5,
     NETIF_PPP_ERRORCONNECT = 6, NETIF_PPP_ERRORAUTHFAIL = 7,
@@ -39,8 +39,8 @@ type
     NETIF_PP_PHASE_OFFSET + 12
     );
 
-  Pesp_netif_auth_type_t = ^Tesp_netif_auth_type_t;
-  Tesp_netif_auth_type_t = (NETIF_PPP_AUTHTYPE_NONE = $00, NETIF_PPP_AUTHTYPE_PAP = $01,
+  Pesp_netif_auth_type = ^Tesp_netif_auth_type;
+  Tesp_netif_auth_type = (NETIF_PPP_AUTHTYPE_NONE = $00, NETIF_PPP_AUTHTYPE_PAP = $01,
     NETIF_PPP_AUTHTYPE_CHAP = $02, NETIF_PPP_AUTHTYPE_MSCHAP = $04,
     NETIF_PPP_AUTHTYPE_MSCHAP_V2 = $08, NETIF_PPP_AUTHTYPE_EAP = $10
     );
@@ -53,7 +53,7 @@ type
 //  config: Pesp_netif_ppp_config_t): Tesp_err_t; cdecl; external;
 
 var
-  NETIF_PPP_STATUS : Tesp_event_base_t; cvar; external;
+  NETIF_PPP_STATUS : Tesp_event_base; cvar; external;
 
 implementation
 

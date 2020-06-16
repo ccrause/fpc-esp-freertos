@@ -20,69 +20,69 @@ const
 
 type
   Pesp_netif_obj = ^Tesp_netif_obj;
-  Tesp_netif_t = Tesp_netif_obj;
+  Tesp_netif = Tesp_netif_obj;
 
-  Pesp_netif_dns_type_t = ^Tesp_netif_dns_type_t;
-  Tesp_netif_dns_type_t = (ESP_NETIF_DNS_MAIN = 0, ESP_NETIF_DNS_BACKUP,
+  Pesp_netif_dns_type = ^Tesp_netif_dns_type;
+  Tesp_netif_dns_type = (ESP_NETIF_DNS_MAIN = 0, ESP_NETIF_DNS_BACKUP,
     ESP_NETIF_DNS_FALLBACK, ESP_NETIF_DNS_MAX
     );
 
-  Pesp_netif_dns_info_t = ^Tesp_netif_dns_info_t;
-  Tesp_netif_dns_info_t = record
-    ip: Tesp_ip_addr_t;
+  Pesp_netif_dns_info = ^Tesp_netif_dns_info;
+  Tesp_netif_dns_info = record
+    ip: Tesp_ip_addr;
   end;
 
-  Pesp_netif_dhcp_status_t = ^Tesp_netif_dhcp_status_t;
-  Tesp_netif_dhcp_status_t = (ESP_NETIF_DHCP_INIT = 0, ESP_NETIF_DHCP_STARTED,
+  Pesp_netif_dhcp_status = ^Tesp_netif_dhcp_status;
+  Tesp_netif_dhcp_status = (ESP_NETIF_DHCP_INIT = 0, ESP_NETIF_DHCP_STARTED,
     ESP_NETIF_DHCP_STOPPED, ESP_NETIF_DHCP_STATUS_MAX);
 
-  Pesp_netif_dhcp_option_mode_t = ^Tesp_netif_dhcp_option_mode_t;
-  Tesp_netif_dhcp_option_mode_t = (ESP_NETIF_OP_START = 0, ESP_NETIF_OP_SET,
+  Pesp_netif_dhcp_option_mode = ^Tesp_netif_dhcp_option_mode;
+  Tesp_netif_dhcp_option_mode = (ESP_NETIF_OP_START = 0, ESP_NETIF_OP_SET,
     ESP_NETIF_OP_GET, ESP_NETIF_OP_MAX);
 
-  Pesp_netif_dhcp_option_id_t = ^Tesp_netif_dhcp_option_id_t;
-  Tesp_netif_dhcp_option_id_t = (ESP_NETIF_DOMAIN_NAME_SERVER = 6,
+  Pesp_netif_dhcp_option_id = ^Tesp_netif_dhcp_option_id;
+  Tesp_netif_dhcp_option_id = (ESP_NETIF_DOMAIN_NAME_SERVER = 6,
     ESP_NETIF_ROUTER_SOLICITATION_ADDRESS = 32,
     ESP_NETIF_REQUESTED_IP_ADDRESS = 50,
     ESP_NETIF_IP_ADDRESS_LEASE_TIME = 51,
     ESP_NETIF_IP_REQUEST_RETRY_TIME = 52);
 
-  Pip_event_t = ^Tip_event_t;
-  Tip_event_t = (IP_EVENT_STA_GOT_IP, IP_EVENT_STA_LOST_IP,
+  Pip_event = ^Tip_event;
+  Tip_event = (IP_EVENT_STA_GOT_IP, IP_EVENT_STA_LOST_IP,
     IP_EVENT_AP_STAIPASSIGNED, IP_EVENT_GOT_IP6,
     IP_EVENT_ETH_GOT_IP, IP_EVENT_PPP_GOT_IP,
     IP_EVENT_PPP_LOST_IP);
 
-  Pesp_netif_ip_info_t = ^Tesp_netif_ip_info_t;
-  Tesp_netif_ip_info_t = record
-    ip: Tesp_ip4_addr_t;
-    netmask: Tesp_ip4_addr_t;
-    gw: Tesp_ip4_addr_t;
+  Pesp_netif_ip_info = ^Tesp_netif_ip_info;
+  Tesp_netif_ip_info = record
+    ip: Tesp_ip4_addr;
+    netmask: Tesp_ip4_addr;
+    gw: Tesp_ip4_addr;
   end;
 
-  Pesp_netif_ip6_info_t = ^Tesp_netif_ip6_info_t;
-  Tesp_netif_ip6_info_t = record
-    ip: Tesp_ip6_addr_t;
+  Pesp_netif_ip6_info = ^Tesp_netif_ip6_info;
+  Tesp_netif_ip6_info = record
+    ip: Tesp_ip6_addr;
   end;
 
-  Pip_event_got_ip_t = ^Tip_event_got_ip_t;
-  Tip_event_got_ip_t = record
+  Pip_event_got_ip = ^Tip_event_got_ip;
+  Tip_event_got_ip = record
     if_index: int32;
-    esp_netif: Pesp_netif_t;
-    ip_info: Tesp_netif_ip_info_t;
+    esp_netif: Pesp_netif;
+    ip_info: Tesp_netif_ip_info;
     ip_changed: longbool;
   end;
 
-  Pip_event_got_ip6_t = ^Tip_event_got_ip6_t;
-  Tip_event_got_ip6_t = record
+  Pip_event_got_ip6 = ^Tip_event_got_ip6;
+  Tip_event_got_ip6 = record
     if_index: int32;
-    esp_netif: Pesp_netif_t;
-    ip6_info: Tesp_netif_ip6_info_t;
+    esp_netif: Pesp_netif;
+    ip6_info: Tesp_netif_ip6_info;
   end;
 
-  Pip_event_ap_staipassigned_t = ^Tip_event_ap_staipassigned_t;
-  Tip_event_ap_staipassigned_t = record
-    ip: Tesp_ip4_addr_t;
+  Pip_event_ap_staipassigned = ^Tip_event_ap_staipassigned;
+  Tip_event_ap_staipassigned = record
+    ip: Tesp_ip4_addr;
   end;
 
   Pesp_netif_flags = ^Tesp_netif_flags;
@@ -97,59 +97,60 @@ type
   Pesp_netif_ip_event_type = ^Tesp_netif_ip_event_type;
   Tesp_netif_ip_event_type = (ESP_NETIF_IP_EVENT_GOT_IP =
     1, ESP_NETIF_IP_EVENT_LOST_IP = 2);
-  Tesp_netif_ip_event_type_t = Tesp_netif_ip_event_type;
-  Pesp_netif_ip_event_type_t = ^Tesp_netif_ip_event_type_t;
+  //Tesp_netif_ip_event_type_t = Tesp_netif_ip_event_type;
+  //Pesp_netif_ip_event_type_t = ^Tesp_netif_ip_event_type_t;
 
   Pesp_netif_inherent_config = ^Tesp_netif_inherent_config;
   Tesp_netif_inherent_config = record
-    flags: Tesp_netif_flags_t;
+    flags: Tesp_netif_flags;
     mac: array[0..5] of byte;
-    ip_info: Pesp_netif_ip_info_t;
+    ip_info: Pesp_netif_ip_info;
     get_ip_event: uint32;
     lost_ip_event: uint32;
     if_key: PChar;
     if_desc: PChar;
     route_prio: int32;
   end;
-  Tesp_netif_inherent_config_t = Tesp_netif_inherent_config;
-  Pesp_netif_inherent_config_t = ^Tesp_netif_inherent_config_t;
+  //Tesp_netif_inherent_config_t = Tesp_netif_inherent_config;
+  //Pesp_netif_inherent_config_t = ^Tesp_netif_inherent_config_t;
   //Tesp_netif_config_t = Tesp_netif_config;
 
   Pesp_netif_iodriver_handle = ^Tesp_netif_iodriver_handle;
   Tesp_netif_iodriver_handle = pointer;
 
+  // TODO: Perhaps no need to have type names ending in _s?
   Pesp_netif_driver_base_s = ^Tesp_netif_driver_base_s;
   Tesp_netif_driver_base_s = record
-    post_attach: function(netif: Pesp_netif_t;
-        h: Tesp_netif_iodriver_handle): Tesp_err_t; cdecl;
-    netif: Pesp_netif_t;
+    post_attach: function(netif: Pesp_netif;
+        h: Tesp_netif_iodriver_handle): Tesp_err; cdecl;
+    netif: Pesp_netif;
   end;
-  Tesp_netif_driver_base_t = Tesp_netif_driver_base_s;
-  Pesp_netif_driver_base_t = ^Tesp_netif_driver_base_t;
+  Tesp_netif_driver_base = Tesp_netif_driver_base_s;
+  Pesp_netif_driver_base = ^Tesp_netif_driver_base;
 
   Pesp_netif_driver_ifconfig = ^Tesp_netif_driver_ifconfig;
   Tesp_netif_driver_ifconfig = record
     handle: Tesp_netif_iodriver_handle;
-    transmit: function(h: pointer; buffer: pointer; len: Tsize_t): Tesp_err_t; cdecl;
+    transmit: function(h: pointer; buffer: pointer; len: Tsize): Tesp_err; cdecl;
     driver_free_rx_buffer: procedure(h: pointer; buffer: pointer); cdecl;
   end;
-  Tesp_netif_driver_ifconfig_t = Tesp_netif_driver_ifconfig;
+  //Tesp_netif_driver_ifconfig_t = Tesp_netif_driver_ifconfig;
 
   // Defined in esp_netif_lwip_internal
-  Tesp_netif_netstack_config_t = Tesp_netif_netstack_config;
+  //Tesp_netif_netstack_config = Tesp_netif_netstack_config;
 
   Pesp_netif_config = ^Tesp_netif_config;
   Tesp_netif_config = record
-    base: Pesp_netif_inherent_config_t;
+    base: Pesp_netif_inherent_config;
     driver: Pesp_netif_driver_ifconfig;
     stack: Pesp_netif_netstack_config;
   end;
 
-  Tesp_netif_receive_t = function(esp_netif: Pesp_netif_t;
-    buffer: pointer; len: Tsize_t; eb: pointer): Tesp_err_t; cdecl;
+  Tesp_netif_receive = function(esp_netif: Pesp_netif;
+    buffer: pointer; len: Tsize; eb: pointer): Tesp_err; cdecl;
 
 var
-  IP_EVENT : Tesp_event_base_t; cvar; external;
+  IP_EVENT : Tesp_event_base; cvar; external;
 
 implementation
 
