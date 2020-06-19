@@ -8,10 +8,6 @@ uses
   esp_err, esp_event_base, portmacro, portable;
 
 type
-  //TUBaseType = uint32;
-  //TBaseType = int32;
-  //PBaseType = ^TBaseType;
-  //TTickType = uint32;
   PFILE = ^file;
 
   Pesp_event_loop_args = ^Tesp_event_loop_args;
@@ -24,54 +20,43 @@ type
   end;
 
 function esp_event_loop_create(event_loop_args: Pesp_event_loop_args;
-  event_loop: Pesp_event_loop_handle): Tesp_err; cdecl; external;
-
+  event_loop: Pesp_event_loop_handle): Tesp_err; external;
 function esp_event_loop_delete(event_loop: Tesp_event_loop_handle): Tesp_err;
-  cdecl; external;
-
-function esp_event_loop_create_default: Tesp_err; cdecl; external;
-
-function esp_event_loop_delete_default: Tesp_err; cdecl; external;
-
+  external;
+function esp_event_loop_create_default: Tesp_err; external;
+function esp_event_loop_delete_default: Tesp_err; external;
 function esp_event_loop_run(event_loop: Tesp_event_loop_handle;
-  ticks_to_run: TTickType): Tesp_err; cdecl; external;
-
+  ticks_to_run: TTickType): Tesp_err; external;
 function esp_event_handler_register(event_base: Tesp_event_base;
   event_id: int32; event_handler: Tesp_event_handler;
-  event_handler_arg: pointer): Tesp_err; cdecl; external;
-
+  event_handler_arg: pointer): Tesp_err; external;
 function esp_event_handler_register_with(event_loop: Tesp_event_loop_handle;
   event_base: Tesp_event_base; event_id: int32; event_handler: Tesp_event_handler;
-  event_handler_arg: pointer): Tesp_err; cdecl; external;
-
+  event_handler_arg: pointer): Tesp_err; external;
 function esp_event_handler_unregister(event_base: Tesp_event_base;
-  event_id: int32; event_handler: Tesp_event_handler): Tesp_err; cdecl; external;
-
+  event_id: int32; event_handler: Tesp_event_handler): Tesp_err; external;
 function esp_event_handler_unregister_with(event_loop: Tesp_event_loop_handle;
   event_base: Tesp_event_base; event_id: int32;
-  event_handler: Tesp_event_handler): Tesp_err; cdecl; external;
-
+  event_handler: Tesp_event_handler): Tesp_err; external;
 function esp_event_post(event_base: Tesp_event_base; event_id: int32;
   event_data: pointer; event_data_size: Tsize; ticks_to_wait: TTickType): Tesp_err;
-  cdecl; external;
-
+  external;
 function esp_event_post_to(event_loop: Tesp_event_loop_handle;
   event_base: Tesp_event_base; event_id: int32; event_data: pointer;
   event_data_size: Tsize; ticks_to_wait: TTickType): Tesp_err;
-  cdecl; external;
+  external;
 
 {$ifdef CONFIG_ESP_EVENT_POST_FROM_ISR}
 function esp_event_isr_post(event_base: Tesp_event_base; event_id: int32;
   event_data: pointer; event_data_size: Tsize; task_unblocked: PBaseType): Tesp_err;
-  cdecl; external;
-
+  external;
 function esp_event_isr_post_to(event_loop: Tesp_event_loop_handle;
   event_base: Tesp_event_base; event_id: int32; event_data: pointer;
   event_data_size: Tsize; task_unblocked: PBaseType): Tesp_err;
-  cdecl; external;
+  external;
 {$endif}
 
-function esp_event_dump(afile: PFILE): Tesp_err; cdecl; external;
+function esp_event_dump(afile: PFILE): Tesp_err; external;
 
 implementation
 

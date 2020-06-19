@@ -5,9 +5,6 @@ unit esp_http_server;
 
 interface
 
-{ $include <freertos/FreeRTOS.h>}
-{  $include <http_parser.h>}
-
 uses
   esp_err, task, portable, http_parser;
 
@@ -39,28 +36,28 @@ const
   HTTPD_TYPE_OCTET = 'application/octet-stream';
 
 type
-  Phttpd_handle_t = ^Thttpd_handle_t;
-  Thttpd_handle_t = pointer;
+  Phttpd_handle = ^Thttpd_handle;
+  Thttpd_handle = pointer;
 
-  Phttpd_method_t = ^Thttpd_method_t;
+  Phttpd_method = ^Thttpd_method;
   {$info 'enum http_method declared in nghttp/http_parser.h'  Break dependency by reverting to uint32'}
-  Thttpd_method_t = Thttp_method;
+  Thttpd_method = Thttp_method;
 
-  Thttpd_free_ctx_fn_t = procedure(ctx: pointer); cdecl;
+  Thttpd_free_ctx_fn = procedure(ctx: pointer);
 
-  Thttpd_open_func_t = function(hd: Thttpd_handle_t;
-    sockfd: longint): Tesp_err_t; cdecl;
+  Thttpd_open_func = function(hd: Thttpd_handle;
+    sockfd: longint): Tesp_err;
 
-  Thttpd_close_func_t = procedure(hd: Thttpd_handle_t; sockfd: longint); cdecl;
+  Thttpd_close_func = procedure(hd: Thttpd_handle; sockfd: longint);
 
-  Thttpd_uri_match_func_t = function(reference_uri: PChar;
-    uri_to_match: PChar; match_upto: Tsize_t): longbool; cdecl;
+  Thttpd_uri_match_func = function(reference_uri: PChar;
+    uri_to_match: PChar; match_upto: Tsize): longbool;
 
   Phttpd_config = ^Thttpd_config;
   Thttpd_config = record
     task_priority: dword;
-    stack_size: Tsize_t;
-    core_id: TBaseType_t;
+    stack_size: Tsize;
+    core_id: TBaseType;
     server_port: uint16;
     ctrl_port: uint16;
     max_open_sockets: uint16;
@@ -71,34 +68,32 @@ type
     recv_wait_timeout: uint16;
     send_wait_timeout: uint16;
     global_user_ctx: pointer;
-    global_user_ctx_free_fn: Thttpd_free_ctx_fn_t;
+    global_user_ctx_free_fn: Thttpd_free_ctx_fn;
     global_transport_ctx: pointer;
-    global_transport_ctx_free_fn: Thttpd_free_ctx_fn_t;
-    open_fn: Thttpd_open_func_t;
-    close_fn: Thttpd_close_func_t;
-    uri_match_fn: Thttpd_uri_match_func_t;
+    global_transport_ctx_free_fn: Thttpd_free_ctx_fn;
+    open_fn: Thttpd_open_func;
+    close_fn: Thttpd_close_func;
+    uri_match_fn: Thttpd_uri_match_func;
   end;
-  Thttpd_config_t = Thttpd_config;
-  Phttpd_config_t = ^Thttpd_config_t;
 
-function HTTPD_DEFAULT_CONFIG: Thttpd_config_t;
+function HTTPD_DEFAULT_CONFIG: Thttpd_config;
 
-function httpd_start(handle: Phttpd_handle_t; config: Phttpd_config_t): Tesp_err_t;
-  cdecl; external;
+function httpd_start(handle: Phttpd_handle; config: Phttpd_config): Tesp_err;
+  external;
 
-function httpd_stop(handle: Thttpd_handle_t): Tesp_err_t; cdecl; external;
+function httpd_stop(handle: Thttpd_handle): Tesp_err; external;
 
 type
   Phttpd_req = ^Thttpd_req;
   Thttpd_req = record
-    handle: Thttpd_handle_t;
+    handle: Thttpd_handle;
     method: longint;
     uri: array[0..(HTTPD_MAX_URI_LEN + 1) - 1] of char;
-    content_len: Tsize_t;
+    content_len: Tsize;
     aux: pointer;
     user_ctx: pointer;
     sess_ctx: pointer;
-    free_ctx: Thttpd_free_ctx_fn_t;
+    free_ctx: Thttpd_free_ctx_fn;
     ignore_sess_ctx_changes: longbool;
   end;
   Thttpd_req_t = Thttpd_req;
@@ -107,21 +102,21 @@ type
   Phttpd_uri = ^Thttpd_uri;
   Thttpd_uri = record
     uri: PChar;
-    method: Thttpd_method_t;
-    handler: function(r: Phttpd_req_t): Tesp_err_t; cdecl;
+    method: Thttpd_method;
+    handler: function(r: Phttpd_req_t): Tesp_err;
     user_ctx: pointer;
   end;
   Thttpd_uri_t = Thttpd_uri;
   Phttpd_uri_t = ^Thttpd_uri_t;
 
-function httpd_register_uri_handler(handle: Thttpd_handle_t;
-  uri_handler: Phttpd_uri_t): Tesp_err_t; cdecl; external;
+function httpd_register_uri_handler(handle: Thttpd_handle;
+  uri_handler: Phttpd_uri_t): Tesp_err; external;
 
-function httpd_unregister_uri_handler(handle: Thttpd_handle_t; uri: PChar;
-  method: Thttpd_method_t): Tesp_err_t; cdecl; external;
+function httpd_unregister_uri_handler(handle: Thttpd_handle; uri: PChar;
+  method: Thttpd_method): Tesp_err; external;
 
-function httpd_unregister_uri(handle: Thttpd_handle_t; uri: PChar): Tesp_err_t;
-  cdecl; external;
+function httpd_unregister_uri(handle: Thttpd_handle; uri: PChar): Tesp_err;
+  external;
 
 type
   Phttpd_err_code_t = ^Thttpd_err_code_t;
@@ -134,101 +129,101 @@ type
     HTTPD_ERR_CODE_MAX);
 
   Thttpd_err_handler_func_t = function(req: Phttpd_req_t;
-    error: Thttpd_err_code_t): Tesp_err_t; cdecl;
+    error: Thttpd_err_code_t): Tesp_err;
 
-function httpd_register_err_handler(handle: Thttpd_handle_t;
-  error: Thttpd_err_code_t; handler_fn: Thttpd_err_handler_func_t): Tesp_err_t;
-  cdecl; external;
+function httpd_register_err_handler(handle: Thttpd_handle;
+  error: Thttpd_err_code_t; handler_fn: Thttpd_err_handler_func_t): Tesp_err;
+  external;
 
 type
-  Thttpd_send_func_t = function(hd: Thttpd_handle_t; sockfd: longint;
-    buf: PChar; buf_len: Tsize_t; flags: longint): longint; cdecl;
+  Thttpd_send_func_t = function(hd: Thttpd_handle; sockfd: longint;
+    buf: PChar; buf_len: Tsize; flags: longint): longint;
 
-  Thttpd_recv_func_t = function(hd: Thttpd_handle_t; sockfd: longint;
-    buf: PChar; buf_len: Tsize_t; flags: longint): longint; cdecl;
+  Thttpd_recv_func_t = function(hd: Thttpd_handle; sockfd: longint;
+    buf: PChar; buf_len: Tsize; flags: longint): longint;
 
-  Thttpd_pending_func_t = function(hd: Thttpd_handle_t;
-    sockfd: longint): longint; cdecl;
+  Thttpd_pending_func_t = function(hd: Thttpd_handle;
+    sockfd: longint): longint;
 
-function httpd_sess_set_recv_override(hd: Thttpd_handle_t; sockfd: longint;
-  recv_func: Thttpd_recv_func_t): Tesp_err_t; cdecl; external;
+function httpd_sess_set_recv_override(hd: Thttpd_handle; sockfd: longint;
+  recv_func: Thttpd_recv_func_t): Tesp_err; external;
 
-function httpd_sess_set_send_override(hd: Thttpd_handle_t; sockfd: longint;
-  send_func: Thttpd_send_func_t): Tesp_err_t; cdecl; external;
+function httpd_sess_set_send_override(hd: Thttpd_handle; sockfd: longint;
+  send_func: Thttpd_send_func_t): Tesp_err; external;
 
-function httpd_sess_set_pending_override(hd: Thttpd_handle_t; sockfd: longint;
-  pending_func: Thttpd_pending_func_t): Tesp_err_t; cdecl; external;
+function httpd_sess_set_pending_override(hd: Thttpd_handle; sockfd: longint;
+  pending_func: Thttpd_pending_func_t): Tesp_err; external;
 
-function httpd_req_to_sockfd(r: Phttpd_req_t): longint; cdecl; external;
+function httpd_req_to_sockfd(r: Phttpd_req_t): longint; external;
 
-function httpd_req_recv(r: Phttpd_req_t; buf: PChar; buf_len: Tsize_t): longint;
-  cdecl; external;
+function httpd_req_recv(r: Phttpd_req_t; buf: PChar; buf_len: Tsize): longint;
+  external;
 
-function httpd_req_get_hdr_value_len(r: Phttpd_req_t; field: PChar): Tsize_t; cdecl; external;
+function httpd_req_get_hdr_value_len(r: Phttpd_req_t; field: PChar): Tsize; external;
 
 function httpd_req_get_hdr_value_str(r: Phttpd_req_t; field: PChar;
-  val: PChar; val_size: Tsize_t): Tesp_err_t; cdecl; external;
+  val: PChar; val_size: Tsize): Tesp_err; external;
 
-function httpd_req_get_url_query_len(r: Phttpd_req_t): Tsize_t; cdecl; external;
+function httpd_req_get_url_query_len(r: Phttpd_req_t): Tsize; external;
 
 function httpd_req_get_url_query_str(r: Phttpd_req_t; buf: PChar;
-  buf_len: Tsize_t): Tesp_err_t; cdecl; external;
+  buf_len: Tsize): Tesp_err; external;
 
 function httpd_query_key_value(qry: PChar; key: PChar; val: PChar;
-  val_size: Tsize_t): Tesp_err_t; cdecl; external;
+  val_size: Tsize): Tesp_err; external;
 
 function httpd_uri_match_wildcard(uri_template: PChar; uri_to_match: PChar;
-  match_upto: Tsize_t): longbool; cdecl; external;
+  match_upto: Tsize): longbool; external;
 
-function httpd_resp_send(r: Phttpd_req_t; buf: PChar; buf_len: int32): Tesp_err_t;
-  cdecl; external;
+function httpd_resp_send(r: Phttpd_req_t; buf: PChar; buf_len: int32): Tesp_err;
+  external;
 
 function httpd_resp_send_chunk(r: Phttpd_req_t; buf: PChar;
-  buf_len: int32): Tesp_err_t; cdecl; external;
+  buf_len: int32): Tesp_err; external;
 
-function httpd_resp_set_status(r: Phttpd_req_t; status: PChar): Tesp_err_t; cdecl; external;
+function httpd_resp_set_status(r: Phttpd_req_t; status: PChar): Tesp_err; external;
 
-function httpd_resp_set_type(r: Phttpd_req_t; _type: PChar): Tesp_err_t; cdecl; external;
+function httpd_resp_set_type(r: Phttpd_req_t; _type: PChar): Tesp_err; external;
 
 function httpd_resp_set_hdr(r: Phttpd_req_t; field: PChar;
-  Value: PChar): Tesp_err_t; cdecl; external;
+  Value: PChar): Tesp_err; external;
 
 function httpd_resp_send_err(req: Phttpd_req_t; error: Thttpd_err_code_t;
-  msg: PChar): Tesp_err_t; cdecl; external;
+  msg: PChar): Tesp_err; external;
 
-function httpd_send(r: Phttpd_req_t; buf: PChar; buf_len: Tsize_t): longint; cdecl; external;
+function httpd_send(r: Phttpd_req_t; buf: PChar; buf_len: Tsize): longint; external;
 
-function httpd_sess_get_ctx(handle: Thttpd_handle_t; sockfd: longint): pointer;
-  cdecl; external;
+function httpd_sess_get_ctx(handle: Thttpd_handle; sockfd: longint): pointer;
+  external;
 
-procedure httpd_sess_set_ctx(handle: Thttpd_handle_t; sockfd: longint;
-  ctx: pointer; free_fn: Thttpd_free_ctx_fn_t); cdecl; external;
+procedure httpd_sess_set_ctx(handle: Thttpd_handle; sockfd: longint;
+  ctx: pointer; free_fn: Thttpd_free_ctx_fn); external;
 
-function httpd_sess_get_transport_ctx(handle: Thttpd_handle_t;
-  sockfd: longint): pointer; cdecl; external;
+function httpd_sess_get_transport_ctx(handle: Thttpd_handle;
+  sockfd: longint): pointer; external;
 
-procedure httpd_sess_set_transport_ctx(handle: Thttpd_handle_t;
-  sockfd: longint; ctx: pointer; free_fn: Thttpd_free_ctx_fn_t); cdecl; external;
+procedure httpd_sess_set_transport_ctx(handle: Thttpd_handle;
+  sockfd: longint; ctx: pointer; free_fn: Thttpd_free_ctx_fn); external;
 
-function httpd_get_global_user_ctx(handle: Thttpd_handle_t): pointer; cdecl; external;
+function httpd_get_global_user_ctx(handle: Thttpd_handle): pointer; external;
 
-function httpd_get_global_transport_ctx(handle: Thttpd_handle_t): pointer; cdecl; external;
+function httpd_get_global_transport_ctx(handle: Thttpd_handle): pointer; external;
 
-function httpd_sess_trigger_close(handle: Thttpd_handle_t;
-  sockfd: longint): Tesp_err_t; cdecl; external;
+function httpd_sess_trigger_close(handle: Thttpd_handle;
+  sockfd: longint): Tesp_err; external;
 
-function httpd_sess_update_lru_counter(handle: Thttpd_handle_t;
-  sockfd: longint): Tesp_err_t; cdecl; external;
+function httpd_sess_update_lru_counter(handle: Thttpd_handle;
+  sockfd: longint): Tesp_err; external;
 
 type
-  Thttpd_work_fn_t = procedure(arg: pointer); cdecl;
+  Thttpd_work_fn = procedure(arg: pointer);
 
-function httpd_queue_work(handle: Thttpd_handle_t; work: Thttpd_work_fn_t;
-  arg: pointer): Tesp_err_t; cdecl; external;
+function httpd_queue_work(handle: Thttpd_handle; work: Thttpd_work_fn;
+  arg: pointer): Tesp_err; external;
 
 implementation
 
-function HTTPD_DEFAULT_CONFIG: Thttpd_config_t;
+function HTTPD_DEFAULT_CONFIG: Thttpd_config;
 begin
   with HTTPD_DEFAULT_CONFIG do
   begin

@@ -17,7 +17,6 @@ type
     addr: array[0..3] of uint32;
     zone: byte;
   end;
-  //Tesp_ip6_addr_t = Tesp_ip6_addr;
 
   Pesp_ip4_addr = ^Tesp_ip4_addr;
   Tesp_ip4_addr = record

@@ -8,8 +8,6 @@ uses
   esp_err, esp_wifi_types, esp_netif, esp_netif_types, esp_event_base, portmacro;
 
 type
-  //TTickType_t = uint32;
-
   Psystem_event_id = ^Tsystem_event_id;
   Tsystem_event_id = (SYSTEM_EVENT_WIFI_READY = 0, SYSTEM_EVENT_SCAN_DONE,
     SYSTEM_EVENT_STA_START, SYSTEM_EVENT_STA_STOP,
@@ -93,16 +91,16 @@ type
 
   Tsystem_event_handler = function(event_base: Tesp_event_base;
     event_id: int32; event_data: pointer; event_data_size: Tsize;
-    ticks_to_wait: TTickType): Tesp_err; cdecl;
+    ticks_to_wait: TTickType): Tesp_err;
 
 function esp_event_send_internal(event_base: Tesp_event_base;
   event_id: int32; event_data: pointer; event_data_size: Tsize;
-  ticks_to_wait: TTickType): Tesp_err; cdecl; external;
+  ticks_to_wait: TTickType): Tesp_err; external;
 
-procedure esp_event_set_default_eth_handlers; cdecl; external;
+procedure esp_event_set_default_eth_handlers; external;
 
 type
-  Tsystem_event_cb = function(ctx: pointer; event: Psystem_event): Tesp_err; cdecl;
+  Tsystem_event_cb = function(ctx: pointer; event: Psystem_event): Tesp_err;
 
 // Deprecated:
 // esp_err_t esp_event_send(system_event_t *event) __attribute__ ((deprecated));

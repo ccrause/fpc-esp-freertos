@@ -110,9 +110,9 @@ type
 type
   Phttp_parser = ^Thttp_parser;
   Thttp_data_cb = function(para1: Phttp_parser; at: PChar;
-    length: uint32): longint; cdecl;
+    length: uint32): longint;
 
-  Thttp_cb = function(para1: Phttp_parser): longint; cdecl;
+  Thttp_cb = function(para1: Phttp_parser): longint;
 
   TBitRange1 = 0..1;
   TBitRange2 = 0..3;
@@ -150,21 +150,11 @@ type
     procedure Setupgrade(AValue: TBitRange1);
   public
     _flags1_: uint32;
-    //unsigned int type : 2;         /* enum http_parser_type */
-    //unsigned int flags : 8;        /* F_* values from 'flags' enum; semi-public */
-    //unsigned int state : 7;        /* enum state from http_parser.c */
-    //unsigned int header_state : 7; /* enum header_state from http_parser.c */
-    //unsigned int index : 7;        /* index into current matcher */
-    //unsigned int lenient_http_headers : 1;
     nread: uint32;
     content_length: uint64;
     http_major: uint16;
     http_minor: uint16;
     _flags2_: uint32;
-    //unsigned int status_code : 16; /* responses only */
-    //unsigned int method : 8;       /* requests only */
-    //unsigned int http_errno : 7;
-    //unsigned int upgrade : 1;
     data: pointer;
     property type_: TBitRange2 read Gettype_ write Settype_;
     property flags: TBitRange8 read Getflags write Setflags;
@@ -210,31 +200,20 @@ type
     end;
   end;
 
-
-function http_parser_version: dword; cdecl; external;
-procedure http_parser_init(parser: Phttp_parser; _type: Thttp_parser_type); cdecl; external;
-
-procedure http_parser_settings_init(settings: Phttp_parser_settings); cdecl; external;
-
+function http_parser_version: dword; external;
+procedure http_parser_init(parser: Phttp_parser; _type: Thttp_parser_type); external;
+procedure http_parser_settings_init(settings: Phttp_parser_settings); external;
 function http_parser_execute(parser: Phttp_parser; settings: Phttp_parser_settings;
-  Data: PChar; len: uint32): uint32; cdecl; external;
-
-function http_should_keep_alive(parser: Phttp_parser): longint; cdecl; external;
-
-function http_method_str(m: Thttp_method): PChar; cdecl; external;
-
-function http_errno_name(err: Thttp_errno): PChar; cdecl; external;
-
-function http_errno_description(err: Thttp_errno): PChar; cdecl; external;
-
-procedure http_parser_url_init(u: Phttp_parser_url); cdecl; external;
-
+  Data: PChar; len: uint32): uint32; external;
+function http_should_keep_alive(parser: Phttp_parser): longint; external;
+function http_method_str(m: Thttp_method): PChar; external;
+function http_errno_name(err: Thttp_errno): PChar; external;
+function http_errno_description(err: Thttp_errno): PChar; external;
+procedure http_parser_url_init(u: Phttp_parser_url); external;
 function http_parser_parse_url(buf: PChar; buflen: uint32; is_connect: longint;
-  u: Phttp_parser_url): longint; cdecl; external;
-
-procedure http_parser_pause(parser: Phttp_parser; paused: longint); cdecl; external;
-
-function http_body_is_final(parser: Phttp_parser): longint; cdecl; external;
+  u: Phttp_parser_url): longint; external;
+procedure http_parser_pause(parser: Phttp_parser; paused: longint); external;
+function http_body_is_final(parser: Phttp_parser): longint; external;
 
 implementation
 

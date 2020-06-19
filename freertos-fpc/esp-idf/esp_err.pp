@@ -25,12 +25,12 @@ const
   ESP_ERR_MESH_BASE = $4000;
   ESP_ERR_FLASH_BASE = $6000;
 
-function esp_err_to_name(code: Tesp_err): PChar; cdecl; external;
+function esp_err_to_name(code: Tesp_err): PChar; external;
 function esp_err_to_name_r(code: Tesp_err; buf: PChar; buflen: Tsize): PChar;
-  cdecl; external;
-procedure _esp_error_check_failed(rc: Tesp_err; afile: PChar; line: integer; afunction: PChar; expression: PChar); cdecl; external; noreturn;
+  external;
+procedure _esp_error_check_failed(rc: Tesp_err; afile: PChar; line: integer; afunction: PChar; expression: PChar); external; noreturn;
 procedure _esp_error_check_failed_without_abort(rc: Tesp_err;
-  afile: PChar; line: int32; _function: PChar; expression: PChar); cdecl; external;
+  afile: PChar; line: int32; _function: PChar; expression: PChar); external;
 
 procedure EspErrorCheck(code: Tesp_err);
 

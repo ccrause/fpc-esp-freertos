@@ -23,116 +23,116 @@ const
    tmrCOMMAND_CHANGE_PERIOD_FROM_ISR		  =  9;
 
 type
-  TTimerHandle_t = pointer;
-  PTimerHandle_t = ^TTimerHandle_t;
-  TTimerCallbackFunction_t = procedure(xTimer: TTimerHandle_t); cdecl;
-  TPendedFunction_t = procedure(para1: pointer; para2: uint32); cdecl;
+  TTimerHandle = pointer;
+  PTimerHandle = ^TTimerHandle;
+  TTimerCallbackFunction = procedure(xTimer: TTimerHandle); cdecl;
+  TPendedFunction = procedure(para1: pointer; para2: uint32); cdecl;
 
-  // Deifned in freertos/task.h
-  TTaskHandle_t = pointer;
+  // Defined in freertos/task.h
+  TTaskHandle = pointer;
 
 {$if defined(configSUPPORT_DYNAMIC_ALLOCATION) and (configSUPPORT_DYNAMIC_ALLOCATION = 1)}
 function xTimerCreate(pcTimerName: PChar;
-								const xTimerPeriodInTicks: TTickType_t;
-								const uxAutoReload: TUBaseType_t;
+								const xTimerPeriodInTicks: TTickType;
+								const uxAutoReload: TUBaseType;
 								pvTimerID: pointer;
-								pxCallbackFunction: TTimerCallbackFunction_t): TTimerCallbackFunction_t; external;
+								pxCallbackFunction: TTimerCallbackFunction): TTimerCallbackFunction; external;
 {$endif}
 
 {$if defined(configSUPPORT_STATIC_ALLOCATION) and (configSUPPORT_STATIC_ALLOCATION = 1)}
 function  xTimerCreateStatic(pcTimerName: PChar;
-									const xTimerPeriodInTicks: TTickType_t,
-									const uxAutoReload: TUBaseType_t;
+									const xTimerPeriodInTicks: TTickType,
+									const uxAutoReload: TUBaseType;
 									pvTimerID: pointer;
 									pxCallbackFunction: TTimerCallbackFunction_t;
-									pxTimerBuffer: PStaticTimer_t): TTimerHandle_t; external;// PRIVILEGED_FUNCTION;
+									pxTimerBuffer: PStaticTimer_t): TTimerHandle_t; external;
 {$endif}
 
-function pvTimerGetTimerID(xTimer: TTimerHandle_t): pointer; external; // PRIVILEGED_FUNCTION;
-function vTimerSetTimerID(xTimer: TTimerHandle_t; pvNewID: pointer): pointer; external; //PRIVILEGED_FUNCTION
-function xTimerIsTimerActive(xTimer: TTimerHandle_t): TBaseType_t; external; //PRIVILEGED_FUNCTION;
-function xTimerGetTimerDaemonTaskHandle: TTaskHandle_t; cdecl; external;
+function pvTimerGetTimerID(xTimer: TTimerHandle): pointer; external;
+function vTimerSetTimerID(xTimer: TTimerHandle; pvNewID: pointer): pointer; external;
+function xTimerIsTimerActive(xTimer: TTimerHandle): TBaseType; external;
+function xTimerGetTimerDaemonTaskHandle: TTaskHandle; cdecl; external;
 
-function xTimerGetPeriod(xTimer: TTimerHandle_t): TTickType_t; external; // PRIVILEGED_FUNCTION;
-function xTimerGetExpiryTime(xTimer: TTimerHandle_t ): TTickType_t; external; //PRIVILEGED_FUNCTION;
+function xTimerGetPeriod(xTimer: TTimerHandle): TTickType; external;
+function xTimerGetExpiryTime(xTimer: TTimerHandle ): TTickType; external;
 
-function xTimerStart(xTimer: TTimerHandle_t; xTicksToWait: TTickType_t): TBaseType_t;
-function xTimerStop(xTimer: TTimerHandle_t; xTicksToWait: TTickType_t): TBaseType_t;
-function xTimerChangePeriod(xTimer: TTimerHandle_t; xNewPeriod, xTicksToWait: TTickType_t): longint;
-function xTimerDelete(xTimer: TTimerHandle_t; xTicksToWait: TTickType_t): TBaseType_t;
-function xTimerReset(xTimer: TTimerHandle_t; xTicksToWait: TTickType_t): TBaseType_t;
-function xTimerStartFromISR(xTimer: TTimerHandle_t; pxHigherPriorityTaskWoken: PBaseType_t): TBaseType_t;
-function xTimerStopFromISR(xTimer: TTimerHandle_t; pxHigherPriorityTaskWoken: PBaseType_t): TBaseType_t;
-function xTimerChangePeriodFromISR(xTimer: TTimerHandle_t; xNewPeriod: TTickType_t;
-  pxHigherPriorityTaskWoken: PBaseType_t): TBaseType_t;
-function xTimerResetFromISR(xTimer: TTimerHandle_t; pxHigherPriorityTaskWoken: PBaseType_t): TBaseType_t;
+function xTimerStart(xTimer: TTimerHandle; xTicksToWait: TTickType): TBaseType;
+function xTimerStop(xTimer: TTimerHandle; xTicksToWait: TTickType): TBaseType;
+function xTimerChangePeriod(xTimer: TTimerHandle; xNewPeriod, xTicksToWait: TTickType): longint;
+function xTimerDelete(xTimer: TTimerHandle; xTicksToWait: TTickType): TBaseType;
+function xTimerReset(xTimer: TTimerHandle; xTicksToWait: TTickType): TBaseType;
+function xTimerStartFromISR(xTimer: TTimerHandle; pxHigherPriorityTaskWoken: PBaseType): TBaseType;
+function xTimerStopFromISR(xTimer: TTimerHandle; pxHigherPriorityTaskWoken: PBaseType): TBaseType;
+function xTimerChangePeriodFromISR(xTimer: TTimerHandle; xNewPeriod: TTickType;
+  pxHigherPriorityTaskWoken: PBaseType): TBaseType;
+function xTimerResetFromISR(xTimer: TTimerHandle; pxHigherPriorityTaskWoken: PBaseType): TBaseType;
 
-function xTimerPendFunctionCallFromISR(xFunctionToPend: TPendedFunction_t;
+function xTimerPendFunctionCallFromISR(xFunctionToPend: TPendedFunction;
   pvParameter1: pointer; ulParameter2: uint32;
-  pxHigherPriorityTaskWoken: PBaseType_t): TBaseType_t; cdecl; external;
+  pxHigherPriorityTaskWoken: PBaseType): TBaseType; cdecl; external;
 
-function xTimerPendFunctionCall(xFunctionToPend: TPendedFunction_t;
-  pvParameter1: pointer; ulParameter2: uint32; xTicksToWait: TTickType_t): TBaseType_t;
+function xTimerPendFunctionCall(xFunctionToPend: TPendedFunction;
+  pvParameter1: pointer; ulParameter2: uint32; xTicksToWait: TTickType): TBaseType;
   cdecl; external;
 
-function pcTimerGetTimerName(xTimer: TTimerHandle_t): PChar; cdecl; external;
+function pcTimerGetTimerName(xTimer: TTimerHandle): PChar; cdecl; external;
 
-function xTimerCreateTimerTask: TBaseType_t; external; //PRIVILEGED_FUNCTION;
+function xTimerCreateTimerTask: TBaseType; external;
 
-function xTimerGenericCommand(xTimer: TTimerHandle_t;
-  const xCommandID: TBaseType_t; const xOptionalValue: TTickType_t;
-  pxHigherPriorityTaskWoken: PBaseType_t; const xTicksToWait: TTickType_t): TBaseType_t; external; //PRIVILEGED_FUNCTION;
+function xTimerGenericCommand(xTimer: TTimerHandle;
+  const xCommandID: TBaseType; const xOptionalValue: TTickType;
+  pxHigherPriorityTaskWoken: PBaseType; const xTicksToWait: TTickType): TBaseType; external;
 
 implementation
 
-function xTimerStart(xTimer: TTimerHandle_t; xTicksToWait: TTickType_t): TBaseType_t;
+function xTimerStart(xTimer: TTimerHandle; xTicksToWait: TTickType): TBaseType;
 begin
   xTimerStart := xTimerGenericCommand(xTimer, tmrCOMMAND_START, xTaskGetTickCount,
     nil, xTicksToWait);
 end;
 
-function xTimerStop(xTimer: TTimerHandle_t; xTicksToWait: TTickType_t): TBaseType_t;
+function xTimerStop(xTimer: TTimerHandle; xTicksToWait: TTickType): TBaseType;
 begin
   xTimerStop := xTimerGenericCommand(xTimer, tmrCOMMAND_STOP, 0, nil, xTicksToWait);
 end;
 
-function xTimerChangePeriod(xTimer: TTimerHandle_t; xNewPeriod, xTicksToWait: TTickType_t): longint;
+function xTimerChangePeriod(xTimer: TTimerHandle; xNewPeriod, xTicksToWait: TTickType): longint;
 begin
   xTimerChangePeriod := xTimerGenericCommand(xTimer, tmrCOMMAND_CHANGE_PERIOD,
     xNewPeriod, nil, xTicksToWait);
 end;
 
-function xTimerDelete(xTimer: TTimerHandle_t; xTicksToWait: TTickType_t): TBaseType_t;
+function xTimerDelete(xTimer: TTimerHandle; xTicksToWait: TTickType): TBaseType;
 begin
   xTimerDelete := xTimerGenericCommand(xTimer, tmrCOMMAND_DELETE, 0, nil, xTicksToWait);
 end;
 
-function xTimerReset(xTimer: TTimerHandle_t; xTicksToWait: TTickType_t): TBaseType_t;
+function xTimerReset(xTimer: TTimerHandle; xTicksToWait: TTickType): TBaseType;
 begin
   xTimerReset := xTimerGenericCommand(xTimer, tmrCOMMAND_RESET, xTaskGetTickCount,
     nil, xTicksToWait);
 end;
 
-function xTimerStartFromISR(xTimer: TTimerHandle_t; pxHigherPriorityTaskWoken: PBaseType_t): TBaseType_t;
+function xTimerStartFromISR(xTimer: TTimerHandle; pxHigherPriorityTaskWoken: PBaseType): TBaseType;
 begin
   xTimerStartFromISR := xTimerGenericCommand(xTimer, tmrCOMMAND_START_FROM_ISR,
     xTaskGetTickCountFromISR, pxHigherPriorityTaskWoken, 0);
 end;
 
-function xTimerStopFromISR(xTimer: TTimerHandle_t; pxHigherPriorityTaskWoken: PBaseType_t): TBaseType_t;
+function xTimerStopFromISR(xTimer: TTimerHandle; pxHigherPriorityTaskWoken: PBaseType): TBaseType;
 begin
   xTimerStopFromISR := xTimerGenericCommand(xTimer, tmrCOMMAND_STOP_FROM_ISR, 0,
     pxHigherPriorityTaskWoken, 0);
 end;
 
-function xTimerChangePeriodFromISR(xTimer: TTimerHandle_t; xNewPeriod: TTickType_t;
-  pxHigherPriorityTaskWoken: PBaseType_t): TBaseType_t;
+function xTimerChangePeriodFromISR(xTimer: TTimerHandle; xNewPeriod: TTickType;
+  pxHigherPriorityTaskWoken: PBaseType): TBaseType;
 begin
   xTimerChangePeriodFromISR := xTimerGenericCommand(
     xTimer, tmrCOMMAND_CHANGE_PERIOD_FROM_ISR, xNewPeriod, pxHigherPriorityTaskWoken, 0);
 end;
 
-function xTimerResetFromISR(xTimer: TTimerHandle_t; pxHigherPriorityTaskWoken: PBaseType_t): TBaseType_t;
+function xTimerResetFromISR(xTimer: TTimerHandle; pxHigherPriorityTaskWoken: PBaseType): TBaseType;
 begin
   xTimerResetFromISR := xTimerGenericCommand(xTimer, tmrCOMMAND_RESET_FROM_ISR,
     xTaskGetTickCountFromISR, pxHigherPriorityTaskWoken, 0);

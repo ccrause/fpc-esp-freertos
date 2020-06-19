@@ -4,65 +4,63 @@ unit event_groups;
 
 interface
 
-{ $include "timers.h"}
-
 uses
-  portmacro,  // Define some base types such as TTickType_t
-  portable,   // Define e.g. TBaseType_t
+  portmacro,  // Define some base types such as TTickType
+  portable,   // Define e.g. TBaseType
   timers;
 
 type
-  PEventGroupHandle_t = ^TEventGroupHandle_t;
-  TEventGroupHandle_t = pointer;
+  PEventGroupHandle = ^TEventGroupHandle;
+  TEventGroupHandle = pointer;
 
-  PEventBits_t = ^TEventBits_t;
-  TEventBits_t = TTickType_t;
+  PEventBits = ^TEventBits;
+  TEventBits = TTickType;
 
 {$if defined(configSUPPORT_DYNAMIC_ALLOCATION) and (configSUPPORT_DYNAMIC_ALLOCATION = 1)}
-function xEventGroupCreate: TEventGroupHandle_t; external; //PRIVILEGED_FUNCTION;
+function xEventGroupCreate: TEventGroupHandle; external;
 {$endif}
 
 {$if defined(configSUPPORT_STATIC_ALLOCATION) and (configSUPPORT_STATIC_ALLOCATION = 1)}
-function xEventGroupCreateStatic(pxEventGroupBuffer: PStaticEventGroup_t): TEventGroupHandle_t; external;// PRIVILEGED_FUNCTION;
+function xEventGroupCreateStatic(pxEventGroupBuffer: PStaticEventGroup_t): TEventGroupHandle; external;
 {$endif}
 
-function xEventGroupWaitBits(xEventGroup: TEventGroupHandle_t;
-  const uxBitsToWaitFor: TEventBits_t; const xClearOnExit: TBaseType_t;
-  const xWaitForAllBits: TBaseType_t; xTicksToWait: TTickType_t): TEventBits_t; external; // PRIVILEGED_FUNCTION;
+function xEventGroupWaitBits(xEventGroup: TEventGroupHandle;
+  const uxBitsToWaitFor: TEventBits; const xClearOnExit: TBaseType;
+  const xWaitForAllBits: TBaseType; xTicksToWait: TTickType): TEventBits; external;
 
-function xEventGroupClearBits(xEventGroup: TEventGroupHandle_t;
-  const uxBitsToClear: TEventBits_t) : TEventBits_t; external; //PRIVILEGED_FUNCTION;
+function xEventGroupClearBits(xEventGroup: TEventGroupHandle;
+  const uxBitsToClear: TEventBits) : TEventBits; external;
 
 {$if defined(configUSE_TRACE_FACILITY) and (configUSE_TRACE_FACILITY = 1)}
-function xEventGroupClearBitsFromISR(xEventGroup: TEventGroupHandle_t;
-  uxBitsToSet: TEventBits_t): TBaseType_t; cdecl; external;
+function xEventGroupClearBitsFromISR(xEventGroup: TEventGroupHandle;
+  uxBitsToSet: TEventBits): TBaseType; cdecl; external;
 {$else}
-function xEventGroupClearBitsFromISR(xEventGroup: TEventGroupHandle_t;
-  uxBitsToClear: TEventBits_t): TEventBits_t;
+function xEventGroupClearBitsFromISR(xEventGroup: TEventGroupHandle;
+  uxBitsToClear: TEventBits): TEventBits;
 {$endif}
 
-function xEventGroupSetBits(xEventGroup: TEventGroupHandle_t;
-  const uxBitsToSet: TEventBits_t): TEventBits_t; external; //PRIVILEGED_FUNCTION;
+function xEventGroupSetBits(xEventGroup: TEventGroupHandle;
+  const uxBitsToSet: TEventBits): TEventBits; external;
 
 {$if defined(configUSE_TRACE_FACILITY) and (configUSE_TRACE_FACILITY = 1)}
-function xEventGroupSetBitsFromISR(xEventGroup: TEventGroupHandle_t;
-  uxBitsToSet: TEventBits_t; pxHigherPriorityTaskWoken: PBaseType_t): TBaseType_t;
+function xEventGroupSetBitsFromISR(xEventGroup: TEventGroupHandle;
+  uxBitsToSet: TEventBits; pxHigherPriorityTaskWoken: PBaseType): TBaseType;
   cdecl; external;
 {$else}
-function xEventGroupSetBitsFromISR(xEventGroup: TEventGroupHandle_t;
-  uxBitsToSet: TEventBits_t; pxHigherPriorityTaskWoken: PBaseType_t): TBaseType_t;
+function xEventGroupSetBitsFromISR(xEventGroup: TEventGroupHandle;
+  uxBitsToSet: TEventBits; pxHigherPriorityTaskWoken: PBaseType): TBaseType;
 {$endif}
 
-function xEventGroupSync(xEventGroup: TEventGroupHandle_t;
-  const uxBitsToSet: TEventBits_t; const uxBitsToWaitFor: TEventBits_t;
-  xTicksToWait: TTickType_t): TEventBits_t; external; //PRIVILEGED_FUNCTION;
+function xEventGroupSync(xEventGroup: TEventGroupHandle;
+  const uxBitsToSet: TEventBits; const uxBitsToWaitFor: TEventBits;
+  xTicksToWait: TTickType): TEventBits; external;
 
-function xEventGroupGetBits(xEventGroup: TEventGroupHandle_t): TEventBits_t;
+function xEventGroupGetBits(xEventGroup: TEventGroupHandle): TEventBits;
 
-function xEventGroupGetBitsFromISR(xEventGroup: TEventGroupHandle_t): TEventBits_t;
+function xEventGroupGetBitsFromISR(xEventGroup: TEventGroupHandle): TEventBits;
   cdecl; external;
 
-procedure vEventGroupDelete(xEventGroup: TEventGroupHandle_t); cdecl; external;
+procedure vEventGroupDelete(xEventGroup: TEventGroupHandle); cdecl; external;
 
 procedure vEventGroupSetBitsCallback(pvEventGroup: pointer;
   ulBitsToSet: uint32); cdecl; external;
@@ -71,30 +69,34 @@ procedure vEventGroupClearBitsCallback(pvEventGroup: pointer;
   ulBitsToClear: uint32); cdecl; external;
 
 {$if defined(configUSE_TRACE_FACILITY) and (configUSE_TRACE_FACILITY = 1)}
-function uxEventGroupGetNumber(xEventGroup: pointer): TUBaseType_t; cdecl; external;
+function uxEventGroupGetNumber(xEventGroup: pointer): TUBaseType; cdecl; external;
 {$endif}
 
 
 implementation
 
-function xEventGroupClearBitsFromISR(xEventGroup: TEventGroupHandle_t;
-  uxBitsToClear: TEventBits_t): TEventBits_t;
+{$if not defined(configUSE_TRACE_FACILITY) or (configUSE_TRACE_FACILITY = 0)}
+function xEventGroupClearBitsFromISR(xEventGroup: TEventGroupHandle;
+  uxBitsToClear: TEventBits): TEventBits;
 begin
   xEventGroupClearBitsFromISR :=
     xTimerPendFunctionCallFromISR(@vEventGroupClearBitsCallback, pointer(
     xEventGroup), uint32(uxBitsToClear), nil);
 end;
+{$endif}
 
-function xEventGroupSetBitsFromISR(xEventGroup: TEventGroupHandle_t;
-  uxBitsToSet: TEventBits_t; pxHigherPriorityTaskWoken: PBaseType_t
-  ): TBaseType_t;
+{$if not defined(configUSE_TRACE_FACILITY) or (configUSE_TRACE_FACILITY = 0)}
+function xEventGroupSetBitsFromISR(xEventGroup: TEventGroupHandle;
+  uxBitsToSet: TEventBits; pxHigherPriorityTaskWoken: PBaseType
+  ): TBaseType;
 begin
   xEventGroupSetBitsFromISR := xTimerPendFunctionCallFromISR(
     @vEventGroupSetBitsCallback, pointer(xEventGroup), uint32(uxBitsToSet),
     pxHigherPriorityTaskWoken);
 end;
+{$endif}
 
-function xEventGroupGetBits(xEventGroup: TEventGroupHandle_t): TEventBits_t;
+function xEventGroupGetBits(xEventGroup: TEventGroupHandle): TEventBits;
 begin
   xEventGroupGetBits := xEventGroupClearBits(xEventGroup, 0);
 end;

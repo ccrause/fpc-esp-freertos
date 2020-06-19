@@ -52,9 +52,9 @@ const
 {$endif}
 
 {$if defined(portUSING_MPU_WRAPPERS) and (portUSING_MPU_WRAPPERS = 1)}
-function pxPortInitialiseStack(pxTopOfStack: PStackType_t; pxCode: TaskFunction_t; pvParameters: pointer; xRunPrivileged: BaseType_t): PStackType_t; external; // PRIVILEGED_FUNCTION;
+function pxPortInitialiseStack(pxTopOfStack: PStackType_t; pxCode: TaskFunction_t; pvParameters: pointer; xRunPrivileged: BaseType_t): PStackType_t; external;
 {$else}
-function pxPortInitialiseStack(pxTopOfStack: PStackType; pxCode: TTaskFunction; pvParameters: pointer): PStackType; external; //PRIVILEGED_FUNCTION; // empty define at the moment
+function pxPortInitialiseStack(pxTopOfStack: PStackType; pxCode: TTaskFunction; pvParameters: pointer): PStackType; external;
 {$endif}
 
 function pvPortMalloc(size: uint32): pointer; inline;
@@ -62,12 +62,12 @@ procedure vPortFree(APointer: pointer); inline;
 function xPortGetFreeHeapSize: uint32; inline;
 function xPortGetMinimumEverFreeHeapSize: uint32; inline;
 
-function xPortStartScheduler: TBaseType; external;//PRIVILEGED_FUNCTION;
-procedure vPortEndScheduler; external; //PRIVILEGED_FUNCTION;
-procedure vPortYieldOtherCore(coreid: TBaseType); external; // PRIVILEGED_FUNCTION;
-procedure vPortSetStackWatchpoint(pxStackStart: pointer); cdecl; external;
-function xPortInIsrContext: TBaseType; cdecl; external;
-function xPortInterruptedFromISRContext: TBaseType; cdecl; external;
+function xPortStartScheduler: TBaseType; external;
+procedure vPortEndScheduler; external;
+procedure vPortYieldOtherCore(coreid: TBaseType); external;
+procedure vPortSetStackWatchpoint(pxStackStart: pointer); external;
+function xPortInIsrContext: TBaseType; external;
+function xPortInterruptedFromISRContext: TBaseType; external;
 
 {$if defined(portUSING_MPU_WRAPPERS) and (portUSING_MPU_WRAPPERS = 1)}
 type
@@ -76,8 +76,8 @@ type
     {undefined structure}
   end;
 
-procedure vPortStoreTaskMPUSettings(xMPUSettings: PxMPU_SETTINGS; xRegions: PxMEMORY_REGION; pxBottomOfStack: PStackType_t; usStackDepth: uint32); external; //PRIVILEGED_FUNCTION;
-procedure vPortReleaseTaskMPUSettings(xMPUSettings: PxMPU_SETTINGS); cdecl; external;
+procedure vPortStoreTaskMPUSettings(xMPUSettings: PxMPU_SETTINGS; xRegions: PxMEMORY_REGION; pxBottomOfStack: PStackType_t; usStackDepth: uint32); external;
+procedure vPortReleaseTaskMPUSettings(xMPUSettings: PxMPU_SETTINGS); external;
 {$endif}
 
 {$ifdef FPC_MCU_ESP8266}
@@ -88,7 +88,7 @@ function xPortGetCoreID: uint32;
 function xPortCanYield: longbool;
 {$endif}
 
-function xPortGetTickRateHz: uint32; cdecl; external;
+function xPortGetTickRateHz: uint32; external;
 procedure uxPortCompareSetExtram(addr: PUint32; compare: uint32; set_: PUint32); external;
 
 implementation
@@ -117,7 +117,7 @@ begin
   xPortGetMinimumEverFreeHeapSize := esp_get_minimum_free_heap_size;
 end;
 
-{$ifndef FPC_MCU_ESP8266}
+{$ifndef FPC_MCU_ESP8266} // not really necessary at the moment
 function xPortGetCoreID: uint32; assembler; // IRAM_ATTR
 asm
   rsr.prid a2            // Read special register Processor ID. PRID = 235

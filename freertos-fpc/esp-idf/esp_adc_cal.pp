@@ -27,17 +27,14 @@ type
   end;
 
 function esp_adc_cal_check_efuse(value_type: Tesp_adc_cal_value): Tesp_err;
-  cdecl; external;
-
+  external;
 function esp_adc_cal_characterize(adc_num: Tadc_unit; atten: Tadc_atten;
   bit_width: Tadc_bits_width; default_vref: uint32;
-  chars: Pesp_adc_cal_characteristics): Tesp_adc_cal_value; cdecl; external;
-
+  chars: Pesp_adc_cal_characteristics): Tesp_adc_cal_value; external;
 function esp_adc_cal_raw_to_voltage(adc_reading: uint32;
-  chars: Pesp_adc_cal_characteristics): uint32; cdecl; external;
-
+  chars: Pesp_adc_cal_characteristics): uint32; external;
 function esp_adc_cal_get_voltage(channel: Tadc_channel;
-  chars: Pesp_adc_cal_characteristics; voltage: Puint32): Tesp_err; cdecl; external;
+  chars: Pesp_adc_cal_characteristics; voltage: Puint32): Tesp_err; external;
 
 implementation
 

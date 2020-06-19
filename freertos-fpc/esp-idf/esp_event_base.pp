@@ -14,7 +14,7 @@ type
   Tesp_event_loop_handle = pointer;
 
   Tesp_event_handler = procedure(event_handler_arg: pointer;
-    event_base: Tesp_event_base; event_id: int32; event_data: pointer); cdecl;
+    event_base: Tesp_event_base; event_id: int32; event_data: pointer);
 
 implementation
 

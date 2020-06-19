@@ -91,14 +91,10 @@ type
     ESP_NETIF_FLAG_AUTOUP = 1 shl 2, ESP_NETIF_FLAG_GARP = 1 shl 3,
     ESP_NETIF_FLAG_EVENT_IP_MODIFIED = 1 shl 4,
     ESP_NETIF_FLAG_IS_PPP = 1 shl 5);
-  Tesp_netif_flags_t = Tesp_netif_flags;
-  Pesp_netif_flags_t = ^Tesp_netif_flags_t;
 
   Pesp_netif_ip_event_type = ^Tesp_netif_ip_event_type;
   Tesp_netif_ip_event_type = (ESP_NETIF_IP_EVENT_GOT_IP =
     1, ESP_NETIF_IP_EVENT_LOST_IP = 2);
-  //Tesp_netif_ip_event_type_t = Tesp_netif_ip_event_type;
-  //Pesp_netif_ip_event_type_t = ^Tesp_netif_ip_event_type_t;
 
   Pesp_netif_inherent_config = ^Tesp_netif_inherent_config;
   Tesp_netif_inherent_config = record
@@ -111,9 +107,6 @@ type
     if_desc: PChar;
     route_prio: int32;
   end;
-  //Tesp_netif_inherent_config_t = Tesp_netif_inherent_config;
-  //Pesp_netif_inherent_config_t = ^Tesp_netif_inherent_config_t;
-  //Tesp_netif_config_t = Tesp_netif_config;
 
   Pesp_netif_iodriver_handle = ^Tesp_netif_iodriver_handle;
   Tesp_netif_iodriver_handle = pointer;
@@ -122,7 +115,7 @@ type
   Pesp_netif_driver_base_s = ^Tesp_netif_driver_base_s;
   Tesp_netif_driver_base_s = record
     post_attach: function(netif: Pesp_netif;
-        h: Tesp_netif_iodriver_handle): Tesp_err; cdecl;
+        h: Tesp_netif_iodriver_handle): Tesp_err;
     netif: Pesp_netif;
   end;
   Tesp_netif_driver_base = Tesp_netif_driver_base_s;
@@ -131,10 +124,9 @@ type
   Pesp_netif_driver_ifconfig = ^Tesp_netif_driver_ifconfig;
   Tesp_netif_driver_ifconfig = record
     handle: Tesp_netif_iodriver_handle;
-    transmit: function(h: pointer; buffer: pointer; len: Tsize): Tesp_err; cdecl;
-    driver_free_rx_buffer: procedure(h: pointer; buffer: pointer); cdecl;
+    transmit: function(h: pointer; buffer: pointer; len: Tsize): Tesp_err;
+    driver_free_rx_buffer: procedure(h: pointer; buffer: pointer);
   end;
-  //Tesp_netif_driver_ifconfig_t = Tesp_netif_driver_ifconfig;
 
   // Defined in esp_netif_lwip_internal
   //Tesp_netif_netstack_config = Tesp_netif_netstack_config;
@@ -147,7 +139,7 @@ type
   end;
 
   Tesp_netif_receive = function(esp_netif: Pesp_netif;
-    buffer: pointer; len: Tsize; eb: pointer): Tesp_err; cdecl;
+    buffer: pointer; len: Tsize; eb: pointer): Tesp_err;
 
 var
   IP_EVENT : Tesp_event_base; cvar; external;

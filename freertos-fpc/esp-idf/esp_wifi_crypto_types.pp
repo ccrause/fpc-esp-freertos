@@ -21,76 +21,76 @@ type
     ESP_CRYPTO_CIPHER_ALG_RC2, ESP_CRYPTO_CIPHER_ALG_RC4);
 
   Tesp_aes_128_encrypt = function(key: pchar; iv: pchar; Data: pchar;
-    data_len: int32): int32; cdecl;
+    data_len: int32): int32;
 
   Tesp_aes_128_decrypt = function(key: pchar; iv: pchar; Data: pchar;
-    data_len: int32): int32; cdecl;
+    data_len: int32): int32;
 
   Tesp_aes_wrap = function(kek: pchar; n: int32; plain: pchar;
-    cipher: pchar): int32; cdecl;
+    cipher: pchar): int32;
 
   Tesp_aes_unwrap = function(kek: pchar; n: int32; cipher: pchar;
-    plain: pchar): int32; cdecl;
+    plain: pchar): int32;
 
   Tesp_hmac_sha256_vector = function(key: pchar; key_len: int32;
-    num_elem: int32; addr: PChar; len: PInt32; mac: pchar): int32; cdecl;
+    num_elem: int32; addr: PChar; len: PInt32; mac: pchar): int32;
 
   Tesp_sha256_prf = function(key: pchar; key_len: int32; _label: PChar;
-    Data: pchar; data_len: int32; buf: pchar; buf_len: int32): int32; cdecl;
+    Data: pchar; data_len: int32; buf: pchar; buf_len: int32): int32;
 
   Tesp_hmac_md5 = function(key: pchar; key_len: uint32; Data: pchar;
-    data_len: uint32; mac: pchar): int32; cdecl;
+    data_len: uint32; mac: pchar): int32;
 
   Tesp_hmac_md5_vector = function(key: pchar; key_len: uint32;
-    num_elem: uint32; addr: PChar; len: PUint32; mac: pchar): int32; cdecl;
+    num_elem: uint32; addr: PChar; len: PUint32; mac: pchar): int32;
 
   Tesp_hmac_sha1 = function(key: pchar; key_len: uint32; Data: pchar;
-    data_len: uint32; mac: pchar): int32; cdecl;
+    data_len: uint32; mac: pchar): int32;
 
   Tesp_hmac_sha1_vector = function(key: pchar; key_len: uint32;
-    num_elem: uint32; addr: PChar; len: PUint32; mac: pchar): int32; cdecl;
+    num_elem: uint32; addr: PChar; len: PUint32; mac: pchar): int32;
 
   Tesp_sha1_prf = function(key: pchar; key_len: uint32; _label: PChar;
-    Data: pchar; data_len: uint32; buf: pchar; buf_len: uint32): int32; cdecl;
+    Data: pchar; data_len: uint32; buf: pchar; buf_len: uint32): int32;
 
   Tesp_sha1_vector = function(num_elem: uint32; addr: PChar;
-    len: PUint32; mac: pchar): int32; cdecl;
+    len: PUint32; mac: pchar): int32;
 
   Tesp_pbkdf2_sha1 = function(passphrase: PChar; ssid: PChar;
     ssid_len: uint32; iterations: int32; buf: pchar;
-    buflen: uint32): int32; cdecl;
+    buflen: uint32): int32;
 
   Tesp_rc4_skip = function(key: pchar; keylen: uint32; skip: uint32;
-    Data: pchar; data_len: uint32): int32; cdecl;
+    Data: pchar; data_len: uint32): int32;
 
   Tesp_md5_vector = function(num_elem: uint32; addr: PChar; len: PUint32;
-    mac: pchar): int32; cdecl;
+    mac: pchar): int32;
 
-  Tesp_aes_encrypt = procedure(ctx: pointer; plain: pchar; crypt: pchar); cdecl;
+  Tesp_aes_encrypt = procedure(ctx: pointer; plain: pchar; crypt: pchar);
 
   Pesp_aes_encrypt_init = ^Tesp_aes_encrypt_init;
-  Tesp_aes_encrypt_init = function(key: pchar; len: uint32): pointer; cdecl;
+  Tesp_aes_encrypt_init = function(key: pchar; len: uint32): pointer;
 
-  Tesp_aes_encrypt_deinit = procedure(ctx: pointer); cdecl;
+  Tesp_aes_encrypt_deinit = procedure(ctx: pointer);
 
-  Tesp_aes_decrypt = procedure(ctx: pointer; crypt: pchar; plain: pchar); cdecl;
+  Tesp_aes_decrypt = procedure(ctx: pointer; crypt: pchar; plain: pchar);
 
   Pesp_aes_decrypt_init = ^Tesp_aes_decrypt_init;
-  Tesp_aes_decrypt_init = function(key: pchar; len: uint32): pointer; cdecl;
+  Tesp_aes_decrypt_init = function(key: pchar; len: uint32): pointer;
 
-  Tesp_aes_decrypt_deinit = procedure(ctx: pointer); cdecl;
+  Tesp_aes_decrypt_deinit = procedure(ctx: pointer);
 
   Tesp_omac1_aes_128 = function(key: PByte; Data: PByte;
-    data_len: Tsize; mic: PByte): int32; cdecl;
+    data_len: Tsize; mic: PByte): int32;
 
   Pesp_ccmp_decrypt = ^Tesp_ccmp_decrypt;
   Tesp_ccmp_decrypt = function(tk: PByte; ieee80211_hdr: PByte;
-    Data: PByte; data_len: Tsize; decrypted_len: PInt32): PByte; cdecl;
+    Data: PByte; data_len: Tsize; decrypted_len: PInt32): PByte;
 
   Pesp_ccmp_encrypt = ^Tesp_ccmp_encrypt;
   Tesp_ccmp_encrypt = function(tk: PByte; frame: PByte; len: Tsize;
     hdrlen: Tsize; pn: PByte; keyid: int32;
-    encrypted_len: PInt32): PByte; cdecl;
+    encrypted_len: PInt32): PByte;
 
   Pwpa_crypto_funcs = ^Twpa_crypto_funcs;
   Twpa_crypto_funcs = record

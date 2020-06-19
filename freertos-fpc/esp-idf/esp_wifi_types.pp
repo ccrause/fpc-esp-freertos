@@ -158,13 +158,7 @@ type
     group_cipher: Twifi_cipher_type;
     ant: Twifi_ant;
     _phy_: byte;
-    //phy_11b: 0..1;           // 1 bit
-    //phy_11g:0..1;            // 1 bit
-    //phy_11n: 0..1;           // 1 bit
-    //phy_lr: 0..1;            // 1 bit
-    //wps: 0..1;               // 1 bit
-    //reserved1: 0..7;         // 3
-    reserved: array[0..2] of byte;//0..$FFFFFF;
+    reserved: array[0..2] of byte;
     country: Twifi_country;
     property phy_11b: TBitRange1 read Getphy_11b write Setphy_11b;
     property phy_11g: TBitRange1 read Getphy_11g write Setphy_11g;
@@ -247,12 +241,7 @@ type
   public
     mac: array[0..5] of byte;
     rssi: int8;
-    //phy_11b: 0..1;
-    //phy_11g: 0..1;
-    //phy_11n: 0..1;
-    //phy_lr:  0..1;
     _phy_: byte;
-    //reserved:0..$0FFFFFFF;
     reserved: array[0..2] of byte;
     property phy_11b: TBitRange1 read Getphy_11b write Setphy_11b;
     property phy_11g: TBitRange1 read Getphy_11g write Setphy_11g;
@@ -386,7 +375,7 @@ type
 
   Pwifi_ant_config = ^Twifi_ant_config;
   { Twifi_ant_config }
-  Twifi_ant_config = bitpacked record
+  Twifi_ant_config = record
   private
     function GetAnt0: TBitRange4;
     function GetAnt1: TBitRange4;
@@ -396,8 +385,6 @@ type
     rx_ant_mode: Twifi_ant_mode;
     rx_ant_default: Twifi_ant;
     tx_ant_mode: Twifi_ant_mode;
-    //enabled_ant0: 0..15;
-    //enabled_ant1: 0..15;
     _enable: byte;
     property enable_ant0: TBitRange4 read GetAnt0 write SetAnt0;
     property enable_ant1: TBitRange4 read GetAnt1 write SetAnt1;

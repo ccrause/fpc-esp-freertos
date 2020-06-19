@@ -69,78 +69,78 @@ type
   Tnvs_iterator = ^Tnvs_opaque_iterator;
 
 function nvs_open(Name: PChar; open_mode: Tnvs_open_mode;
-  out_handle: Pnvs_handle): Tesp_err; cdecl; external;
+  out_handle: Pnvs_handle): Tesp_err; external;
 
 function nvs_open_from_partition(part_name: PChar; Name: PChar;
-  open_mode: Tnvs_open_mode; out_handle: Pnvs_handle): Tesp_err; cdecl; external;
+  open_mode: Tnvs_open_mode; out_handle: Pnvs_handle): Tesp_err; external;
 
 function nvs_set_i8(handle: Tnvs_handle; key: PChar; Value: int8): Tesp_err;
-  cdecl; external;
+  external;
 
 function nvs_set_u8(handle: Tnvs_handle; key: PChar; Value: byte): Tesp_err;
-  cdecl; external;
+  external;
 
 function nvs_set_i16(handle: Tnvs_handle; key: PChar;
-  Value: int16): Tesp_err; cdecl; external;
+  Value: int16): Tesp_err; external;
 
 function nvs_set_u16(handle: Tnvs_handle; key: PChar;
-  Value: uint16): Tesp_err; cdecl; external;
+  Value: uint16): Tesp_err; external;
 
 function nvs_set_i32(handle: Tnvs_handle; key: PChar;
-  Value: int32): Tesp_err; cdecl; external;
+  Value: int32): Tesp_err; external;
 
 function nvs_set_u32(handle: Tnvs_handle; key: PChar;
-  Value: uint32): Tesp_err; cdecl; external;
+  Value: uint32): Tesp_err; external;
 
 function nvs_set_i64(handle: Tnvs_handle; key: PChar;
-  Value: int64): Tesp_err; cdecl; external;
+  Value: int64): Tesp_err; external;
 
 function nvs_set_u64(handle: Tnvs_handle; key: PChar;
-  Value: uint64): Tesp_err; cdecl; external;
+  Value: uint64): Tesp_err; external;
 
 function nvs_set_str(handle: Tnvs_handle; key: PChar; Value: PChar): Tesp_err;
-  cdecl; external;
+  external;
 
 function nvs_set_blob(handle: Tnvs_handle; key: PChar; Value: pointer;
-  length: Tsize): Tesp_err; cdecl; external;
+  length: Tsize): Tesp_err; external;
 
 function nvs_get_i8(handle: Tnvs_handle; key: PChar;
-  out_value: Pint8): Tesp_err; cdecl; external;
+  out_value: Pint8): Tesp_err; external;
 
 function nvs_get_u8(handle: Tnvs_handle; key: PChar;
-  out_value: PByte): Tesp_err; cdecl; external;
+  out_value: PByte): Tesp_err; external;
 
 function nvs_get_i16(handle: Tnvs_handle; key: PChar;
-  out_value: Pint16): Tesp_err; cdecl; external;
+  out_value: Pint16): Tesp_err; external;
 
 function nvs_get_u16(handle: Tnvs_handle; key: PChar;
-  out_value: PUInt16): Tesp_err; cdecl; external;
+  out_value: PUInt16): Tesp_err; external;
 
 function nvs_get_i32(handle: Tnvs_handle; key: PChar;
-  out_value: PInt32): Tesp_err; cdecl; external;
+  out_value: PInt32): Tesp_err; external;
 
 function nvs_get_u32(handle: Tnvs_handle; key: PChar;
-  out_value: PUInt32): Tesp_err; cdecl; external;
+  out_value: PUInt32): Tesp_err; external;
 
 function nvs_get_i64(handle: Tnvs_handle; key: PChar;
-  out_value: PInt64): Tesp_err; cdecl; external;
+  out_value: PInt64): Tesp_err; external;
 
 function nvs_get_u64(handle: Tnvs_handle; key: PChar;
-  out_value: PUInt64): Tesp_err; cdecl; external;
+  out_value: PUInt64): Tesp_err; external;
 
 function nvs_get_str(handle: Tnvs_handle; key: PChar; out_value: PChar;
-  length: Psize): Tesp_err; cdecl; external;
+  length: Psize): Tesp_err; external;
 
 function nvs_get_blob(handle: Tnvs_handle; key: PChar; out_value: pointer;
-  length: Psize): Tesp_err; cdecl; external;
+  length: Psize): Tesp_err; external;
 
-function nvs_erase_key(handle: Tnvs_handle; key: PChar): Tesp_err; cdecl; external;
+function nvs_erase_key(handle: Tnvs_handle; key: PChar): Tesp_err; external;
 
-function nvs_erase_all(handle: Tnvs_handle): Tesp_err; cdecl; external;
+function nvs_erase_all(handle: Tnvs_handle): Tesp_err; external;
 
-function nvs_commit(handle: Tnvs_handle): Tesp_err; cdecl; external;
+function nvs_commit(handle: Tnvs_handle): Tesp_err; external;
 
-procedure nvs_close(handle: Tnvs_handle); cdecl; external;
+procedure nvs_close(handle: Tnvs_handle); external;
 
 type
   Pnvs_stats = ^Tnvs_stats;
@@ -152,54 +152,54 @@ type
   end;
 
 function nvs_get_stats(part_name: PChar; nvs_stats: Pnvs_stats): Tesp_err;
-  cdecl; external;
+  external;
 
 function nvs_get_used_entry_count(handle: Tnvs_handle;
-  used_entries: Psize): Tesp_err; cdecl; external;
+  used_entries: Psize): Tesp_err; external;
 
 function nvs_entry_find(part_name: PChar; namespace_name: PChar;
-  _type: Tnvs_type): Tnvs_iterator; cdecl; external;
+  _type: Tnvs_type): Tnvs_iterator; external;
 
-function nvs_entry_next(iterator: Tnvs_iterator): Tnvs_iterator; cdecl; external;
+function nvs_entry_next(iterator: Tnvs_iterator): Tnvs_iterator; external;
 
 procedure nvs_entry_info(iterator: Tnvs_iterator; out_info: Pnvs_entry_info);
-  cdecl; external;
+  external;
 
-procedure nvs_release_iterator(iterator: Tnvs_iterator); cdecl; external;
+procedure nvs_release_iterator(iterator: Tnvs_iterator); external;
 
 // From nvs_flash.h
 const
   NVS_KEY_SIZE = 32;
 
 type
-  Pnvs_sec_cfg = ^Tnvs_sec_cfg_t;
-  Tnvs_sec_cfg_t = record
+  Pnvs_sec_cfg = ^Tnvs_sec_cfg;
+  Tnvs_sec_cfg = record
     eky: array[0..(NVS_KEY_SIZE) - 1] of byte;
     tky: array[0..(NVS_KEY_SIZE) - 1] of byte;
   end;
 
-function nvs_flash_init: Tesp_err; cdecl; external;
+function nvs_flash_init: Tesp_err; external;
 
-function nvs_flash_init_partition(partition_label: PChar): Tesp_err; cdecl; external;
+function nvs_flash_init_partition(partition_label: PChar): Tesp_err; external;
 
-function nvs_flash_deinit: Tesp_err; cdecl; external;
+function nvs_flash_deinit: Tesp_err; external;
 
-function nvs_flash_deinit_partition(partition_label: PChar): Tesp_err; cdecl; external;
+function nvs_flash_deinit_partition(partition_label: PChar): Tesp_err; external;
 
-function nvs_flash_erase: Tesp_err; cdecl; external;
+function nvs_flash_erase: Tesp_err; external;
 
-function nvs_flash_erase_partition(part_name: PChar): Tesp_err; cdecl; external;
+function nvs_flash_erase_partition(part_name: PChar): Tesp_err; external;
 
-function nvs_flash_secure_init(cfg: Pnvs_sec_cfg): Tesp_err; cdecl; external;
+function nvs_flash_secure_init(cfg: Pnvs_sec_cfg): Tesp_err; external;
 
 function nvs_flash_secure_init_partition(partition_label: PChar;
-  cfg: Pnvs_sec_cfg): Tesp_err; cdecl; external;
+  cfg: Pnvs_sec_cfg): Tesp_err; external;
 
 function nvs_flash_generate_keys(partition: Pesp_partition;
-  cfg: Pnvs_sec_cfg): Tesp_err; cdecl; external;
+  cfg: Pnvs_sec_cfg): Tesp_err; external;
 
 function nvs_flash_read_security_cfg(partition: Pesp_partition;
-  cfg: Pnvs_sec_cfg): Tesp_err; cdecl; external;
+  cfg: Pnvs_sec_cfg): Tesp_err; external;
 
 implementation
 

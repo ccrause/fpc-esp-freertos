@@ -181,7 +181,7 @@ type
     GPIO_DRIVE_CAP_2 = 2, GPIO_DRIVE_CAP_DEFAULT = 2,
     GPIO_DRIVE_CAP_3 = 3, GPIO_DRIVE_CAP_MAX);
 
-  Tgpio_isr = procedure(para1: pointer); cdecl;
+  Tgpio_isr = procedure(para1: pointer);
 
 implementation
 

@@ -21,11 +21,11 @@ type
 
   Pesp_flash_os_functions = ^Tesp_flash_os_functions;
   Tesp_flash_os_functions = record
-    start: function(arg: pointer): Tesp_err; cdecl;
-    end_: function(arg: pointer): Tesp_err; cdecl;
+    start: function(arg: pointer): Tesp_err;
+    end_: function(arg: pointer): Tesp_err;
     region_protected: function(arg: pointer; start_addr: Tsize;
-        size: Tsize): Tesp_err; cdecl;
-    delay_ms: function(arg: pointer; ms: uint32): Tesp_err; cdecl;
+        size: Tsize): Tesp_err;
+    delay_ms: function(arg: pointer; ms: uint32): Tesp_err;
   end;
 
   Pesp_flash = ^Tesp_flash;
@@ -39,47 +39,47 @@ type
     chip_id: uint32;
   end;
 
-function esp_flash_init(chip: Pesp_flash): Tesp_err; cdecl; external;
+function esp_flash_init(chip: Pesp_flash): Tesp_err; external;
 
-function esp_flash_chip_driver_initialized(chip: Pesp_flash): Tbool; cdecl; external;
+function esp_flash_chip_driver_initialized(chip: Pesp_flash): Tbool; external;
 
 function esp_flash_read_id(chip: Pesp_flash; out_id: Puint32): Tesp_err;
-  cdecl; external;
+  external;
 
 function esp_flash_get_size(chip: Pesp_flash; out_size: Puint32): Tesp_err;
-  cdecl; external;
+  external;
 
-function esp_flash_erase_chip(chip: Pesp_flash): Tesp_err; cdecl; external;
+function esp_flash_erase_chip(chip: Pesp_flash): Tesp_err; external;
 
 function esp_flash_erase_region(chip: Pesp_flash; start: uint32;
-  len: uint32): Tesp_err; cdecl; external;
+  len: uint32): Tesp_err; external;
 
 function esp_flash_get_chip_write_protect(chip: Pesp_flash;
-  write_protected: Pbool): Tesp_err; cdecl; external;
+  write_protected: Pbool): Tesp_err; external;
 
 function esp_flash_set_chip_write_protect(chip: Pesp_flash;
-  write_protect: Tbool): Tesp_err; cdecl; external;
+  write_protect: Tbool): Tesp_err; external;
 
 function esp_flash_get_protectable_regions(chip: Pesp_flash;
-  out_regions: Pesp_flash_region; out_num_regions: Puint32): Tesp_err; cdecl; external;
+  out_regions: Pesp_flash_region; out_num_regions: Puint32): Tesp_err; external;
 
 function esp_flash_get_protected_region(chip: Pesp_flash;
-  region: Pesp_flash_region; out_protected: Pbool): Tesp_err; cdecl; external;
+  region: Pesp_flash_region; out_protected: Pbool): Tesp_err; external;
 
 function esp_flash_set_protected_region(chip: Pesp_flash;
-  region: Pesp_flash_region; protect: Tbool): Tesp_err; cdecl; external;
+  region: Pesp_flash_region; protect: Tbool): Tesp_err; external;
 
 function esp_flash_read(chip: Pesp_flash; buffer: pointer; address: uint32;
-  length: uint32): Tesp_err; cdecl; external;
+  length: uint32): Tesp_err; external;
 
 function esp_flash_write(chip: Pesp_flash; buffer: pointer; address: uint32;
-  length: uint32): Tesp_err; cdecl; external;
+  length: uint32): Tesp_err; external;
 
 function esp_flash_write_encrypted(chip: Pesp_flash; address: uint32;
-  buffer: pointer; length: uint32): Tesp_err; cdecl; external;
+  buffer: pointer; length: uint32): Tesp_err; external;
 
 function esp_flash_read_encrypted(chip: Pesp_flash; address: uint32;
-  out_buffer: pointer; length: uint32): Tesp_err; cdecl; external;
+  out_buffer: pointer; length: uint32): Tesp_err; external;
 
 var
   esp_flash_default_chip : Pesp_flash; cvar; external;

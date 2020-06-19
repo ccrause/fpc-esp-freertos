@@ -14,8 +14,6 @@ type
     ppp_phase_event_enabled: longbool;
     ppp_error_event_enabled: longbool;
   end;
-  //Tesp_netif_ppp_config = Tesp_netif_ppp_config;
-  //Pesp_netif_ppp_config = ^Tesp_netif_ppp_config;
 
   Pesp_netif_ppp_status_event = ^Tesp_netif_ppp_status_event;
   Tesp_netif_ppp_status_event = (NETIF_PPP_ERRORNONE = 0, NETIF_PPP_ERRORPARAM = 1,
@@ -56,6 +54,5 @@ var
   NETIF_PPP_STATUS : Tesp_event_base; cvar; external;
 
 implementation
-
 
 end.

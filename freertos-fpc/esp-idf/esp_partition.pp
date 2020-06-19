@@ -56,50 +56,37 @@ type
 
 function esp_partition_find(_type: Tesp_partition_type;
   subtype: Tesp_partition_subtype; _label: pchar): Tesp_partition_iterator;
-  cdecl; external;
-
+  external;
 function esp_partition_find_first(_type: Tesp_partition_type;
-  subtype: Tesp_partition_subtype; _label: pchar): Pesp_partition; cdecl; external;
-
+  subtype: Tesp_partition_subtype; _label: pchar): Pesp_partition; external;
 function esp_partition_get(iterator: Tesp_partition_iterator): Pesp_partition;
-  cdecl; external;
-
+  external;
 function esp_partition_next(iterator: Tesp_partition_iterator):
   Tesp_partition_iterator;
-  cdecl; external;
-
+  external;
 procedure esp_partition_iterator_release(iterator: Tesp_partition_iterator);
-  cdecl; external;
-
+  external;
 function esp_partition_verify(partition: Pesp_partition): Pesp_partition;
-  cdecl; external;
-
+  external;
 function esp_partition_read(partition: Pesp_partition; src_offset: Tsize;
-  dst: pointer; size: Tsize): Tesp_err; cdecl; external;
-
+  dst: pointer; size: Tsize): Tesp_err; external;
 function esp_partition_write(partition: Pesp_partition; dst_offset: Tsize;
-  src: pointer; size: Tsize): Tesp_err; cdecl; external;
-
+  src: pointer; size: Tsize): Tesp_err; external;
 function esp_partition_erase_range(partition: Pesp_partition;
-  offset: Tsize; size: Tsize): Tesp_err; cdecl; external;
-
+  offset: Tsize; size: Tsize): Tesp_err; external;
 function esp_partition_mmap(partition: Pesp_partition; offset: Tsize;
   size: Tsize; memory: Tspi_flash_mmap_memory; out_ptr: Ppointer;
-  out_handle: Pspi_flash_mmap_handle): Tesp_err; cdecl; external;
-
+  out_handle: Pspi_flash_mmap_handle): Tesp_err; external;
 function esp_partition_get_sha256(partition: Pesp_partition;
-  sha_256: PByte): Tesp_err; cdecl; external;
-
+  sha_256: PByte): Tesp_err; external;
 function esp_partition_check_identity(partition_1: Pesp_partition;
-  partition_2: Pesp_partition): Tbool; cdecl; external;
-
+  partition_2: Pesp_partition): Tbool; external;
 function esp_partition_register_external(flash_chip: Pesp_flash;
   offset: Tsize; size: Tsize; _label: pchar; _type: Tesp_partition_type;
   subtype: Tesp_partition_subtype;
-  out_partition: PPesp_partition): Tesp_err; cdecl; external;
-
+  out_partition: PPesp_partition): Tesp_err; external;
 function esp_partition_deregister_external(partition: Pesp_partition): Tesp_err;
-  cdecl; external;
+  external;
 
 function ESP_PARTITION_SUBTYPE_OTA(i: longint): Tesp_partition_subtype;
 
