@@ -1,8 +1,14 @@
 program simpleserver;
 
 uses
-  freertos, wificonnect, esp_log, esp_http_server, esp_err, http_parser,
-  portable;
+  freertos,
+  //{$ifdef CPULX6}
+  wificonnect,
+  //{$else}
+  //wificonnect_esp8266,
+  //{$endif}
+  esp_http_server, esp_err, http_parser,
+  portable, task;
 
 {$macro on}
 {$inline on}
@@ -15,7 +21,6 @@ uses
 {$include credentials.ignore}
 
 const
-  TAG = 'example';
   htmlpage = '<!DOCTYPE html><html><body><h1>Welcome to FPC + ESP-IDF</h1><p><img src="/fpclogo.gif" alt="FPC"></p></body></html>';
 
 // Import fpc logo in gif format as array of char
@@ -31,7 +36,7 @@ begin
   begin
     buf := pvPortMalloc(buf_len);
     if (httpd_req_get_hdr_value_str(req, 'Host', buf, buf_len) = ESP_OK) then
-      esp_log_write(ESP_LOG_INFO, TAG, 'Found header => Host: %s\n', buf);
+      writeln('Found header => Host: ', buf);
     vPortFree(buf);
   end;
 
@@ -50,7 +55,7 @@ begin
   begin
     buf := pvPortMalloc(buf_len);
     if (httpd_req_get_hdr_value_str(req, 'Host', buf, buf_len) = ESP_OK) then
-      esp_log_write(ESP_LOG_INFO, TAG, 'Found header => Host: %s'#10, buf);
+      writeln('Found header => Host: ', buf);
     vPortFree(buf);
   end;
 
@@ -84,11 +89,11 @@ begin
     user_ctx  := nil;
   end;
 
-  esp_log_write(ESP_LOG_INFO, 'example', 'Starting server on port: %d'#10, config.server_port);
+  writeln('Starting server on port: ', config.server_port);
   if (httpd_start(@server, @config) = ESP_OK) then
   begin
     // Set URI handlers
-    esp_log_write(ESP_LOG_INFO, TAG, 'Registering URI handler'#10);
+    writeln('Registering URI handler');
     httpd_register_uri_handler(server, @helloUriHandlerConfig);
     httpd_register_uri_handler(server, @fpcUriHandlerConfig);
     result := server;
@@ -96,15 +101,13 @@ begin
   else
   begin
     result := nil;
-    esp_log_write(ESP_LOG_ERROR, TAG, '### Failed to start httpd'#10);
+    writeln('### Failed to start httpd');
   end;
 end;
 
 begin
-  esp_log_level_set('wifi', ESP_LOG_WARN);
-
   connectWifi(AP_NAME, PWD);
-  esp_log_write(ESP_LOG_INFO, TAG, 'Starting web server...'#10);
+  writeln('Starting web server...');
   start_webserver;
 
   repeat
