@@ -43,11 +43,11 @@ function heap_caps_check_integrity(caps: uint32; print_errors: longbool): longbo
 function heap_caps_check_integrity_addr(addr: PInt32;
   print_errors: longbool): longbool; external;
 procedure heap_caps_malloc_extmem_enable(limit: uint32); external;
-function heap_caps_malloc_prefer(size: uint32; num: uint32): pointer; varargs; external;
+function heap_caps_malloc_prefer(size: uint32; num: uint32): pointer; cdecl; varargs; external;
 //function heap_caps_malloc_prefer(size: uint32; num: uint32): pointer; external;
-function heap_caps_realloc_prefer(ptr: pointer; size: uint32; num: uint32): pointer; varargs; external;
+function heap_caps_realloc_prefer(ptr: pointer; size: uint32; num: uint32): pointer; cdecl; varargs; external;
 //function heap_caps_realloc_prefer(ptr: pointer; size: uint32; num: uint32): pointer; external;
-function heap_caps_calloc_prefer(n: uint32; size: uint32; num: uint32): pointer; varargs; external;
+function heap_caps_calloc_prefer(n: uint32; size: uint32; num: uint32): pointer; cdecl; varargs; external;
 //function heap_caps_calloc_prefer(n: uint32; size: uint32; num: uint32): pointer; external;
 procedure heap_caps_dump(caps: uint32); external;
 procedure heap_caps_dump_all; external;

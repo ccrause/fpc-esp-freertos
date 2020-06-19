@@ -123,8 +123,8 @@ type
     {$ifdef CONFIG_IDF_TARGET_ESP32S2BETA}
     _slowclk_cal_get: function: uint32;
     {$endif}
-    _log_write: procedure(level: uint32; tag: PChar; format: PChar); varargs;
-    _log_writev: procedure(level: uint32; tag: PChar; format: PChar); varargs;
+    _log_write: procedure(level: uint32; tag: PChar; format: PChar); cdecl; varargs;
+    _log_writev: procedure(level: uint32; tag: PChar; format: PChar); cdecl; varargs;
     _log_timestamp: function: uint32;
     _malloc_internal: function(size: Tsize): pointer;
     _realloc_internal: function(ptr: pointer; size: Tsize): pointer;
