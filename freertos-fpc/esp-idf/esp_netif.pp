@@ -80,7 +80,7 @@ function esp_ip4addr_aton(addr: PChar): uint32; external;
 function esp_netif_get_io_driver(esp_netif: Pesp_netif): Tesp_netif_iodriver_handle;
   external;
 function esp_netif_get_handle_from_ifkey(if_key: PChar): Pesp_netif; external;
-function esp_netif_get_flags(esp_netif: Pesp_netif): Tesp_netif_flags_t;
+function esp_netif_get_flags(esp_netif: Pesp_netif): Tesp_netif_flags;
   external;
 function esp_netif_get_ifkey(esp_netif: Pesp_netif): PChar; external;
 function esp_netif_get_desc(esp_netif: Pesp_netif): PChar; external;

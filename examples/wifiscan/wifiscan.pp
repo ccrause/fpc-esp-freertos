@@ -4,7 +4,7 @@ program wifiscan;
 
 uses
   esp_err, esp_wifi, esp_wifi_types, esp_netif, esp_event,
-  esp_wifi_default, nvs, xtensa_api, xtensa_context;
+  esp_wifi_default, nvs;
 
 procedure printAPInfo(const AP: Twifi_ap_record);
 var

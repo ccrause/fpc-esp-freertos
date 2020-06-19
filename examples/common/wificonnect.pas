@@ -25,7 +25,7 @@ const
 
 var
   ret: longint;
-  WifiEventGroup: TEventGroupHandle_t;
+  WifiEventGroup: TEventGroupHandle;
   retries: uint32 = 0;
 
 // Rather use StrPLCopy, but while sysutils are not yet working...
@@ -44,19 +44,19 @@ begin
   end;
 end;
 
-procedure EventHandler(Arg: pointer; AEventBase: Tesp_event_base_t;
+procedure EventHandler(Arg: pointer; AEventBase: Tesp_event_base;
                                   AEventID: int32; AEventData: pointer);
 var
-  event: Pip_event_got_ip_t;
+  event: Pip_event_got_ip;
   addr: uint32;
 begin
   writeln('Event: ', AEventBase, ' - eventid: ', AEventID);
-  if (AEventBase = WIFI_EVENT) and (Twifi_event_t(AEventID) = WIFI_EVENT_STA_START) then
+  if (AEventBase = WIFI_EVENT) and (Twifi_event(AEventID) = WIFI_EVENT_STA_START) then
   begin
     writeln('Wifi started, now connecting...');
     esp_wifi_connect();
   end
-  else if (AEventBase = WIFI_EVENT) and (Twifi_event_t(AEventID) = WIFI_EVENT_STA_DISCONNECTED) then
+  else if (AEventBase = WIFI_EVENT) and (Twifi_event(AEventID) = WIFI_EVENT_STA_DISCONNECTED) then
   begin
     if (retries < MaxRetries) then
     begin
@@ -70,9 +70,9 @@ begin
       writeln('### Connect to the AP fail');
     end;
   end
-  else if (AEventBase = IP_EVENT) and (Tip_event_t(AEventID) = IP_EVENT_STA_GOT_IP) then
+  else if (AEventBase = IP_EVENT) and (Tip_event(AEventID) = IP_EVENT_STA_GOT_IP) then
   begin
-    event := Pip_event_got_ip_t(AEventData);
+    event := Pip_event_got_ip(AEventData);
     addr := event^.ip_info.ip.addr;
     writeln('Got ip: ',  addr and $FF, '.', (addr shr 8) and $FF, '.', (addr shr 16) and $FF, '.', addr shr 24);
     retries := 0;
@@ -84,9 +84,9 @@ end;
 
 procedure WifiInitStationMode(const APName, APassword: string);
 var
-  cfg: Twifi_init_config_t;
-  wifi_config: Twifi_config_t;
-  bits: TEventBits_t;
+  cfg: Twifi_init_config;
+  wifi_config: Twifi_config;
+  bits: TEventBits;
   i: integer;
 begin
   WifiEventGroup := xEventGroupCreate();
@@ -95,8 +95,8 @@ begin
   esp_netif_create_default_wifi_sta();
   WIFI_INIT_CONFIG_DEFAULT(cfg);
   EspErrorCheck(esp_wifi_init(@cfg));
-  EspErrorCheck(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, Tesp_event_handler_t(@EventHandler), nil));
-  EspErrorCheck(esp_event_handler_register(IP_EVENT, ord(IP_EVENT_STA_GOT_IP), Tesp_event_handler_t(@EventHandler), nil));
+  EspErrorCheck(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, Tesp_event_handler(@EventHandler), nil));
+  EspErrorCheck(esp_event_handler_register(IP_EVENT, ord(IP_EVENT_STA_GOT_IP), Tesp_event_handler(@EventHandler), nil));
 
   // Seems like the name and password are not treated as NULL terminated
   // so zero everything
@@ -124,8 +124,8 @@ begin
     writeln('## UNEXPECTED EVENT, bits = ', bits);
 
   // Done, now clean up event group
-  EspErrorCheck(esp_event_handler_unregister(IP_EVENT, ord(IP_EVENT_STA_GOT_IP), Tesp_event_handler_t(@EventHandler)));
-  EspErrorCheck(esp_event_handler_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, Tesp_event_handler_t(@EventHandler)));
+  EspErrorCheck(esp_event_handler_unregister(IP_EVENT, ord(IP_EVENT_STA_GOT_IP), Tesp_event_handler(@EventHandler)));
+  EspErrorCheck(esp_event_handler_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, Tesp_event_handler(@EventHandler)));
   vEventGroupDelete(WifiEventGroup);
 end;
 
