@@ -21,7 +21,7 @@ const
 // Import fpc logo in gif format as array of char
 {$include fpclogo.inc}
 
-function hello_get_handler(req: Phttpd_req_t): Tesp_err_t; cdecl;
+function hello_get_handler(req: Phttpd_req): Tesp_err;
 var
   buf: PChar;
   buf_len: uint32;
@@ -31,7 +31,7 @@ begin
   begin
     buf := pvPortMalloc(buf_len);
     if (httpd_req_get_hdr_value_str(req, 'Host', buf, buf_len) = ESP_OK) then
-      esp_log_write(ESP_LOG_INFO, TAG, 'Found header => Host: %s'#10, buf);
+      esp_log_write(ESP_LOG_INFO, TAG, 'Found header => Host: %s\n', buf);
     vPortFree(buf);
   end;
 
@@ -40,7 +40,7 @@ begin
   result := ESP_OK;
 end;
 
-function fpclogo_get_handler(req: Phttpd_req_t): Tesp_err_t; cdecl;
+function fpclogo_get_handler(req: Phttpd_req): Tesp_err;
 var
   buf: PChar;
   buf_len: uint32;
@@ -59,12 +59,12 @@ begin
   result := ESP_OK;
 end;
 
-function start_webserver: Thttpd_handle_t;
+function start_webserver: Thttpd_handle;
 var
-  server: Thttpd_handle_t;
-  config: Thttpd_config_t;
-  helloUriHandlerConfig: Thttpd_uri_t;
-  fpcUriHandlerConfig: Thttpd_uri_t;
+  server: Thttpd_handle;
+  config: Thttpd_config;
+  helloUriHandlerConfig: Thttpd_uri;
+  fpcUriHandlerConfig: Thttpd_uri;
 begin
   config := HTTPD_DEFAULT_CONFIG();
 
