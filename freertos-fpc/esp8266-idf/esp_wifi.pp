@@ -86,7 +86,7 @@ type
     _type: Twifi_promiscuous_pkt_type);
 
   Tesp_vendor_ie_cb = procedure(ctx: pointer; _type: Twifi_vendor_ie_type;
-    sa: TMac; vnd_ie: Pvendor_ie_data_t; rssi: longint);
+    sa: TMac; vnd_ie: Pvendor_ie_data; rssi: longint);
 
 procedure WIFI_INIT_CONFIG_DEFAULT(out cfg: Twifi_init_config);
 

@@ -6,11 +6,6 @@ uses
   esp_wifi_types, tcpip_adapter, ip_addr, ip4_addr,
   esp_err;
 
-{$ifndef SYSTEM_EVENT_AP_STA_GOT_IP6}
-const
-  SYSTEM_EVENT_AP_STA_GOT_IP6 = SYSTEM_EVENT_GOT_IP6;
-{$endif}
-
 type
   Psystem_event_id = ^Tsystem_event_id;
   Tsystem_event_id = (SYSTEM_EVENT_WIFI_READY = 0, SYSTEM_EVENT_SCAN_DONE,
@@ -126,6 +121,11 @@ type
   end;
 
   Tsystem_event_handler = function(event: Psystem_event): Tesp_err;
+
+{$ifndef SYSTEM_EVENT_AP_STA_GOT_IP6}
+const
+  SYSTEM_EVENT_AP_STA_GOT_IP6 = SYSTEM_EVENT_GOT_IP6;
+{$endif}
 
 function esp_event_send(event: Psystem_event): Tesp_err; external;
 function esp_event_process_default(event: Psystem_event): Tesp_err; external;
