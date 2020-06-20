@@ -62,7 +62,7 @@ procedure portEND_SWITCHING_ISR(xSwitchRequired: boolean);
 procedure portYIELD_FROM_ISR(); external;
 
 var
-  cpu_sr : uint32; external;
+  cpu_sr : uint32; cvar; external;
 
 procedure vPortEnterCritical(); external;
 procedure vPortExitCritical(); external;
@@ -138,22 +138,36 @@ begin
 		vTaskSwitchContext();
 end;
 
-procedure portDISABLE_INTERRUPTS; inline;
+procedure portDISABLE_INTERRUPTS;
+var
+  pcpu_sr: puint32;
 begin
+  // Loading the address of cpu_sr using l32r doesn't always work,
+  // because the literal with the address may be beyond the reach of l32r.
+  // This work-around is one potential way to make it work, at the expense of
+  // extra 4 bytes in the exe for the address and another 4 bytes stack space.
+  // The compiler creates a local literal with the address to cpu_sr
+  // which is in easy range of l32r.
+  pcpu_sr := @cpu_sr;
   asm
   //__asm__ volatile ("rsil %0, " XTSTR(XCHAL_EXCM_LEVEL) : "=a" (cpu_sr) :: "memory")
-    // Fix this
-    rsil a2, XCHAL_EXCM_LEVEL
-  end;
+    rsil a2, XCHAL_EXCM_LEVEL  // store PS into a2 and write XCHAL_EXCM_LEVEL into PS.INTLEVEL
+    l32i a3, pcpu_sr           // load local address of cpu_sr into a3
+    s32i a2, a3, 0             // store a2 into memory pointed to by a3
+  end ['a2', 'a3'];
 end;
 
 procedure portENABLE_INTERRUPTS;
+var
+  pcpu_sr: puint32;
 begin
+  pcpu_sr := @cpu_sr;
   asm
     //__asm__ volatile ("wsr %0, ps" :: "a" (cpu_sr) : "memory")
-    // FIX!!
-    wsr.ps a2
-  end;
+    l32i a3, pcpu_sr           // Load address of cpu_sr into a3
+    l32i  a2, a3, 0            // Load contents of cpu_sr into a2
+    wsr.ps a2                  // Restore PS from a2
+  end ['a2', 'a3'];
 end;
 
 procedure portENTER_CRITICAL;
