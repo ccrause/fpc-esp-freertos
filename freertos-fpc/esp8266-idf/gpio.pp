@@ -5,19 +5,6 @@ interface
 uses
   eagle_soc, esp_err;
 
-//type
-//  Pgpio_config_t = ^gpio_config_t;
-//  Pgpio_int_type_t = ^gpio_int_type_t;
-//  Pgpio_isr_handle_t = ^gpio_isr_handle_t;
-//  Pgpio_mode_t = ^gpio_mode_t;
-//  Pgpio_num_t = ^gpio_num_t;
-//  Pgpio_pull_mode_t = ^gpio_pull_mode_t;
-//  Pgpio_pulldown_t = ^gpio_pulldown_t;
-//  Pgpio_pullup_t = ^gpio_pullup_t;
-
-{.$include "esp8266/pin_mux_register.h"}
-{.$include "esp8266/gpio_register.h"}
-
 const
   GPIO_Pin_0   = BIT0;
   GPIO_Pin_1   = BIT1;
@@ -82,35 +69,35 @@ type
     intr_type: Tgpio_int_type;
   end;
 
-  Tgpio_isr = procedure(para1: pointer); cdecl;
+  Tgpio_isr = procedure(para1: pointer);
   Pgpio_isr_handle = ^Tgpio_isr_handle;
   Tgpio_isr_handle = pointer;
 
-  TIsrProc = procedure(para: pointer); cdecl;
+  TIsrProc = procedure(para: pointer);
 
-function gpio_config(constref gpio_cfg: Tgpio_config): Tesp_err; cdecl; external;
+function gpio_config(constref gpio_cfg: Tgpio_config): Tesp_err; external;
 function gpio_set_intr_type(gpio_num: Tgpio_num;
-  intr_type: Tgpio_int_type): Tesp_err; cdecl; external;
-function gpio_set_level(gpio_num: Tgpio_num; level: uint32): Tesp_err; cdecl; external;
-function gpio_get_level(gpio_num: Tgpio_num): longint; cdecl; external;
+  intr_type: Tgpio_int_type): Tesp_err; external;
+function gpio_set_level(gpio_num: Tgpio_num; level: uint32): Tesp_err; external;
+function gpio_get_level(gpio_num: Tgpio_num): longint; external;
 function gpio_set_direction(gpio_num: Tgpio_num; mode: Tgpio_mode): Tesp_err;
-  cdecl; external;
+  external;
 function gpio_set_pull_mode(gpio_num: Tgpio_num; pull: Tgpio_pull_mode): Tesp_err;
-  cdecl; external;
+  external;
 function gpio_wakeup_enable(gpio_num: Tgpio_num;
-  intr_type: Tgpio_int_type): Tesp_err; cdecl; external;
-function gpio_wakeup_disable(gpio_num: Tgpio_num): Tesp_err; cdecl; external;
+  intr_type: Tgpio_int_type): Tesp_err; external;
+function gpio_wakeup_disable(gpio_num: Tgpio_num): Tesp_err; external;
 function gpio_isr_register(fn: TIsrProc; arg: pointer;
-  no_use: longint; handle_no_use: Pgpio_isr_handle): Tesp_err; cdecl; external;
-function gpio_pullup_en(gpio_num: Tgpio_num): Tesp_err; cdecl; external;
-function gpio_pullup_dis(gpio_num: Tgpio_num): Tesp_err; cdecl; external;
-function gpio_pulldown_en(gpio_num: Tgpio_num): Tesp_err; cdecl; external;
-function gpio_pulldown_dis(gpio_num: Tgpio_num): Tesp_err; cdecl; external;
-function gpio_install_isr_service(no_use: longint): Tesp_err; cdecl; external;
-procedure gpio_uninstall_isr_service; cdecl; external;
+  no_use: longint; handle_no_use: Pgpio_isr_handle): Tesp_err; external;
+function gpio_pullup_en(gpio_num: Tgpio_num): Tesp_err; external;
+function gpio_pullup_dis(gpio_num: Tgpio_num): Tesp_err; external;
+function gpio_pulldown_en(gpio_num: Tgpio_num): Tesp_err; external;
+function gpio_pulldown_dis(gpio_num: Tgpio_num): Tesp_err; external;
+function gpio_install_isr_service(no_use: longint): Tesp_err; external;
+procedure gpio_uninstall_isr_service; external;
 function gpio_isr_handler_add(gpio_num: Tgpio_num; isr_handler: Tgpio_isr;
-  args: pointer): Tesp_err; cdecl; external;
-function gpio_isr_handler_remove(gpio_num: Tgpio_num): Tesp_err; cdecl; external;
+  args: pointer): Tesp_err; external;
+function gpio_isr_handler_remove(gpio_num: Tgpio_num): Tesp_err; external;
 
 implementation
 

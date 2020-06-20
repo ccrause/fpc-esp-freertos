@@ -5,12 +5,6 @@ interface
 uses
   portmacro;
 
-{.$include "sdkconfig.h"}
-{.$include <stdint.h>}
-{.$include <stddef.h>}
-{.$include "esp_err.h"}
-{.$include "esp_heap_config.h"}
-
 const
   MALLOC_CAP_32BIT = 1 shl 1;
   MALLOC_CAP_8BIT = 1 shl 2;
@@ -38,8 +32,6 @@ type
     afile: PChar;
     line: Tsize;
   end;
-  //Tmem2_blk_t = Tmem_blk2;
-  //Pmem2_blk_t = ^Tmem2_blk_t;
 {$else}
   Pmem2_blk_t = ^Tmem2_blk;
   Tmem2_blk = Tmem_blk;
@@ -54,24 +46,20 @@ type
     free_bytes: Tsize;
     min_free_bytes: Tsize;
   end;
-  //Theap_region_t = Theap_region;
-  //Pheap_region_t = ^Theap_region_t;
 
-
-function heap_caps_get_free_size(caps: uint32): Tsize; cdecl; external;
-function heap_caps_get_minimum_free_size(caps: uint32): Tsize; cdecl; external;
-
+function heap_caps_get_free_size(caps: uint32): Tsize; external;
+function heap_caps_get_minimum_free_size(caps: uint32): Tsize; external;
 procedure esp_heap_caps_init_region(region: Pheap_region; max_num: Tsize);
-  cdecl; external;
+  external;
 function _heap_caps_malloc(size: Tsize; caps: uint32; afile: PChar;
-  line: Tsize): pointer; cdecl; external;
-procedure _heap_caps_free(ptr: pointer; afile: PChar; line: Tsize); cdecl; external;
+  line: Tsize): pointer; external;
+procedure _heap_caps_free(ptr: pointer; afile: PChar; line: Tsize); external;
 function _heap_caps_calloc(Count: Tsize; size: Tsize; caps: uint32;
-  afile: PChar; line: Tsize): pointer; cdecl; external;
+  afile: PChar; line: Tsize): pointer; external;
 function _heap_caps_realloc(mem: pointer; newsize: Tsize; caps: uint32;
-  afile: PChar; line: Tsize): pointer; cdecl; external;
+  afile: PChar; line: Tsize): pointer; external;
 function _heap_caps_zalloc(size: Tsize; caps: uint32; afile: PChar;
-  line: Tsize): pointer; cdecl; external;
+  line: Tsize): pointer; external;
 
 // Pascal functions will not give the same capability as the C macro's
 // which automatically embed the call size file name and line number.

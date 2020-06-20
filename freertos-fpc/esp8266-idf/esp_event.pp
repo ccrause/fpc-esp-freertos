@@ -6,17 +6,10 @@ uses
   esp_wifi_types, tcpip_adapter, ip_addr, ip4_addr,
   esp_err;
 
-{.$include "esp_err.h"}
-{.$include "esp_wifi_types.h"}
-{.$include "lwip/ip_addr.h"}
-{.$include "tcpip_adapter.h"}
-{.$include "freertos/FreeRTOS.h"}
-{.$include "freertos/task.h"}
-{.$include "freertos/queue.h"}
-{.$include "freertos/semphr.h"}
-
-//const
-//  ESP_EVENT_IPV6 = LWIP_IPV6;
+{$ifndef SYSTEM_EVENT_AP_STA_GOT_IP6}
+const
+  SYSTEM_EVENT_AP_STA_GOT_IP6 = SYSTEM_EVENT_GOT_IP6;
+{$endif}
 
 type
   Psystem_event_id = ^Tsystem_event_id;
@@ -34,12 +27,6 @@ type
     SYSTEM_EVENT_ETH_CONNECTED, SYSTEM_EVENT_ETH_DISCONNECTED,
     SYSTEM_EVENT_ETH_GOT_IP, SYSTEM_EVENT_MAX);
 
-{$ifndef SYSTEM_EVENT_AP_STA_GOT_IP6}
-const
-  SYSTEM_EVENT_AP_STA_GOT_IP6 = SYSTEM_EVENT_GOT_IP6;
-{$endif}
-
-type
   Psystem_event_sta_wps_fail_reason = ^Tsystem_event_sta_wps_fail_reason;
   Tsystem_event_sta_wps_fail_reason = (WPS_FAIL_REASON_NORMAL =
     0, WPS_FAIL_REASON_RECV_M2D,
@@ -138,12 +125,12 @@ type
     event_info: Tsystem_event_info;
   end;
 
-  Tsystem_event_handler = function(event: Psystem_event): Tesp_err; cdecl;
+  Tsystem_event_handler = function(event: Psystem_event): Tesp_err;
 
-function esp_event_send(event: Psystem_event): Tesp_err; cdecl; external;
-function esp_event_process_default(event: Psystem_event): Tesp_err; cdecl; external;
-procedure esp_event_set_default_wifi_handlers; cdecl; external;
-function esp_event_loop_create_default: Tesp_err; cdecl; external;
+function esp_event_send(event: Psystem_event): Tesp_err; external;
+function esp_event_process_default(event: Psystem_event): Tesp_err; external;
+procedure esp_event_set_default_wifi_handlers; external;
+function esp_event_loop_create_default: Tesp_err; external;
 
 implementation
 

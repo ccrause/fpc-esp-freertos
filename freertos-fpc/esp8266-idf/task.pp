@@ -14,17 +14,16 @@ const
   tskKERNEL_VERSION_BUILD = 1;
 
 type
-  PTaskHandle = ^TTaskHandle;
-  TTaskHandle = pointer;
-  TBaseType = int32;
+  //PTaskHandle = ^TTaskHandle;
+  //TTaskHandle = pointer;
+  //TBaseType = int32;
   TUBaseType = uint32;
-  TTickType = uint32;
   // Moved here from freertos
   {$ifndef configSTACK_DEPTH_TYPE}
     configSTACK_DEPTH_TYPE = uint16;
   {$endif}
 
-  TTaskHookFunction = function(para1: pointer): TBaseType; cdecl;
+  TTaskHookFunction = function(para1: pointer): TBaseType;
 
   PeTaskState = ^TeTaskState;
   TeTaskState = (eRunning = 0, eReady, eBlocked, eSuspended,
@@ -111,7 +110,7 @@ function taskSCHEDULER_RUNNING: TBaseType;
 function xTaskCreate(pxTaskCode: TTaskFunction; pcName: PChar;
   usStackDepth: configSTACK_DEPTH_TYPE; pvParameters: pointer;
   uxPriority: TUBaseType; pxCreatedTask: PTaskHandle): TBaseType;
-  cdecl; external;
+  external;
 {$endif}
 
 function xTaskCreatePinnedToCore(pxTaskCode: TTaskFunction; pcName: PChar;
@@ -122,113 +121,113 @@ function xTaskCreatePinnedToCore(pxTaskCode: TTaskFunction; pcName: PChar;
 function xTaskCreateStatic(pxTaskCode: TTaskFunction; pcName: PChar;
   ulStackDepth: uint32; pvParameters: pointer; uxPriority: TUBaseType;
   puxStackBuffer: PStackType; pxTaskBuffer: PStaticTask): TTaskHandle;
-  cdecl; external;
+  external;
 {$endif}
 
 
 {$if defined(portUSING_MPU_WRAPPERS) and (portUSING_MPU_WRAPPERS = 1)}
 function xTaskCreateRestricted(pxTaskDefinition: PTaskParameters;
-  pxCreatedTask: PTaskHandle): TBaseType; cdecl; external;
+  pxCreatedTask: PTaskHandle): TBaseType; external;
 {$endif}
 
 {$if defined(portUSING_MPU_WRAPPERS)and defined(configSUPPORT_STATIC_ALLOCATION) and
      ((portUSING_MPU_WRAPPERS = 1 ) and ( configSUPPORT_STATIC_ALLOCATION = 1))}
 function xTaskCreateRestrictedStatic(pxTaskDefinition: PTaskParameters;
-  pxCreatedTask: PTaskHandle): TBaseType; cdecl; external;
+  pxCreatedTask: PTaskHandle): TBaseType; external;
 {$endif}
 
 procedure vTaskAllocateMPURegions(xTask: TTaskHandle; pxRegions: PMemoryRegion);
-  cdecl; external;
+  external;
 
-procedure vTaskDelete(xTaskToDelete: TTaskHandle); cdecl; external;
+procedure vTaskDelete(xTaskToDelete: TTaskHandle); external;
 
-procedure vTaskDelay(xTicksToDelay: TTickType); cdecl; external;
+procedure vTaskDelay(xTicksToDelay: TTickType); external;
 procedure vTaskDelayUntil(pxPreviousWakeTime: PTickType; xTimeIncrement: TTickType);
-  cdecl; external;
+  external;
 
-function xTaskAbortDelay(xTask: TTaskHandle): TBaseType; cdecl; external;
+function xTaskAbortDelay(xTask: TTaskHandle): TBaseType; external;
 
-function uxTaskPriorityGet(xTask: TTaskHandle): TUBaseType; cdecl; external;
+function uxTaskPriorityGet(xTask: TTaskHandle): TUBaseType; external;
 
-function uxTaskPriorityGetFromISR(xTask: TTaskHandle): TUBaseType; cdecl; external;
+function uxTaskPriorityGetFromISR(xTask: TTaskHandle): TUBaseType; external;
 
-function eTaskGetState(xTask: TTaskHandle): TeTaskState; cdecl; external;
+function eTaskGetState(xTask: TTaskHandle): TeTaskState; external;
 
 procedure vTaskGetInfo(xTask: TTaskHandle; pxTaskStatus: PTaskStatus;
-  xGetFreeStackSpace: TBaseType; eState: TeTaskState); cdecl; external;
+  xGetFreeStackSpace: TBaseType; eState: TeTaskState); external;
 
 procedure vTaskPrioritySet(xTask: TTaskHandle; uxNewPriority: TUBaseType);
-  cdecl; external;
+  external;
 
-procedure vTaskSuspend(xTaskToSuspend: TTaskHandle); cdecl; external;
+procedure vTaskSuspend(xTaskToSuspend: TTaskHandle); external;
 
-procedure vTaskResume(xTaskToResume: TTaskHandle); cdecl; external;
+procedure vTaskResume(xTaskToResume: TTaskHandle); external;
 
-function xTaskResumeFromISR(xTaskToResume: TTaskHandle): TBaseType; cdecl; external;
-
-
-procedure vTaskStartScheduler; cdecl; external;
-
-procedure vTaskEndScheduler; cdecl; external;
-
-procedure vTaskSuspendAll; cdecl; external;
-
-function xTaskResumeAll: TBaseType; cdecl; external;
+function xTaskResumeFromISR(xTaskToResume: TTaskHandle): TBaseType; external;
 
 
-function xTaskGetTickCount: TTickType; cdecl; external;
+procedure vTaskStartScheduler; external;
 
-function xTaskGetTickCountFromISR: TTickType; cdecl; external;
+procedure vTaskEndScheduler; external;
 
-function uxTaskGetNumberOfTasks: TUBaseType; cdecl; external;
+procedure vTaskSuspendAll; external;
 
-function pcTaskGetName(xTaskToQuery: TTaskHandle): PChar; cdecl; external;
+function xTaskResumeAll: TBaseType; external;
+
+
+function xTaskGetTickCount: TTickType; external;
+
+function xTaskGetTickCountFromISR: TTickType; external;
+
+function uxTaskGetNumberOfTasks: TUBaseType; external;
+
+function pcTaskGetName(xTaskToQuery: TTaskHandle): PChar; external;
 
 
 
-function xTaskGetHandle(pcNameToQuery: PChar): TTaskHandle; cdecl; external;
+function xTaskGetHandle(pcNameToQuery: PChar): TTaskHandle; external;
 
 
 function uxTaskGetStackHighWaterMark(xTask: TTaskHandle): TUBaseType;
-  cdecl; external;
+  external;
 
 {$if defined(configUSE_APPLICATION_TASK_TAG) and (configUSE_APPLICATION_TASK_TAG = 1)}
 procedure vTaskSetApplicationTaskTag(xTask: TTaskHandle;
-  pxHookFunction: TTaskHookFunction); cdecl; external;
+  pxHookFunction: TTaskHookFunction); external;
 function xTaskGetApplicationTaskTag(xTask: TTaskHandle): TTaskHookFunction;
-  cdecl; external;
+  external;
 {$endif}
 
 {$if defined(configNUM_THREAD_LOCAL_STORAGE_POINTERS) and (configNUM_THREAD_LOCAL_STORAGE_POINTERS > 0)}
 procedure vTaskSetThreadLocalStoragePointer(xTaskToSet: TTaskHandle;
-  xIndex: TBaseType; pvValue: pointer); cdecl; external;
+  xIndex: TBaseType; pvValue: pointer); external;
 function pvTaskGetThreadLocalStoragePointer(xTaskToQuery: TTaskHandle;
-  xIndex: TBaseType): pointer; cdecl; external;
+  xIndex: TBaseType): pointer; external;
 function pvTaskGetThreadLocalStorageBufferPointer(xTaskToQuery: TTaskHandle;
-  xIndex: TBaseType): ppointer; cdecl; external;
+  xIndex: TBaseType): ppointer; external;
 
   {$if (configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS)}
   type
-    TTlsDeleteCallbackFunction = procedure(para1: longint; para2: pointer); cdecl;
+    TTlsDeleteCallbackFunction = procedure(para1: longint; para2: pointer);
 
   procedure vTaskSetThreadLocalStoragePointerAndDelCallback(xTaskToSet: TTaskHandle;
     xIndex: TBaseType; pvValue: pointer; pvDelCallback: TTlsDeleteCallbackFunction);
-    cdecl; external;
+    external;
   {$endif}
 {$endif}
 
 
 function xTaskCallApplicationTaskHook(xTask: TTaskHandle;
-  pvParameter: pointer): TBaseType; cdecl; external;
+  pvParameter: pointer): TBaseType; external;
 
-function xTaskGetIdleTaskHandle: TTaskHandle; cdecl; external;
+function xTaskGetIdleTaskHandle: TTaskHandle; external;
 function uxTaskGetSystemState(pxTaskStatusArray: PTaskStatus;
-  uxArraySize: TUBaseType; pulTotalRunTime: Puint32): TUBaseType; cdecl; external;
-procedure vTaskList(pcWriteBuffer: PChar); cdecl; external;
-procedure vTaskGetRunTimeStats(pcWriteBuffer: PChar); cdecl; external;
+  uxArraySize: TUBaseType; pulTotalRunTime: Puint32): TUBaseType; external;
+procedure vTaskList(pcWriteBuffer: PChar); external;
+procedure vTaskGetRunTimeStats(pcWriteBuffer: PChar); external;
 function xTaskGenericNotify(xTaskToNotify: TTaskHandle; ulValue: uint32;
   eAction: TeNotifyAction; pulPreviousNotificationValue: Puint32): TBaseType;
-  cdecl; external;
+  external;
 
 function xTaskNotify(xTaskToNotify: TTaskHandle; ulValue: uint32; eAction: TeNotifyAction): TBaseType;
 function xTaskNotifyAndQuery(xTaskToNotify: TTaskHandle; ulValue: uint32; eAction: TeNotifyAction;
@@ -236,7 +235,7 @@ function xTaskNotifyAndQuery(xTaskToNotify: TTaskHandle; ulValue: uint32; eActio
 
 function xTaskGenericNotifyFromISR(xTaskToNotify: TTaskHandle;
   ulValue: uint32; eAction: TeNotifyAction; pulPreviousNotificationValue: Puint32;
-  pxHigherPriorityTaskWoken: PBaseType): TBaseType; cdecl; external;
+  pxHigherPriorityTaskWoken: PBaseType): TBaseType; external;
 
 function xTaskNotifyFromISR(xTaskToNotify: TTaskHandle;
   ulValue: uint32; eAction: TeNotifyAction; pulPreviousNotificationValue: Puint32;
@@ -248,47 +247,47 @@ function xTaskNotifyAndQueryFromISR(xTaskToNotify: TTaskHandle;
 
 function xTaskNotifyWait(ulBitsToClearOnEntry: uint32; ulBitsToClearOnExit: uint32;
   pulNotificationValue: Puint32; xTicksToWait: TTickType): TBaseType;
-  cdecl; external;
+  external;
 
 function xTaskNotifyGive(xTaskToNotify: TTaskHandle): TBaseType;
 
 procedure vTaskNotifyGiveFromISR(xTaskToNotify: TTaskHandle;
-  pxHigherPriorityTaskWoken: PBaseType); cdecl; external;
+  pxHigherPriorityTaskWoken: PBaseType); external;
 function ulTaskNotifyTake(xClearCountOnExit: TBaseType;
-  xTicksToWait: TTickType): uint32; cdecl; external;
-function xTaskNotifyStateClear(xTask: TTaskHandle): TBaseType; cdecl; external;
-function xTaskIncrementTick: TBaseType; cdecl; external;
+  xTicksToWait: TTickType): uint32; external;
+function xTaskNotifyStateClear(xTask: TTaskHandle): TBaseType; external;
+function xTaskIncrementTick: TBaseType; external;
 
 procedure vTaskPlaceOnEventList(pxEventList: PList; xTicksToWait: TTickType);
-  cdecl; external;
+  external;
 
 procedure vTaskPlaceOnUnorderedEventList(pxEventList: PList;
-  xItemValue: TTickType; xTicksToWait: TTickType); cdecl; external;
+  xItemValue: TTickType; xTicksToWait: TTickType); external;
 procedure vTaskPlaceOnEventListRestricted(pxEventList: PList;
-  xTicksToWait: TTickType; xWaitIndefinitely: TBaseType); cdecl; external;
-function xTaskRemoveFromEventList(pxEventList: PList): TBaseType; cdecl; external;
+  xTicksToWait: TTickType; xWaitIndefinitely: TBaseType); external;
+function xTaskRemoveFromEventList(pxEventList: PList): TBaseType; external;
 procedure vTaskRemoveFromUnorderedEventList(pxEventListItem: PListItem;
-  xItemValue: TTickType); cdecl; external;
-procedure vTaskSwitchContext; cdecl; external;
-function uxTaskResetEventItemValue: TTickType; cdecl; external;
-function xTaskGetCurrentTaskHandle: TTaskHandle; cdecl; external;
-procedure vTaskSetTimeOutState(pxTimeOut: PTimeOut); cdecl; external;
+  xItemValue: TTickType); external;
+procedure vTaskSwitchContext; external;
+function uxTaskResetEventItemValue: TTickType; external;
+function xTaskGetCurrentTaskHandle: TTaskHandle; external;
+procedure vTaskSetTimeOutState(pxTimeOut: PTimeOut); external;
 function xTaskCheckForTimeOut(pxTimeOut: PTimeOut;
-  pxTicksToWait: PTickType): TBaseType; cdecl; external;
-procedure vTaskMissedYield; cdecl; external;
-function xTaskGetSchedulerState: TBaseType; cdecl; external;
-function xTaskPriorityInherit(pxMutexHolder: TTaskHandle): TBaseType; cdecl; external;
+  pxTicksToWait: PTickType): TBaseType; external;
+procedure vTaskMissedYield; external;
+function xTaskGetSchedulerState: TBaseType; external;
+function xTaskPriorityInherit(pxMutexHolder: TTaskHandle): TBaseType; external;
 function xTaskPriorityDisinherit(pxMutexHolder: TTaskHandle): TBaseType;
-  cdecl; external;
+  external;
 procedure vTaskPriorityDisinheritAfterTimeout(pxMutexHolder: TTaskHandle;
-  uxHighestPriorityWaitingTask: TUBaseType); cdecl; external;
-function uxTaskGetTaskNumber(xTask: TTaskHandle): TUBaseType; cdecl; external;
+  uxHighestPriorityWaitingTask: TUBaseType); external;
+function uxTaskGetTaskNumber(xTask: TTaskHandle): TUBaseType; external;
 procedure vTaskSetTaskNumber(xTask: TTaskHandle; uxHandle: TUBaseType);
-  cdecl; external;
-procedure vTaskStepTick(xTicksToJump: TTickType); cdecl; external;
-function eTaskConfirmSleepModeStatus: TeSleepModeStatus; cdecl; external;
-function pvTaskIncrementMutexHeldCount: pointer; cdecl; external;
-procedure vTaskInternalSetTimeOutState(pxTimeOut: PTimeOut); cdecl; external;
+  external;
+procedure vTaskStepTick(xTicksToJump: TTickType); external;
+function eTaskConfirmSleepModeStatus: TeSleepModeStatus; external;
+function pvTaskIncrementMutexHeldCount: pointer; external;
+procedure vTaskInternalSetTimeOutState(pxTimeOut: PTimeOut); external;
 
 type
   PxTASK_SNAPSHOT = ^TxTASK_SNAPSHOT;
@@ -301,7 +300,7 @@ type
   PTaskSnapshot = ^TTaskSnapshot;
 
 function uxTaskGetSnapshotAll(pxTaskSnapshotArray: PTaskSnapshot;
-  uxArraySize: TUBaseType; pxTcbSz: PUBaseType): TUBaseType; cdecl; external;
+  uxArraySize: TUBaseType; pxTcbSz: PUBaseType): TUBaseType; external;
 
 
 implementation

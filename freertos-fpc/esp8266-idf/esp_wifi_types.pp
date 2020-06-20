@@ -12,13 +12,6 @@ type
   Pwifi_ps_type = ^Twifi_ps_type;
   Twifi_ps_type = (WIFI_PS_NONE, WIFI_PS_MIN_MODEM, WIFI_PS_MAX_MODEM);
 
-  Pwifi_mode = ^Twifi_mode;
-  Twifi_mode = (WIFI_MODE_NULL = 0, WIFI_MODE_STA, WIFI_MODE_AP,
-    WIFI_MODE_APSTA, WIFI_MODE_MAX);
-
-  Pwifi_interface = ^Twifi_interface;
-  Twifi_interface = Tesp_interface;
-
 const
   WIFI_IF_STA = ESP_IF_WIFI_STA;
   WIFI_IF_AP = ESP_IF_WIFI_AP;
@@ -50,6 +43,13 @@ const
   WIFI_VENDOR_IE_ELEMENT_ID = $DD;
 
 type
+  Pwifi_interface = ^Twifi_interface;
+  Twifi_interface = Tesp_interface;
+
+  Pwifi_mode = ^Twifi_mode;
+  Twifi_mode = (WIFI_MODE_NULL = 0, WIFI_MODE_STA, WIFI_MODE_AP,
+    WIFI_MODE_APSTA, WIFI_MODE_MAX);
+
   Pwifi_country_policy_t = ^Twifi_country_policy;
   Twifi_country_policy = (WIFI_COUNTRY_POLICY_AUTO, WIFI_COUNTRY_POLICY_MANUAL);
 
@@ -159,12 +159,6 @@ type
     group_cipher: Twifi_cipher_type;
     ant: Twifi_ant;
     _phy_: byte;
-    //phy_11b: 0..1;           // 1 bit
-    //phy_11g:0..1;            // 1 bit
-    //phy_11n: 0..1;           // 1 bit
-    //phy_lr: 0..1;            // 1 bit
-    //wps: 0..1;               // 1 bit
-    //reserved1: 0..7;         // 3
     reserved: array[0..2] of byte;//0..$FFFFFF;
     country: Twifi_country;
     property phy_11b: TBitRange1 read Getphy_11b write Setphy_11b;
@@ -245,12 +239,7 @@ type
     procedure Setphy_lr(const avalue: TBitRange1); inline;
   public
     mac: array[0..5] of byte;
-    //phy_11b: 0..1;
-    //phy_11g: 0..1;
-    //phy_11n: 0..1;
-    //phy_lr:  0..1;
     _phy_: byte;
-    //reserved:0..$0FFFFFFF;
     reserved: array[0..2] of byte;
     property phy_11b: TBitRange1 read Getphy_11b write Setphy_11b;
     property phy_11g: TBitRange1 read Getphy_11g write Setphy_11g;
@@ -275,8 +264,8 @@ type
   Pwifi_vendor_ie_id = ^Twifi_vendor_ie_id;
   Twifi_vendor_ie_id = (WIFI_VND_IE_ID_0, WIFI_VND_IE_ID_1);
 
-  Pvendor_ie_data_t = ^Tvendor_ie_data_t;
-  Tvendor_ie_data_t = record
+  Pvendor_ie_data = ^Tvendor_ie_data;
+  Tvendor_ie_data = record
     element_id: byte;
     length: byte;
     vendor_oui: array[0..2] of byte;

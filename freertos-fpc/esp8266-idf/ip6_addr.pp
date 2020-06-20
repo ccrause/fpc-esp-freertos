@@ -2,12 +2,6 @@ unit ip6_addr;
 
 interface
 
-type
-  Pip6_addr = ^Tip6_addr;
-  Tip6_addr = record
-    addr: array[0..3] of uint32;
-  end;
-
 const
   IP6_MULTICAST_SCOPE_RESERVED = $0;
   IP6_MULTICAST_SCOPE_RESERVED0 = $0;
@@ -33,6 +27,12 @@ const
   IP6_ADDR_DEPRECATED = $10;
   IP6_ADDR_TENTATIVE_COUNT_MASK = $07;
   IP6ADDR_STRLEN_MAX = 46;
+
+type
+  Pip6_addr = ^Tip6_addr;
+  Tip6_addr = record
+    addr: array[0..3] of uint32;
+  end;
 
 {
 (* error 

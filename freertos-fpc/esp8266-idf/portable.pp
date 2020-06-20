@@ -4,19 +4,17 @@ interface
 
 uses
   portmacro, projdefs, esp_heap_caps;
-{.$include "mpu_wrappers.h"}
-{.$include "esp_heap_caps.h"}
-
-type
-  //PxMEMORY_REGION = ^xMEMORY_REGION;
-  PStackType = ^TStackType;
 
 const
   portBYTE_ALIGNMENT_MASK = portBYTE_ALIGNMENT - 1;
-
 {$ifndef portNUM_CONFIGURABLE_REGIONS}
   portNUM_CONFIGURABLE_REGIONS = 1;
 {$endif}
+  pvMALLOC_DRAM = (MALLOC_CAP_8BIT or MALLOC_CAP_32BIT) or MALLOC_CAP_DMA;
+  pvMALLOC_IRAM = MALLOC_CAP_32BIT;
+
+type
+  PStackType = ^TStackType;
 
 {$if defined(portUSING_MPU_WRAPPERS) and (portUSING_MPU_WRAPPERS = 1)}
 function pxPortInitialiseStack(pxTopOfStack: PStackType; pxCode: TaskFunction;
@@ -25,10 +23,6 @@ function pxPortInitialiseStack(pxTopOfStack: PStackType; pxCode: TaskFunction;
 function pxPortInitialiseStack(pxTopOfStack: PStackType; pxCode: TTaskFunction;
     pvParameters: pointer): PStackType; external;
 {$endif}
-
-const
-  pvMALLOC_DRAM = (MALLOC_CAP_8BIT or MALLOC_CAP_32BIT) or MALLOC_CAP_DMA;
-  pvMALLOC_IRAM = MALLOC_CAP_32BIT;
 
 function pvPortMalloc(s: longint): pointer;
 function pvPortZalloc(s: longint): pointer;

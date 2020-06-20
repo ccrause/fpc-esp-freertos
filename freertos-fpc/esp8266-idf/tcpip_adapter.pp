@@ -16,8 +16,6 @@ uses
 
 {$if CONFIG_TCPIP_LWIP = 1}
 
-//{$include "dhcpserver/dhcpserver.h"}
-
 const
   IPSTR = '%d.%d.%d.%d';
   IPV6STR = '%04x:%04x:%04x:%04x:%04x:%04x:%04x:%04x';
@@ -107,7 +105,7 @@ type
   //  {undefined structure}
   //end;
 
-  Ttcpip_adapter_api_fn = function(msg: Ptcpip_adapter_api_msg_s): longint; cdecl;
+  Ttcpip_adapter_api_fn = function(msg: Ptcpip_adapter_api_msg_s): longint;
 
   //Ptcpip_adapter_api_msg_s = ^Ttcpip_adapter_api_msg_s;
   Ttcpip_adapter_api_msg_s = record
@@ -143,90 +141,79 @@ type
   Ttcpip_adapter_ip_lost_timer = Ttcpip_adatper_ip_lost_timer_s;
   Ptcpip_adapter_ip_lost_timer = ^Ttcpip_adapter_ip_lost_timer;
 
-procedure tcpip_adapter_init; cdecl; external;
+procedure tcpip_adapter_init; external;
 function tcpip_adapter_start(tcpip_if: Ttcpip_adapter_if; mac: pbyte;
-  ip_info: Ptcpip_adapter_ip_info): Tesp_err; cdecl; external;
-function tcpip_adapter_stop(tcpip_if: Ttcpip_adapter_if): Tesp_err; cdecl; external;
-function tcpip_adapter_up(tcpip_if: Ttcpip_adapter_if): Tesp_err; cdecl; external;
-function tcpip_adapter_down(tcpip_if: Ttcpip_adapter_if): Tesp_err; cdecl; external;
+  ip_info: Ptcpip_adapter_ip_info): Tesp_err; external;
+function tcpip_adapter_stop(tcpip_if: Ttcpip_adapter_if): Tesp_err; external;
+function tcpip_adapter_up(tcpip_if: Ttcpip_adapter_if): Tesp_err; external;
+function tcpip_adapter_down(tcpip_if: Ttcpip_adapter_if): Tesp_err; external;
 function tcpip_adapter_get_ip_info(tcpip_if: Ttcpip_adapter_if;
-  ip_info: Ptcpip_adapter_ip_info): Tesp_err; cdecl; external;
+  ip_info: Ptcpip_adapter_ip_info): Tesp_err; external;
 function tcpip_adapter_set_ip_info(tcpip_if: Ttcpip_adapter_if;
-  ip_info: Ptcpip_adapter_ip_info): Tesp_err; cdecl; external;
+  ip_info: Ptcpip_adapter_ip_info): Tesp_err; external;
 function tcpip_adapter_set_dns_info(tcpip_if: Ttcpip_adapter_if;
   _type: Ttcpip_adapter_dns_type; dns: Ptcpip_adapter_dns_info): Tesp_err;
-  cdecl; external;
+  external;
 function tcpip_adapter_get_dns_info(tcpip_if: Ttcpip_adapter_if;
   _type: Ttcpip_adapter_dns_type; dns: Ptcpip_adapter_dns_info): Tesp_err;
-  cdecl; external;
+  external;
 function tcpip_adapter_get_old_ip_info(tcpip_if: Ttcpip_adapter_if;
-  ip_info: Ptcpip_adapter_ip_info): Tesp_err; cdecl; external;
+  ip_info: Ptcpip_adapter_ip_info): Tesp_err; external;
 function tcpip_adapter_set_old_ip_info(tcpip_if: Ttcpip_adapter_if;
-  ip_info: Ptcpip_adapter_ip_info): Tesp_err; cdecl; external;
+  ip_info: Ptcpip_adapter_ip_info): Tesp_err; external;
 function tcpip_adapter_create_ip6_linklocal(tcpip_if: Ttcpip_adapter_if): Tesp_err;
-  cdecl; external;
+  external;
 
 {$if TCPIP_ADAPTER_IPV6}
 function tcpip_adapter_get_ip6_linklocal(tcpip_if: Ttcpip_adapter_if;
-  if_ip6: Pip6_addr_t): Tesp_err; cdecl; external;
+  if_ip6: Pip6_addr_t): Tesp_err; external;
 {$endif}
 
 {$if 0}
 function tcpip_adapter_get_mac(tcpip_if: Ttcpip_adapter_if_t;
-  mac: pbyte): Tesp_err; cdecl; external;
+  mac: pbyte): Tesp_err; external;
 function tcpip_adapter_set_mac(tcpip_if: Ttcpip_adapter_if_t;
-  mac: pbyte): Tesp_err; cdecl; external;
+  mac: pbyte): Tesp_err; external;
 {$endif}
 
 function tcpip_adapter_dhcps_get_status(tcpip_if: Ttcpip_adapter_if;
-  status: Ptcpip_adapter_dhcp_status): Tesp_err; cdecl; external;
-
+  status: Ptcpip_adapter_dhcp_status): Tesp_err; external;
 function tcpip_adapter_dhcps_option(opt_op: Ttcpip_adapter_option_mode;
   opt_id: Ttcpip_adapter_option_id; opt_val: pointer; opt_len: uint32): Tesp_err;
-  cdecl; external;
-
+  external;
 function tcpip_adapter_dhcps_start(tcpip_if: Ttcpip_adapter_if): Tesp_err;
-  cdecl; external;
-
+  external;
 function tcpip_adapter_dhcps_stop(tcpip_if: Ttcpip_adapter_if): Tesp_err;
-  cdecl; external;
-
+  external;
 function tcpip_adapter_dhcpc_get_status(tcpip_if: Ttcpip_adapter_if;
-  status: Ptcpip_adapter_dhcp_status): Tesp_err; cdecl; external;
-
+  status: Ptcpip_adapter_dhcp_status): Tesp_err; external;
 function tcpip_adapter_dhcpc_option(opt_op: Ttcpip_adapter_option_mode;
   opt_id: Ttcpip_adapter_option_id; opt_val: pointer; opt_len: uint32): Tesp_err;
-  cdecl; external;
-
+  external;
 function tcpip_adapter_dhcpc_start(tcpip_if: Ttcpip_adapter_if): Tesp_err;
-  cdecl; external;
-
+  external;
 function tcpip_adapter_dhcpc_stop(tcpip_if: Ttcpip_adapter_if): Tesp_err;
-  cdecl; external;
+  external;
 function tcpip_adapter_eth_input(buffer: pointer; len: uint16;
-  eb: pointer): Tesp_err; cdecl; external;
-
+  eb: pointer): Tesp_err; external;
 function tcpip_adapter_sta_input(buffer: pointer; len: uint16;
-  eb: pointer): Tesp_err; cdecl; external;
-
+  eb: pointer): Tesp_err; external;
 function tcpip_adapter_ap_input(buffer: pointer; len: uint16;
-  eb: pointer): Tesp_err; cdecl; external;
-
-function tcpip_adapter_get_esp_if(dev: pointer): Tesp_interface; cdecl; external;
-
+  eb: pointer): Tesp_err; external;
+function tcpip_adapter_get_esp_if(dev: pointer): Tesp_interface; external;
 function tcpip_adapter_get_sta_list(wifi_sta_list: Pwifi_sta_list;
-  tcpip_sta_list: Ptcpip_adapter_sta_list): Tesp_err; cdecl; external;
+  tcpip_sta_list: Ptcpip_adapter_sta_list): Tesp_err; external;
 
 const
   TCPIP_HOSTNAME_MAX_SIZE = 32;
 
 function tcpip_adapter_set_hostname(tcpip_if: Ttcpip_adapter_if;
-  hostname: PChar): Tesp_err; cdecl; external;
+  hostname: PChar): Tesp_err; external;
 function tcpip_adapter_get_hostname(tcpip_if: Ttcpip_adapter_if;
-  hostname: PPchar): Tesp_err; cdecl; external;
+  hostname: PPchar): Tesp_err; external;
 function tcpip_adapter_get_netif(tcpip_if: Ttcpip_adapter_if;
-  netif: Ppointer): Tesp_err; cdecl; external;
-function tcpip_adapter_is_netif_up(tcpip_if: Ttcpip_adapter_if): longbool; cdecl; external;
+  netif: Ppointer): Tesp_err; external;
+function tcpip_adapter_is_netif_up(tcpip_if: Ttcpip_adapter_if): longbool; external;
 
 implementation
 

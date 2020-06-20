@@ -8,9 +8,6 @@ interface
 uses
   portmacro, portable;
 
-{.$include "projdefs.h"}
-{. $include "portable.h"}
-
 {$ifndef configUSE_NEWLIB_REENTRANT}
   {$define configUSE_NEWLIB_REENTRANT := 0}
 {$endif}
@@ -842,7 +839,6 @@ type
 
 const
   portTICK_RATE_MS = portTICK_PERIOD_MS;
-
 {$endif}
 
 {$if not(configUSE_ALTERNATIVE_API = 0 )}
@@ -1022,23 +1018,17 @@ begin
   portCLEAN_UP_TCB := pointer(pxTCB);
 end;
 
-{ was #define dname(params) para_def_expr }
-{ argument types are unknown }
 function portSETUP_TCB(pxTCB: longint): pointer;
 begin
   portSETUP_TCB := pointer(pxTCB);
 end;
 
-{ was #define dname(params) para_def_expr }
-{ argument types are unknown }
 function traceEVENT_GROUP_SYNC_END(
   xEventGroup, uxBitsToSet, uxBitsToWaitFor, xTimeoutOccurred: longint): pointer;
 begin
   traceEVENT_GROUP_SYNC_END := pointer(xTimeoutOccurred);
 end;
 
-{ was #define dname(params) para_def_expr }
-{ argument types are unknown }
 function traceEVENT_GROUP_WAIT_BITS_END(
   xEventGroup, uxBitsToWaitFor, xTimeoutOccurred: longint): pointer;
 begin

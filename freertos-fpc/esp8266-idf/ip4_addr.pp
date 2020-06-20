@@ -1,31 +1,6 @@
 unit ip4_addr;
 
 interface
-{.$include "lwip/opt.h"}
-{.$include "lwip/def.h"}
-
-//{$if LWIP_IPV4}
-
-type
-  Pip4_addr = ^Tip4_addr;
-  Tip4_addr = record
-    addr: uint32;
-  end;
-  //Tip4_addr = Tip4_addr_t;
-{$ifdef PACK_STRUCT_USE_INCLUDES}
-{$include "arch/bpstruct.h"}
-{$endif}
-
-  Tip4_addr2 = packed record
-    addrw: array[0..1] of uint16;
-  end;
-
-{$ifdef PACK_STRUCT_USE_INCLUDES}
-{$include "arch/epstruct.h"}
-{$endif}
-
-  Tnetif = record end;
-  Pnetif = ^Tnetif;
 
 const
   IPADDR_NONE         = $ffffffff;
@@ -48,12 +23,25 @@ const
   IP_CLASSD_HOST = $0fffffff;
   IP_LOOPBACKNET = 127;
 
-function ip4_addr_isbroadcast_u32(addr: uint32; netif: Pnetif): byte; cdecl; external;
-function ipaddr_addr(cp: PChar): uint32; cdecl; external;
-function ip4addr_aton(cp: PChar; addr: Pip4_addr): longint; cdecl; external;
-function ip4addr_ntoa(addr: Pip4_addr): PChar; cdecl; external;
+type
+  Pip4_addr = ^Tip4_addr;
+  Tip4_addr = record
+    addr: uint32;
+  end;
+
+  Tip4_addr2 = packed record
+    addrw: array[0..1] of uint16;
+  end;
+
+  Tnetif = record end;
+  Pnetif = ^Tnetif;
+
+function ip4_addr_isbroadcast_u32(addr: uint32; netif: Pnetif): byte; external;
+function ipaddr_addr(cp: PChar): uint32; external;
+function ip4addr_aton(cp: PChar; addr: Pip4_addr): longint; external;
+function ip4addr_ntoa(addr: Pip4_addr): PChar; external;
 function ip4addr_ntoa_r(addr: Pip4_addr; buf: PChar; buflen: longint): PChar;
-  cdecl; external;
+  external;
 
 // Ignore the macro's below for now
 // Too much effort to hand translate and seem of little benefit to end users in FPC
@@ -151,7 +139,7 @@ function ip4_addr_isbroadcast(addr1, netif: longint): longint;
 { return type might be wrong }
 function ip_addr_netmask_valid(netmask: longint): longint;
 
-function ip4_addr_netmask_valid(netmask: uint32): byte; cdecl; external;
+function ip4_addr_netmask_valid(netmask: uint32): byte; external;
 { was #define dname(params) para_def_expr }
 { argument types are unknown }
 { return type might be wrong }

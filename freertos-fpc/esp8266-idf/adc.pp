@@ -16,10 +16,10 @@ type
     clk_div: byte;
   end;
 
-function adc_read(Data: puint16): Tesp_err; cdecl; external;
-function adc_read_fast(Data: puint16; len: uint16): Tesp_err; cdecl; external;
-function adc_deinit: Tesp_err; cdecl; external;
-function adc_init(config: Padc_config): Tesp_err; cdecl; external;
+function adc_read(Data: puint16): Tesp_err; external;
+function adc_read_fast(Data: puint16; len: uint16): Tesp_err; external;
+function adc_deinit: Tesp_err; external;
+function adc_init(config: Padc_config): Tesp_err; external;
 
 implementation
 

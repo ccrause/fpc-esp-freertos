@@ -4,10 +4,6 @@ unit portmacro;
 
 interface
 
-//#include "esp_attr.h"
-//#include    <xtensa/xtruntime.h>
-//#include    "xtensa_rtos.h"
-
 {$if defined(configUSE_NEWLIB_REENTRANT) and (configUSE_NEWLIB_REENTRANT = 1)}
 {$ifndef CONFIG_NEWLIB_LIBRARY_CUSTOMER}
 //#include "esp_newlib.h"
@@ -81,10 +77,6 @@ procedure portENABLE_INTERRUPTS(); inline;
 procedure portENTER_CRITICAL; inline;
 procedure portEXIT_CRITICAL; inline;
 function xPortGetCoreID(): uint32; inline;
-//function xTaskGetCurrentTaskHandleForCPU(_cpu: TTaskHandle): uint32; inline;
-
-//{$define portTASK_FUNCTION_PROTO( vFunction, pvParameters ) void vFunction( void *pvParameters )
-//{$define portTASK_FUNCTION( vFunction, pvParameters ) void vFunction( void *pvParameters )
 
 procedure _xt_user_exit; external;
 procedure _xt_tick_timer_init; external;
@@ -119,7 +111,6 @@ procedure esp_increase_tick_cnt(ticks: TTickType); external;
 //extern void esp_vApplicationIdleHook( void );
 //extern void esp_vApplicationTickHook( void );
 function g_esp_ticks_per_us: uint32; external;
-
 function prvGetExpectedIdleTime(): TTickType; external;
 
 // Moved from freertos
@@ -130,7 +121,6 @@ function portSET_INTERRUPT_MASK_FROM_ISR: longint;
 function portCLEAR_INTERRUPT_MASK_FROM_ISR(uxSavedStatusValue: longint)
   : pointer;
 {$endif}
-
 
 implementation
 
@@ -180,11 +170,6 @@ function xPortGetCoreID(): uint32;
 begin
   xPortGetCoreID := 0;
 end;
-
-//function xTaskGetCurrentTaskHandleForCPU(_cpu: TTaskHandle): uint32;
-//begin
-//  xTaskGetCurrentTaskHandleForCPU := xTaskGetCurrentTaskHandle(_cpu);
-//end;
 
 {$ifndef portSET_INTERRUPT_MASK_FROM_ISR}
 function portSET_INTERRUPT_MASK_FROM_ISR: longint;
