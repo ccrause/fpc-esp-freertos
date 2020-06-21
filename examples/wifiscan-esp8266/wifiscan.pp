@@ -4,9 +4,10 @@ program wifiscan;
 
 uses
   esp_err, esp_wifi, esp_wifi_types, esp_event,
-  nvs, nvs_flash, task, esp_event_loop;
+  nvs, nvs_flash, task, esp_event_loop,
+  portmacro;
 
-function eventhandler(ctx: pointer; event: Psystem_event): Tesp_err; cdecl;
+function eventhandler(ctx: pointer; event: Psystem_event): Tesp_err;
 begin
   writeln('Event -  ', event^.event_id);
   Result := ESP_OK;
