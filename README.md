@@ -9,6 +9,8 @@ Support for the ESP8266_RTOS_SDK [version 3.3](https://github.com/espressif/ESP8
 ## Notes
 * Need to think which optional features are needed for basic functionality (FreeRTOS trace/stats etc.).
 * Require reentrant support (XT_USE_THREAD_SAFE_CLIB)?
+* Be very careful when setting esp_deep_sleep(0) on ESP8266, the only way out is via a reset.
+In some cases it can cause problems with flashing firmware. Recover with esptool.py  --chip esp8266 --port /dev/ttyUSB0 --baud 115200 --before default_reset  erase_flash
 
 Common functionality that is expected from config:
 * CONFIG_LOG_SET_LEVEL - used to change verbosity at runtime
