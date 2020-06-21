@@ -18,11 +18,6 @@ const
   {$endif}
 
 type
-  PGPIO_INT_TYPE = ^TGPIO_INT_TYPE;
-  TGPIO_INT_TYPE = (GPIO_PIN_INTR_DISABLE = 0, GPIO_PIN_INTR_POSEDGE = 1,
-    GPIO_PIN_INTR_NEGEDGE = 2, GPIO_PIN_INTR_ANYEDGE = 3,
-    GPIO_PIN_INTR_LOLEVEL = 4, GPIO_PIN_INTR_HILEVEL = 5);
-
   Tgpio_intr_handler_fn = procedure(intr_mask: uint32; high: longbool;
     arg: pointer);
 
