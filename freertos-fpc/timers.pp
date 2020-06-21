@@ -25,8 +25,8 @@ const
 type
   TTimerHandle = pointer;
   PTimerHandle = ^TTimerHandle;
-  TTimerCallbackFunction = procedure(xTimer: TTimerHandle); cdecl;
-  TPendedFunction = procedure(para1: pointer; para2: uint32); cdecl;
+  TTimerCallbackFunction = procedure(xTimer: TTimerHandle);
+  TPendedFunction = procedure(para1: pointer; para2: uint32);
 
   // Defined in freertos/task.h
   TTaskHandle = pointer;
@@ -44,15 +44,13 @@ function  xTimerCreateStatic(pcTimerName: PChar;
 									const xTimerPeriodInTicks: TTickType,
 									const uxAutoReload: TUBaseType;
 									pvTimerID: pointer;
-									pxCallbackFunction: TTimerCallbackFunction_t;
-									pxTimerBuffer: PStaticTimer_t): TTimerHandle_t; external;
+									pxCallbackFunction: TTimerCallbackFunction;
+									pxTimerBuffer: PStaticTimer): TTimerHandle; external;
 {$endif}
-
 function pvTimerGetTimerID(xTimer: TTimerHandle): pointer; external;
 function vTimerSetTimerID(xTimer: TTimerHandle; pvNewID: pointer): pointer; external;
 function xTimerIsTimerActive(xTimer: TTimerHandle): TBaseType; external;
-function xTimerGetTimerDaemonTaskHandle: TTaskHandle; cdecl; external;
-
+function xTimerGetTimerDaemonTaskHandle: TTaskHandle; external;
 function xTimerGetPeriod(xTimer: TTimerHandle): TTickType; external;
 function xTimerGetExpiryTime(xTimer: TTimerHandle ): TTickType; external;
 
@@ -69,16 +67,12 @@ function xTimerResetFromISR(xTimer: TTimerHandle; pxHigherPriorityTaskWoken: PBa
 
 function xTimerPendFunctionCallFromISR(xFunctionToPend: TPendedFunction;
   pvParameter1: pointer; ulParameter2: uint32;
-  pxHigherPriorityTaskWoken: PBaseType): TBaseType; cdecl; external;
-
+  pxHigherPriorityTaskWoken: PBaseType): TBaseType; external;
 function xTimerPendFunctionCall(xFunctionToPend: TPendedFunction;
   pvParameter1: pointer; ulParameter2: uint32; xTicksToWait: TTickType): TBaseType;
-  cdecl; external;
-
-function pcTimerGetTimerName(xTimer: TTimerHandle): PChar; cdecl; external;
-
+  external;
+function pcTimerGetTimerName(xTimer: TTimerHandle): PChar; external;
 function xTimerCreateTimerTask: TBaseType; external;
-
 function xTimerGenericCommand(xTimer: TTimerHandle;
   const xCommandID: TBaseType; const xOptionalValue: TTickType;
   pxHigherPriorityTaskWoken: PBaseType; const xTicksToWait: TTickType): TBaseType; external;
@@ -137,6 +131,5 @@ begin
   xTimerResetFromISR := xTimerGenericCommand(xTimer, tmrCOMMAND_RESET_FROM_ISR,
     xTaskGetTickCountFromISR, pxHigherPriorityTaskWoken, 0);
 end;
-
 
 end.

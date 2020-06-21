@@ -27,7 +27,6 @@ function xEventGroupCreateStatic(pxEventGroupBuffer: PStaticEventGroup_t): TEven
 function xEventGroupWaitBits(xEventGroup: TEventGroupHandle;
   const uxBitsToWaitFor: TEventBits; const xClearOnExit: TBaseType;
   const xWaitForAllBits: TBaseType; xTicksToWait: TTickType): TEventBits; external;
-
 function xEventGroupClearBits(xEventGroup: TEventGroupHandle;
   const uxBitsToClear: TEventBits) : TEventBits; external;
 
@@ -58,18 +57,15 @@ function xEventGroupSync(xEventGroup: TEventGroupHandle;
 function xEventGroupGetBits(xEventGroup: TEventGroupHandle): TEventBits;
 
 function xEventGroupGetBitsFromISR(xEventGroup: TEventGroupHandle): TEventBits;
-  cdecl; external;
-
-procedure vEventGroupDelete(xEventGroup: TEventGroupHandle); cdecl; external;
-
+  external;
+procedure vEventGroupDelete(xEventGroup: TEventGroupHandle); external;
 procedure vEventGroupSetBitsCallback(pvEventGroup: pointer;
-  ulBitsToSet: uint32); cdecl; external;
-
+  ulBitsToSet: uint32); external;
 procedure vEventGroupClearBitsCallback(pvEventGroup: pointer;
-  ulBitsToClear: uint32); cdecl; external;
+  ulBitsToClear: uint32); external;
 
 {$if defined(configUSE_TRACE_FACILITY) and (configUSE_TRACE_FACILITY = 1)}
-function uxEventGroupGetNumber(xEventGroup: pointer): TUBaseType; cdecl; external;
+function uxEventGroupGetNumber(xEventGroup: pointer): TUBaseType; external;
 {$endif}
 
 
