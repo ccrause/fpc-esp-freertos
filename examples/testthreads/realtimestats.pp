@@ -6,7 +6,7 @@ program realtimestats;
 
 uses
   fthreads, freertos, task, esp_err, semphr, portmacro, portable, projdefs,
-  gpio, gpio_types;
+  gpio {$ifdef CPULX6}, gpio_types {$endif};
 
 const
   numSpinTasks            = 2;
@@ -224,11 +224,14 @@ begin
   for i := 0 to numSpinTasks-1 do
   begin
     taskName[4] := char(ord('0') + i);
+    writeln('Creating Task', i);
     // Pass i as parameter to task
     xTaskCreatePinnedToCore(@spinTask, PChar(@taskName[0]), 1024, pointer(i), 0, nil, tskNO_AFFINITY);
   end;
 
   //Create and start stats task
+  writeln('Creating stats');
+  vTaskDelay(pdMS_TO_TICKS(10));
   xTaskCreatePinnedToCore(@statsTask, 'stats', 4*1024, nil, statsTaskPriority, nil, 0);//tskNO_AFFINITY);
   xSemaphoreGive(syncStatsTask);
 

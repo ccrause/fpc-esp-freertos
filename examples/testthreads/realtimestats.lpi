@@ -28,6 +28,7 @@
             <UnitOutputDirectory Value="lib/$(TargetCPU)-freertos"/>
           </SearchPaths>
           <CodeGeneration>
+            <HeapSize Value="1024"/>
             <TargetCPU Value="xtensa"/>
             <TargetOS Value="freertos"/>
           </CodeGeneration>
@@ -51,7 +52,8 @@
 -Wpesp8266
 -Cacall0
 -XPxtensa-lx106-elf-
--al"/>
+-al
+-Xm"/>
             <CompilerPath Value="/home/christo/fpc/cc/compiler/ppcrossxtensa"/>
             <ExecuteBefore>
               <CompileReasons Run="False"/>
