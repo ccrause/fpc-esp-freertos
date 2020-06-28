@@ -5,15 +5,16 @@ unit freertos;
 
 interface
 
-uses
-  portmacro, portable;
-
 {$ifndef configUSE_NEWLIB_REENTRANT}
   {$define configUSE_NEWLIB_REENTRANT := 0}
 {$endif}
-//{$if ( configUSE_NEWLIB_REENTRANT = 1 )}
-//{$include <reent.h>}
-//{$endif}
+
+uses
+  portmacro, portable
+{$if configUSE_NEWLIB_REENTRANT = 1}
+  , reent
+{$endif}
+  ;
 
 {$ifndef configMINIMAL_STACK_SIZE}
   {$error Missing definition:  configMINIMAL_STACK_SIZE must be defined in FreeRTOSConfig.h.  configMINIMAL_STACK_SIZE defines the size (in words) of the stack allocated to the idle task.  Refer to the demo project provided for your port for a suitable value.}
