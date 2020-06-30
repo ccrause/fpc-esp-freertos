@@ -38,7 +38,7 @@ const
 // FreeRTOS have some TLS space per task, use DataIndex to identify the
 // location of FPC's TLS pointer in this space
 // TODO: check if FPC TLS space required can fit into the FreeRTOS TLS block, could save memory that way.
-  DataIndex: PtrUInt = 1; // Not 0 purely for debugging, nothing else currently use the TLS space
+  DataIndex: PtrUInt = 0; // Require setting "Number of thread local storage pointers" to larger than 0 under FreeRTOS options in config
   ThreadVarBlockSize: dword = 0;
   TLSAPISupported: boolean = false;
   pdTRUE = 1;
@@ -84,10 +84,10 @@ begin
   p := pvTaskGetThreadLocalStoragePointer(nil, DataIndex);
   if p = nil then
   begin
-    RunError(232);
-    //SysAllocateThreadVars;
-    //InitThread($400);  // Default to 1 kB stack
-    //p := pvTaskGetThreadLocalStoragePointer(nil, DataIndex);
+    //RunError(232);
+    SysAllocateThreadVars;
+    InitThread($400);  // Default to 1 kB stack
+    p := pvTaskGetThreadLocalStoragePointer(nil, DataIndex);
   end;
 
   SysRelocateThreadVar := p + Offset;
@@ -103,6 +103,7 @@ begin
 
   { the thread attach/detach code uses locks to avoid multiple calls of this }
   // consider here only the FreeRTOS provided TLS space for now
+  TLSAPISupported := true;
   p := pvTaskGetThreadLocalStoragePointer(nil, DataIndex);
   if p = nil then // FPC TLS space not allocated
   begin
@@ -113,7 +114,7 @@ begin
       FreeRTOSThreadManager.RelocateThreadVar := @SysRelocateThreadVar;
       //CurrentTM.RelocateThreadVar := @SysRelocateThreadVar;
       // TODO: Threadvar support not yet working
-      //InitThreadVars(@SysRelocateThreadVar);
+      InitThreadVars(@SysRelocateThreadVar);
 
       IsMultiThread := true;
     end
