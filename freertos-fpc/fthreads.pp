@@ -52,9 +52,9 @@ procedure fpc_threaderror; [external name 'FPC_THREADERROR'];
 
 procedure SysInitThreadvar (var Offset: dword; Size: dword);
 begin
-  //{$ifdef xtensa}
-  //ThreadVarBlockSize := align(ThreadVarBlockSize, 4);
-  //{$endif xtensa}
+  {$ifdef CPUXTENSA}
+  ThreadVarBlockSize := align(ThreadVarBlockSize, 4);
+  {$endif CPUXTENSA}
   Offset := ThreadVarBlockSize;
   Inc(ThreadVarBlockSize, Size);
 end;
@@ -70,14 +70,14 @@ begin
   { allocate room on the heap for the thread vars }
   if TLSAPISupported and TLSInitialized then // let's stick with the FreeRTOS TLS block for now
   begin
-    p := pvPortMalloc(ThreadVarBlockSize); // ThreadVarBlockSize is global, the TLS space is the same for all the threads;
+    p := pvPortMalloc(ThreadVarBlockSize); // ThreadVarBlockSize is global, the TLS size is the same for all the threads;
     vTaskSetThreadLocalStoragePointer(nil, DataIndex, p);
   end
   else
     HandleError(3); // path not found, meaning TLS is not available on target
 
-  // Pattern fill thread storage block
-  FillChar(p^, $0F, ThreadVarBlockSize);
+  // Zero fill thread storage block
+  FillByte(p^, ThreadVarBlockSize, 0);
 end;
 
 
