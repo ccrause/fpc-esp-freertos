@@ -21,13 +21,13 @@ interface
 const
   DefaultStackSize = 1024;
 
-procedure FreeRTOSTaskWrapper(param: pointer);
-
 { every platform can have it's own implementation of GetCPUCount; use the define
   HAS_GETCPUCOUNT to disable the default implementation which simply returns 1 }
 function GetCPUCount: LongWord;
 
 property CPUCount: LongWord read GetCPUCount;
+
+procedure SysInitMultithreading;
 
 implementation
 
@@ -45,14 +45,18 @@ const
 
 var
   FreeRTOSThreadManager: TThreadManager;
+  TLSInitialized: boolean32 = false;
 
 procedure HandleError(Errno : Longint); external name 'FPC_HANDLEERROR';
 procedure fpc_threaderror; [external name 'FPC_THREADERROR'];
 
 procedure SysInitThreadvar (var Offset: dword; Size: dword);
 begin
+  //{$ifdef xtensa}
+  //ThreadVarBlockSize := align(ThreadVarBlockSize, 4);
+  //{$endif xtensa}
   Offset := ThreadVarBlockSize;
-  Inc (ThreadVarBlockSize, Size);
+  Inc(ThreadVarBlockSize, Size);
 end;
 
 procedure SysAllocateThreadVars;
@@ -64,16 +68,16 @@ begin
   { exceptions which use threadvars but      }
   { these aren't allocated yet ...           }
   { allocate room on the heap for the thread vars }
-  if TLSAPISupported then // let's stick with the FreeRTOS TLS block for now
+  if TLSAPISupported and TLSInitialized then // let's stick with the FreeRTOS TLS block for now
   begin
-    p := pvPortMalloc(ThreadVarBlockSize);
+    p := pvPortMalloc(ThreadVarBlockSize); // ThreadVarBlockSize is global, the TLS space is the same for all the threads;
     vTaskSetThreadLocalStoragePointer(nil, DataIndex, p);
   end
   else
     HandleError(3); // path not found, meaning TLS is not available on target
 
-  // Zero fill thread storage block
-  FillChar(p^, 0, ThreadVarBlockSize);
+  // Pattern fill thread storage block
+  FillChar(p^, $0F, ThreadVarBlockSize);
 end;
 
 
@@ -84,9 +88,8 @@ begin
   p := pvTaskGetThreadLocalStoragePointer(nil, DataIndex);
   if p = nil then
   begin
-    //RunError(232);
     SysAllocateThreadVars;
-    InitThread($400);  // Default to 1 kB stack
+    InitThread($1000);  // Default to 4 kB stack
     p := pvTaskGetThreadLocalStoragePointer(nil, DataIndex);
   end;
 
@@ -99,30 +102,25 @@ var
   RC: cardinal;
   p: pointer;
 begin
-  { do not check IsMultiThread, as program could have altered it, out of Delphi habit }
-
-  { the thread attach/detach code uses locks to avoid multiple calls of this }
   // consider here only the FreeRTOS provided TLS space for now
-  TLSAPISupported := true;
-  p := pvTaskGetThreadLocalStoragePointer(nil, DataIndex);
-  if p = nil then // FPC TLS space not allocated
+  if InterLockedExchange(longint(TLSInitialized),ord(true)) = 0 then
   begin
-    p := pvPortMalloc(SizeOf(PtrUInt));
-    if p <> nil then
     begin
-      vTaskSetThreadLocalStoragePointer(nil, DataIndex, p);  // Require configNUM_THREAD_LOCAL_STORAGE_POINTERS to be set
-      FreeRTOSThreadManager.RelocateThreadVar := @SysRelocateThreadVar;
-      //CurrentTM.RelocateThreadVar := @SysRelocateThreadVar;
-      // TODO: Threadvar support not yet working
-      InitThreadVars(@SysRelocateThreadVar);
-
+      TLSAPISupported := true;
       IsMultiThread := true;
+      TLSInitialized := true;
+
+      // 1. Calls init_all_unit_threadvars which
+      //    a) Calls init_all_unit_threadvars which calls init_unit_threadvars in a loop which
+      //       i) Calls InitThreadvar which returns offset into threadvar block and increment ThreadBlockVarSize with size of variable
+      // 2. Calls AllocateThreadVars with the final block size stored in global variable ThreadBlockVarSize
+      //    a) Allocate memory for the TLS block
+      //    b) Store pointer to TLS data block with vTaskSetThreadLocalStoragePointer
+      // 3. Calls copy_all_unit_threadvars which iterates over copy_unit_threadvars which then:
+      //    a) Call RelocateThreadVar to get a destination pointer, and which should increment the pointer
+      //    b) Call Move to copy data from the original storage to the TLS block
+      InitThreadVars(@SysRelocateThreadVar);
     end
-    else
-    begin
-      TLSAPISupported := false;
-      RunError(204); // Invalid pointer operation
-    end;
   end;
 end;
 
@@ -170,7 +168,9 @@ type
   end;
 
 
-function ThreadMain(param : pointer) : pointer;cdecl;
+// FreeRTOS tasks are defined as procedure (param: pointer),
+// while TThreadFunc is defined as function(parameter : pointer) : ptrint;
+procedure ThreadMain(param : pointer);
 var
   ti : tthreadinfo;
 begin
@@ -189,20 +189,8 @@ begin
 {$ifdef DEBUG_MT}
   writeln('Jumping to thread function');
 {$endif DEBUG_MT}
-  ThreadMain := pointer(ti.f(ti.p));
+  ti.f(ti.p);
 end;
-
-// FreeRTOS tasks are defined as procedure (param: pointer),
-// while TThreadFunc is defined as function(parameter : pointer) : ptrint;
-// Use a wrapper procedure with TTaskFunc signature to run a thread
-procedure FreeRTOSTaskWrapper(param: pointer);
-var
-  res: ptrint;
-begin
-  res := PThreadInfo(param)^.f(PThreadInfo(param)^.p);
-  // TODO: Store exit value...
-end;
-
 
 function SysBeginThread (SA: pointer; StackSize : PtrUInt;
                          ThreadFunction: TThreadFunc; P: pointer;
@@ -228,7 +216,7 @@ begin
   WriteLn ('Starting new thread');
 {$endif DEBUG_MT}
 
-  RC := xTaskCreate(@FreeRTOSTaskWrapper,  // pointer to wrapper procedure
+  RC := xTaskCreate(@ThreadMain,  // pointer to wrapper procedure
                     'FPC-thread',          // task name, cannot yet assign a debug name after task creation
                     StackSize,             // ...
                     TI,                    // Thread info passed as parameter
