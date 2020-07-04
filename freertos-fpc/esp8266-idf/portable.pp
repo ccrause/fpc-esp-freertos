@@ -3,7 +3,7 @@ unit portable;
 interface
 
 uses
-  portmacro, projdefs, esp_heap_caps;
+  portmacro, projdefs, esp_heap_caps, esp_system;
 
 const
   portBYTE_ALIGNMENT_MASK = portBYTE_ALIGNMENT - 1;
@@ -15,6 +15,10 @@ const
 
 type
   PStackType = ^TStackType;
+
+
+// Mapping not in SDK:
+function xPortGetFreeHeapSize: Tsize; external name 'esp_get_free_heap_size';
 
 {$if defined(portUSING_MPU_WRAPPERS) and (portUSING_MPU_WRAPPERS = 1)}
 function pxPortInitialiseStack(pxTopOfStack: PStackType; pxCode: TaskFunction;
