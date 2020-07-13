@@ -16,10 +16,12 @@
 
 unit fthreads;
 
+{$inline on}
+
 interface
 
 const
-  DefaultStackSize = 1024;
+  DefaultStackSize = 4*1024;
 
 { every platform can have it's own implementation of GetCPUCount; use the define
   HAS_GETCPUCOUNT to disable the default implementation which simply returns 1 }
@@ -29,10 +31,16 @@ property CPUCount: LongWord read GetCPUCount;
 
 procedure SysInitMultithreading;
 
+function fBeginThreadNamed(StackSize: PtrUInt;
+  ThreadFunction: TThreadFunc; P: pointer;
+  var ThreadId: TThreadID; aname: string): TThreadID;
+
 implementation
 
 uses
   task, semphr, portmacro, portable;
+
+{$include freertosconfig.inc}
 
 const
 // FreeRTOS have some TLS space per task, use DataIndex to identify the
@@ -77,7 +85,7 @@ begin
     HandleError(3); // path not found, meaning TLS is not available on target
 
   // Zero fill thread storage block
-  FillByte(p^, ThreadVarBlockSize, 0);
+  FillByte(p^, ThreadVarBlockSize, 3);
 end;
 
 
@@ -89,7 +97,7 @@ begin
   if p = nil then
   begin
     SysAllocateThreadVars;
-    InitThread($1000);  // Default to 4 kB stack
+    InitThread(DefaultStackSize);
     p := pvTaskGetThreadLocalStoragePointer(nil, DataIndex);
   end;
 
@@ -98,12 +106,9 @@ end;
 
 
 procedure SysInitMultithreading;
-var
-  RC: cardinal;
-  p: pointer;
 begin
   // consider here only the FreeRTOS provided TLS space for now
-  if InterLockedExchange(longint(TLSInitialized),ord(true)) = 0 then
+  //if InterLockedExchange(longint(TLSInitialized),ord(true)) = 0 then
   begin
     begin
       TLSAPISupported := true;
@@ -167,6 +172,8 @@ type
     stklen : cardinal;
   end;
 
+var
+  threadCount: uint32 = 0;
 
 // FreeRTOS tasks are defined as procedure (param: pointer),
 // while TThreadFunc is defined as function(parameter : pointer) : ptrint;
@@ -190,11 +197,14 @@ begin
   writeln('Jumping to thread function');
 {$endif DEBUG_MT}
   ti.f(ti.p);
+  DoneThread;  // Other units don't call DoneThread, but it seems necessary to clean up before deleting task
+  vTaskDelete(nil); // Inform FreeRTOS to delete task
 end;
 
-function SysBeginThread (SA: pointer; StackSize : PtrUInt;
-                         ThreadFunction: TThreadFunc; P: pointer;
-                         CreationFlags: dword; var ThreadId: TThreadID): TThreadID;
+// Keep the name short, FreeRTOS defaults to a 16 char length
+function fBeginThreadNamed(StackSize: PtrUInt;
+  ThreadFunction: TThreadFunc; P: pointer;
+  var ThreadId: TThreadID; aname: string): TThreadID;
 var
   TI: PThreadInfo;
   RC: cardinal;
@@ -215,19 +225,18 @@ begin
 {$ifdef DEBUG_MT}
   WriteLn ('Starting new thread');
 {$endif DEBUG_MT}
-
-  RC := xTaskCreate(@ThreadMain,  // pointer to wrapper procedure
-                    'FPC-thread',          // task name, cannot yet assign a debug name after task creation
+  RC := xTaskCreate(@ThreadMain,           // pointer to wrapper procedure
+                    PChar(@aname[1]),      // task name, cannot yet assign a debug name after task creation
                     StackSize,             // ...
                     TI,                    // Thread info passed as parameter
                     1,                     // Priority, idle task priority is 0, so make this slightly higher
                     @ThreadID);            // Task handle to created task
 
   if RC = pdTRUE then
-    SysBeginThread := ThreadID
+    fBeginThreadNamed := ThreadID
   else
   begin
-    SysBeginThread := 0;
+    fBeginThreadNamed := 0;
 {$IFDEF DEBUG_MT}
     WriteLn ('Thread creation failed');
 {$ENDIF DEBUG_MT}
@@ -236,6 +245,18 @@ begin
   end;
 end;
 
+function SysBeginThread (SA: pointer; StackSize : PtrUInt;
+                         ThreadFunction: TThreadFunc; P: pointer;
+                         CreationFlags: dword; var ThreadId: TThreadID): TThreadID;
+var
+  s: string;
+begin
+  inc(threadCount);
+  Str(threadCount, s);
+  s := 'fpc-' + s;
+
+  SysBeginThread := fBeginThreadNamed(StackSize, ThreadFunction, P, ThreadId, S);
+end;
 
 procedure SysEndThread (ExitCode: cardinal);
 begin
@@ -252,8 +273,6 @@ end;
 
 
 function SysSuspendThread (ThreadHandle: TThreadID): dword;
-var
-  RC: cardinal;
 begin
   vTaskSuspend(pointer(ThreadHandle));
   SysSuspendThread := 0;
@@ -376,13 +395,13 @@ type
   PLocalEventRec = ^TBasicEventState;
 
 
-const
-  wrSignaled  = 0;
-  wrTimeout   = 1;
-  wrAbandoned = 2;  (* This cannot happen for an event semaphore with OS/2? *)
-  wrError     = 3;
-  Error_Timeout = 640;
-  OS2SemNamePrefix = '\SEM32\';  // Remain OS2 compatible?
+//const
+//  wrSignaled  = 0;
+//  wrTimeout   = 1;
+//  wrAbandoned = 2;  (* This cannot happen for an event semaphore with OS/2? *)
+//  wrError     = 3;
+//  Error_Timeout = 640;
+//  OS2SemNamePrefix = '\SEM32\';  // Remain OS2 compatible?
 
 // initialstate = true means semaphore is owned by current thread, others waiting on this will block
 function SysBasicEventCreate (EventAttributes: Pointer;
@@ -401,8 +420,6 @@ end;
 
 
 procedure SysBasicEventDestroy (State: PEventState);
-var
-  RC: cardinal;
 begin
   if State = nil then
     FPC_ThreadError
@@ -412,9 +429,6 @@ end;
 
 
 procedure SysBasicEventResetEvent (State: PEventState);
-var
-  PostCount: cardinal;
-  RC: cardinal;
 begin
   if State = nil then
     FPC_ThreadError
@@ -427,8 +441,6 @@ end;
 
 
 procedure SysBasicEventSetEvent (State: PEventState);
-var
-  RC: cardinal;
 begin
   //if State = nil then
   //  FPC_ThreadError
@@ -443,8 +455,6 @@ end;
 
 
 function SysBasicEventWaitFor (Timeout: Cardinal; State: PEventState): longint;
-var
-  RC: cardinal;
 begin
   //if State = nil then
   // FPC_ThreadError
@@ -467,6 +477,7 @@ end;
 
 function SysRTLEventCreate: PRTLEvent;
 begin
+  // xSemaphoreCreateBinary returns a pointer
   Result := PRTLEvent(xSemaphoreCreateBinary);
   if Result = nil then
     FPC_ThreadError;
@@ -482,10 +493,10 @@ end;
 procedure SysRTLEventSetEvent (AEvent: PRTLEvent);
 begin
   // First obtain semaphore before giving it
-  if xSemaphoreTake(TSemaphoreHandle(AEvent), 10) = pdTRUE then
+  //if xSemaphoreTake(TSemaphoreHandle(AEvent), 10) = pdTRUE then
     xSemaphoreGive(TSemaphoreHandle(AEvent))
-  else
-    FPC_ThreadError;
+  //else
+  //  FPC_ThreadError;
 end;
 
 
@@ -524,6 +535,7 @@ end;
 
 procedure InitSystemThreads;
 begin
+  //esp_log_write(ESP_LOG_INFO, '', 'SysRelocateThreadVar: %x', @SysRelocateThreadVar);
   with FreeRTOSThreadManager do
   begin
     InitManager            :=Nil;
