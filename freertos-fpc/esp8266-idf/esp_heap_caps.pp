@@ -61,18 +61,6 @@ function _heap_caps_realloc(mem: pointer; newsize: Tsize; caps: uint32;
 function _heap_caps_zalloc(size: Tsize; caps: uint32; afile: PChar;
   line: Tsize): pointer; external;
 
-// Pascal functions will not give the same capability as the C macro's
-// which automatically embed the call size file name and line number.
-// If this is required, rather call the raw functions above and supply
-// the file name and line number via the include macro:
-// {$include %file%} and {$include %lineNum%}
-
-//function heap_caps_malloc(size, caps: longint): longint;
-//function heap_caps_free(ptr: longint): longint;
-//function heap_caps_calloc(n, size, caps: longint): longint;
-//function heap_caps_realloc(ptr, size, caps: longint): longint;
-//function heap_caps_zalloc(size, caps: longint): longint;
-
 implementation
 
 uses
@@ -92,30 +80,5 @@ function MEM2_HEAD_SIZE: Tsize; { return type might be wrong }
 begin
   MEM2_HEAD_SIZE := sizeof(Tmem2_blk);
 end;
-
-//function heap_caps_malloc(size, caps: longint): longint;
-//begin
-//  heap_caps_malloc := _heap_caps_malloc(size, caps, __ESP_FILE__, __LINE__);
-//end;
-
-//function heap_caps_free(ptr: longint): longint;
-//begin
-//  heap_caps_free := _heap_caps_free(ptr, __ESP_FILE__, __LINE__);
-//end;
-
-//function heap_caps_calloc(n, size, caps: longint): longint;
-//begin
-//  heap_caps_calloc := _heap_caps_calloc(n, size, caps, __ESP_FILE__, __LINE__);
-//end;
-
-//function heap_caps_realloc(ptr, size, caps: longint): longint;
-//begin
-//  heap_caps_realloc := _heap_caps_realloc(ptr, size, caps, __ESP_FILE__, __LINE__);
-//end;
-
-//function heap_caps_zalloc(size, caps: longint): longint;
-//begin
-//  heap_caps_zalloc := _heap_caps_zalloc(size, caps, __ESP_FILE__, __LINE__);
-//end;
 
 end.
