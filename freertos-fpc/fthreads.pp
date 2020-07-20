@@ -314,7 +314,7 @@ begin
   if Prio < 0 then
     Prio := 0;
   vTaskPrioritySet(TTaskHandle(ThreadHandle), Prio);
-  Result := true;
+  SysThreadSetPriority := true;
 end;
 
 
@@ -371,9 +371,9 @@ end;
 function SysTryEnterCriticalSection(var CS): longint;
 begin
   if xSemaphoreTake(TSemaphoreHandle(CS), 0) = pdTRUE then
-    Result := 1
+    SysTryEnterCriticalSection := 1
   else
-    Result := 0;
+    SysTryEnterCriticalSection := 0;
 end;
 
 procedure SysLeaveCriticalSection(var CS);
@@ -407,15 +407,15 @@ type
 function SysBasicEventCreate (EventAttributes: Pointer;
      AManualReset, InitialState: boolean; const Name: ansistring): PEventState;
 begin
-  New(PLocalEventRec(Result));
-  PLocalEventRec(Result)^.FHandle := xSemaphoreCreateMutex;
-  if PLocalEventRec(Result)^.FHandle = nil then
+  New(PLocalEventRec(SysBasicEventCreate));
+  PLocalEventRec(SysBasicEventCreate)^.FHandle := xSemaphoreCreateMutex;
+  if PLocalEventRec(SysBasicEventCreate)^.FHandle = nil then
   begin
-    Dispose (PLocalEventRec (Result));
+    Dispose (PLocalEventRec (SysBasicEventCreate));
     FPC_ThreadError;
   end
   else if InitialState then
-    xSemaphoreTake(PLocalEventRec(Result)^.FHandle, 0);  // No timeout given because sem is not yet visible elsewhere
+    xSemaphoreTake(PLocalEventRec(SysBasicEventCreate)^.FHandle, 0);  // No timeout given because sem is not yet visible elsewhere
 end;
 
 
@@ -478,8 +478,8 @@ end;
 function SysRTLEventCreate: PRTLEvent;
 begin
   // xSemaphoreCreateBinary returns a pointer
-  Result := PRTLEvent(xSemaphoreCreateBinary);
-  if Result = nil then
+  SysRTLEventCreate := PRTLEvent(xSemaphoreCreateBinary);
+  if SysRTLEventCreate = nil then
     FPC_ThreadError;
 end;
 
