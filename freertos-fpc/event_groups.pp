@@ -5,9 +5,7 @@ unit event_groups;
 interface
 
 uses
-  portmacro,  // Define some base types such as TTickType
-  portable,   // Define e.g. TBaseType
-  timers;
+  portmacro, portable, timers;
 
 type
   PEventGroupHandle = ^TEventGroupHandle;
@@ -32,7 +30,7 @@ function xEventGroupClearBits(xEventGroup: TEventGroupHandle;
 
 {$if defined(configUSE_TRACE_FACILITY) and (configUSE_TRACE_FACILITY = 1)}
 function xEventGroupClearBitsFromISR(xEventGroup: TEventGroupHandle;
-  uxBitsToSet: TEventBits): TBaseType; cdecl; external;
+  uxBitsToSet: TEventBits): TBaseType; external;
 {$else}
 function xEventGroupClearBitsFromISR(xEventGroup: TEventGroupHandle;
   uxBitsToClear: TEventBits): TEventBits;
@@ -44,7 +42,7 @@ function xEventGroupSetBits(xEventGroup: TEventGroupHandle;
 {$if defined(configUSE_TRACE_FACILITY) and (configUSE_TRACE_FACILITY = 1)}
 function xEventGroupSetBitsFromISR(xEventGroup: TEventGroupHandle;
   uxBitsToSet: TEventBits; pxHigherPriorityTaskWoken: PBaseType): TBaseType;
-  cdecl; external;
+  external;
 {$else}
 function xEventGroupSetBitsFromISR(xEventGroup: TEventGroupHandle;
   uxBitsToSet: TEventBits; pxHigherPriorityTaskWoken: PBaseType): TBaseType;
