@@ -1,6 +1,5 @@
 unit list;
 
-{$include sdkconfig.inc}
 {$include freertosconfig.inc}
 
 interface

@@ -1,6 +1,5 @@
 unit projdefs;
 
-{$include sdkconfig.inc}
 {$include freertosconfig.inc}
 
 interface
