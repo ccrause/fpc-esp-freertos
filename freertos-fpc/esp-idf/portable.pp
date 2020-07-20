@@ -39,6 +39,9 @@ const
 // Malloc/free provided by Newlib
 function pvPortMalloc(size: uint32): pointer; external name 'malloc';
 procedure vPortFree(APointer: pointer); external name 'free';
+function pvPortZalloc(s: longint): pointer; external name 'zalloc';
+function pvPortCalloc(count, sz: Tsize): pointer; external name 'calloc';
+function pvPortRealloc(memptr: pointer; sz: Tsize): pointer; external name 'realloc';
 function xPortGetFreeHeapSize: uint32; external name 'esp_get_free_heap_size';
 function xPortGetMinimumEverFreeHeapSize: uint32; external name 'esp_get_minimum_free_heap_size';
 function xPortStartScheduler: TBaseType; external;
