@@ -28,9 +28,6 @@ type
   TTimerCallbackFunction = procedure(xTimer: TTimerHandle);
   TPendedFunction = procedure(para1: pointer; para2: uint32);
 
-  // Defined in freertos/task.h
-  TTaskHandle = pointer;
-
 {$if defined(configSUPPORT_DYNAMIC_ALLOCATION) and (configSUPPORT_DYNAMIC_ALLOCATION = 1)}
 function xTimerCreate(pcTimerName: PChar;
 								const xTimerPeriodInTicks: TTickType;
