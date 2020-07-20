@@ -6,9 +6,10 @@ interface
 
 {$if defined(configUSE_NEWLIB_REENTRANT) and (configUSE_NEWLIB_REENTRANT = 1)}
 {$ifndef CONFIG_NEWLIB_LIBRARY_CUSTOMER}
-//#include "esp_newlib.h"
+uses
+  esp_newlib;
 
-{$define _impure_ptr _global_impure_ptr}
+//{$define _impure_ptr _global_impure_ptr}
 
 //{$undef _REENT_INIT_PTR}
 //{$define _REENT_INIT_PTR(p) esp_reent_init(p)
@@ -61,9 +62,6 @@ procedure portEND_SWITCHING_ISR(xSwitchRequired: boolean);
 
 procedure portYIELD_FROM_ISR(); external;
 
-var
-  cpu_sr : uint32; cvar; external;
-
 procedure vPortEnterCritical(); external;
 procedure vPortExitCritical(); external;
 
@@ -72,10 +70,10 @@ procedure PortDisableInt_NoNest(); external;
 procedure PortEnableInt_NoNest(); external;
 
 procedure portDISABLE_INTERRUPTS; inline;
-procedure portENABLE_INTERRUPTS(); inline;
+procedure portENABLE_INTERRUPTS; inline;
 
-procedure portENTER_CRITICAL; inline;
-procedure portEXIT_CRITICAL; inline;
+procedure portENTER_CRITICAL; external name 'vPortEnterCritical';//inline;
+procedure portEXIT_CRITICAL; external name 'vPortExitCritical'; //inline;
 function xPortGetCoreID(): uint32; inline;
 
 procedure _xt_user_exit; external;
@@ -115,11 +113,11 @@ function prvGetExpectedIdleTime(): TTickType; external;
 
 // Moved from freertos
 {$ifndef portSET_INTERRUPT_MASK_FROM_ISR}
-function portSET_INTERRUPT_MASK_FROM_ISR: longint;
+function portSET_INTERRUPT_MASK_FROM_ISR: longint; inline;
 {$endif}
 {$ifndef portCLEAR_INTERRUPT_MASK_FROM_ISR}
 function portCLEAR_INTERRUPT_MASK_FROM_ISR(uxSavedStatusValue: longint)
-  : pointer;
+  : pointer; inline;
 {$endif}
 
 implementation
@@ -138,47 +136,38 @@ begin
 		vTaskSwitchContext();
 end;
 
-procedure portDISABLE_INTERRUPTS;
+// TODO: Check if port(DIS/EN)ABLE_INTERRUPTS can be simplified
 var
-  pcpu_sr: puint32;
-begin
-  // Loading the address of cpu_sr using l32r doesn't always work,
-  // because the literal with the address may be beyond the reach of l32r.
-  // This work-around is one potential way to make it work, at the expense of
-  // extra 4 bytes in the exe for the address and another 4 bytes stack space.
-  // The compiler creates a local literal with the address to cpu_sr
-  // which is in easy range of l32r.
-  pcpu_sr := @cpu_sr;
-  asm
-  //__asm__ volatile ("rsil %0, " XTSTR(XCHAL_EXCM_LEVEL) : "=a" (cpu_sr) :: "memory")
-    rsil a2, XCHAL_EXCM_LEVEL  // store PS into a2 and write XCHAL_EXCM_LEVEL into PS.INTLEVEL
-    l32i a3, pcpu_sr           // load local address of cpu_sr into a3
-    s32i a2, a3, 0             // store a2 into memory pointed to by a3
-  end ['a2', 'a3'];
-end;
+  cpu_sr : uint32; cvar; external;
 
-procedure portENABLE_INTERRUPTS;
-var
-  pcpu_sr: puint32;
-begin
-  pcpu_sr := @cpu_sr;
-  asm
-    //__asm__ volatile ("wsr %0, ps" :: "a" (cpu_sr) : "memory")
-    l32i a3, pcpu_sr           // Load address of cpu_sr into a3
-    l32i  a2, a3, 0            // Load contents of cpu_sr into a2
-    wsr.ps a2                  // Restore PS from a2
-  end ['a2', 'a3'];
-end;
+procedure portDISABLE_INTERRUPTS; assembler; nostackframe;
+label
+  Lcpu_sr, dest;
+asm
+  j dest
+  .balign 4                  // Ensure label Lcpu_sr is aligned
+  Lcpu_sr:
+  .long cpu_sr               // Store a local copy of the address to cpu_sr
+  dest:
+  rsil a2, XCHAL_EXCM_LEVEL  // store PS into a2 and write XCHAL_EXCM_LEVEL into PS.INTLEVEL
+  l32r a3, Lcpu_sr           // Load address of cpu_sr into a3
+  s32i  a2, a3, 0            // Store a2 in cpu_sr
+end ['a2', 'a3'];
 
-procedure portENTER_CRITICAL;
-begin
-  vPortEnterCritical();
-end;
-
-procedure portEXIT_CRITICAL();
-begin
-  vPortExitCritical();
-end;
+procedure portENABLE_INTERRUPTS; assembler; nostackframe;
+label
+  Lcpu_sr, dest;
+asm
+  j dest
+  .balign 4
+  Lcpu_sr:
+  .long cpu_sr               // Linker complain about label address out of range (4294967291, $FFFFFFFB or -5)
+  dest:                      // at l32r a3, Lcpu_sr below
+  .balign 4
+  l32r a3, Lcpu_sr           // Load address of cpu_sr into a3
+  l32i  a2, a3, 0            // Load contents of cpu_sr into a2
+  wsr.ps a2                  // Restore PS from a2
+end ['a2', 'a3'];
 
 function xPortGetCoreID(): uint32;
 begin
