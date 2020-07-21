@@ -38,7 +38,7 @@ function fBeginThreadNamed(StackSize: PtrUInt;
 implementation
 
 uses
-  task, semphr, portmacro, portable;
+  fmem, task, semphr, portmacro, portable;
 
 {$include freertosconfig.inc}
 
@@ -78,7 +78,7 @@ begin
   { allocate room on the heap for the thread vars }
   if TLSAPISupported and TLSInitialized then // let's stick with the FreeRTOS TLS block for now
   begin
-    p := pvPortMalloc(ThreadVarBlockSize); // ThreadVarBlockSize is global, the TLS size is the same for all the threads;
+    p := GetMem(ThreadVarBlockSize); // ThreadVarBlockSize is global, the TLS size is the same for all the threads;
     vTaskSetThreadLocalStoragePointer(nil, DataIndex, p);
   end
   else
@@ -140,7 +140,7 @@ begin
     begin
       p := pvTaskGetThreadLocalStoragePointer(nil, DataIndex);
       if p <> nil then
-        vPortFree(p);
+        FreeMem(p);
     end
   end;
 end;
@@ -154,7 +154,7 @@ begin
   begin
     p := pvTaskGetThreadLocalStoragePointer(nil, DataIndex);
     if p <> nil then
-      vPortFree(p);
+      FreeMem(p);
   end
   else
     RunError(3);
