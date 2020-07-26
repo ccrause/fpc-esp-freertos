@@ -4,7 +4,7 @@ program testexit;
 {$inline on}
 
 uses
-  esp_sleep, esp_system;
+  esp_sleep, esp_system, portmacro;
 
 var
   // Test of -device isa-debug-exit
@@ -67,7 +67,9 @@ begin
         // Call deep sleep with no wakeup source set
         writeln('Calling deep sleep');
         esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_ALL);
+        portENTER_CRITICAL;
         esp_deep_sleep_start;
+        portEXIT_CRITICAL; // Not supposed to get here, but I like the symmetry
       end;
 
       '4':
