@@ -1,7 +1,7 @@
 program nvs_test;
 
 uses
-  nvs, esp_err;
+  nvs, {$ifdef CPULX106}nvs_flash,{$endif} esp_err;
 
 var
   err: longint;
@@ -10,7 +10,7 @@ var
 
 begin
   err := nvs_flash_init();
-  if ((err = ESP_ERR_NVS_NO_FREE_PAGES) or (err = ESP_ERR_NVS_NEW_VERSION_FOUND)) then
+  if (err = ESP_ERR_NVS_NO_FREE_PAGES) {$ifdef CPULX6}} or (err = ESP_ERR_NVS_NEW_VERSION_FOUND){$endif} then
   begin
     EspErrorCheck(nvs_flash_erase());
     err := nvs_flash_init();
