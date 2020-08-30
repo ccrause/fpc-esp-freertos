@@ -78,6 +78,7 @@ begin
   { allocate room on the heap for the thread vars }
   if TLSAPISupported and TLSInitialized then // let's stick with the FreeRTOS TLS block for now
   begin
+    // TODO: Not sure whether it is safe to call GetMem or the OS provided routine...
     p := GetMem(ThreadVarBlockSize); // ThreadVarBlockSize is global, the TLS size is the same for all the threads;
     vTaskSetThreadLocalStoragePointer(nil, DataIndex, p);
   end
