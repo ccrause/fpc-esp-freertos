@@ -1,12 +1,11 @@
 unit portable;
 
-{$include sdkconfig.inc}
 {$inline on}
 
 interface
 
 uses
-  portmacro;
+  portmacro, projdefs;
 
 const
   PS_INTLEVEL_MASK = $F;  // TODO: from xtensa/corebits.h.  Include core_bits once converted
@@ -17,8 +16,6 @@ type
   TBaseType = int32;
   PBaseType = ^TBaseType;
   TUBaseType = uint32;
-  TTaskFunction = procedure(para: pointer);
-  PTaskFunction = ^TTaskFunction;
 
 const
   portBYTE_ALIGNMENT_MASK = portBYTE_ALIGNMENT - 1;
