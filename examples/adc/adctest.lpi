@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectOptions>
-    <Version Value="12"/>
+    <Version Value="11"/>
     <General>
       <Flags>
         <MainUnitHasCreateFormStatements Value="False"/>
@@ -9,46 +9,13 @@
         <MainUnitHasScaledStatement Value="False"/>
       </Flags>
       <SessionStorage Value="InProjectDir"/>
+      <MainUnit Value="0"/>
       <Title Value="adctest"/>
       <UseAppBundle Value="False"/>
       <ResourceType Value="res"/>
     </General>
-    <BuildModes>
-      <Item Name="ESP32" Default="True"/>
-      <Item Name="ESP8266">
-        <CompilerOptions>
-          <Version Value="11"/>
-          <Target>
-            <Filename Value="adctest"/>
-          </Target>
-          <SearchPaths>
-            <IncludeFiles Value="$(ProjOutDir);../../freertos-fpc;../../freertos-fpc/esp8266-idf"/>
-            <Libraries Value="../../../../xtensa/ESP8266_RTOS_SDK/libs"/>
-            <OtherUnitFiles Value="../../freertos-fpc;../../freertos-fpc/esp8266-idf"/>
-            <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
-          </SearchPaths>
-          <Linking>
-            <Debugging>
-              <UseLineInfoUnit Value="False"/>
-            </Debugging>
-          </Linking>
-          <Other>
-            <Verbosity>
-              <ShowUsedFiles Value="True"/>
-            </Verbosity>
-            <ConfigFile>
-              <DontUseConfigFile Value="True"/>
-              <CustomConfigFile Value="True"/>
-              <ConfigFilePath Value="~/fpc/cc/fpc.cfg"/>
-            </ConfigFile>
-            <CustomOptions Value="-Tfreertos 
--Wpesp32 
--Cawindowed 
--XPxtensa-esp32-elf-"/>
-            <CompilerPath Value="/home/christo/fpc/cc/compiler/ppcrossxtensa"/>
-          </Other>
-        </CompilerOptions>
-      </Item>
+    <BuildModes Count="1">
+      <Item1 Name="ESP32" Default="True"/>
     </BuildModes>
     <PublishOptions>
       <Version Value="2"/>
@@ -56,12 +23,13 @@
     </PublishOptions>
     <RunParams>
       <FormatVersion Value="2"/>
+      <Modes Count="0"/>
     </RunParams>
-    <Units>
-      <Unit>
+    <Units Count="1">
+      <Unit0>
         <Filename Value="adctest.pp"/>
         <IsPartOfProject Value="True"/>
-      </Unit>
+      </Unit0>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -77,36 +45,35 @@
     </SearchPaths>
     <Linking>
       <Debugging>
+        <DebugInfoType Value="dsDwarf3"/>
         <UseLineInfoUnit Value="False"/>
       </Debugging>
     </Linking>
     <Other>
-      <Verbosity>
-        <ShowUsedFiles Value="True"/>
-      </Verbosity>
       <ConfigFile>
         <DontUseConfigFile Value="True"/>
         <CustomConfigFile Value="True"/>
-        <ConfigFilePath Value="~/fpc/cc/fpc.cfg"/>
+        <ConfigFilePath Value="~/fpc/3.3.1/fpc.cfg"/>
       </ConfigFile>
       <CustomOptions Value="-Tfreertos 
 -Wpesp32 
 -Cawindowed 
--XPxtensa-esp32-elf-"/>
-      <CompilerPath Value="/home/christo/fpc/cc/compiler/ppcrossxtensa"/>
+-XP/home/christo/.espressif/tools/xtensa-esp32-elf/esp-2020r1-8.2.0/xtensa-esp32-elf/bin/xtensa-esp32-elf-
+-Ff/home/christo/xtensa/esp-idf"/>
+      <CompilerPath Value="/home/christo/fpc/3.3.1/compiler/ppcrossxtensa"/>
     </Other>
   </CompilerOptions>
   <Debugging>
-    <Exceptions>
-      <Item>
+    <Exceptions Count="3">
+      <Item1>
         <Name Value="EAbort"/>
-      </Item>
-      <Item>
+      </Item1>
+      <Item2>
         <Name Value="ECodetoolError"/>
-      </Item>
-      <Item>
+      </Item2>
+      <Item3>
         <Name Value="EFOpenError"/>
-      </Item>
+      </Item3>
     </Exceptions>
   </Debugging>
 </CONFIG>

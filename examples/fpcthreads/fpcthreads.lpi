@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectOptions>
-    <Version Value="12"/>
+    <Version Value="11"/>
     <General>
       <Flags>
         <MainUnitHasCreateFormStatements Value="False"/>
@@ -9,13 +9,14 @@
         <MainUnitHasScaledStatement Value="False"/>
       </Flags>
       <SessionStorage Value="InProjectDir"/>
+      <MainUnit Value="0"/>
       <Title Value="fpcthreads"/>
       <UseAppBundle Value="False"/>
       <ResourceType Value="res"/>
     </General>
-    <BuildModes>
-      <Item Name="ESP32" Default="True"/>
-      <Item Name="ESP8266">
+    <BuildModes Count="2">
+      <Item1 Name="ESP32" Default="True"/>
+      <Item2 Name="ESP8266">
         <CompilerOptions>
           <Version Value="11"/>
           <Target>
@@ -23,47 +24,31 @@
           </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir);../../freertos-fpc;../../freertos-fpc/esp8266-idf"/>
-            <Libraries Value="../../fpc-esp8266-idf/libs;../../../../xtensa/xtensa-lx106-elf/xtensa-lx106-elf/sysroot/lib"/>
-            <OtherUnitFiles Value="../../freertos-fpc;../../freertos-fpc/esp8266-idf;../common"/>
-            <UnitOutputDirectory Value="lib/$(TargetCPU)-freertos"/>
+            <Libraries Value="../../../../xtensa/ESP8266_RTOS_SDK_V3_3/libs;../../../../xtensa/xtensa-lx106-elf/xtensa-lx106-elf/sysroot/lib"/>
+            <OtherUnitFiles Value="../../freertos-fpc;../../freertos-fpc/esp8266-idf"/>
+            <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
           </SearchPaths>
-          <CodeGeneration>
-            <HeapSize Value="2048"/>
-            <TargetCPU Value="xtensa"/>
-            <TargetOS Value="freertos"/>
-          </CodeGeneration>
           <Linking>
             <Debugging>
-              <DebugInfoType Value="dsDwarf2Set"/>
+              <DebugInfoType Value="dsDwarf3"/>
               <UseLineInfoUnit Value="False"/>
             </Debugging>
           </Linking>
           <Other>
-            <Verbosity>
-              <ShowHintsForUnusedUnitsInMainSrc Value="True"/>
-            </Verbosity>
-            <WriteFPCLogo Value="False"/>
             <ConfigFile>
               <DontUseConfigFile Value="True"/>
               <CustomConfigFile Value="True"/>
               <ConfigFilePath Value="~/fpc/3.3.1/fpc.cfg"/>
             </ConfigFile>
-            <CustomOptions Value="-Tfreertos
+            <CustomOptions Value="-Tfreertos 
 -Wpesp8266
 -Cacall0
 -XPxtensa-lx106-elf-
--al"/>
+-Ff/home/christo/xtensa/ESP8266_RTOS_SDK_V3_3"/>
             <CompilerPath Value="/home/christo/fpc/3.3.1/compiler/ppcrossxtensa"/>
-            <ExecuteBefore>
-              <CompileReasons Run="False"/>
-            </ExecuteBefore>
-            <ExecuteAfter>
-              <CompileReasons Run="False"/>
-            </ExecuteAfter>
           </Other>
-          <CompileReasons Run="False"/>
         </CompilerOptions>
-      </Item>
+      </Item2>
     </BuildModes>
     <PublishOptions>
       <Version Value="2"/>
@@ -71,36 +56,13 @@
     </PublishOptions>
     <RunParams>
       <FormatVersion Value="2"/>
+      <Modes Count="0"/>
     </RunParams>
-    <Units>
-      <Unit>
+    <Units Count="1">
+      <Unit0>
         <Filename Value="fpcthreads.pp"/>
         <IsPartOfProject Value="True"/>
-      </Unit>
-      <Unit>
-        <Filename Value="../../freertos-fpc/freertosconfig.inc"/>
-        <IsPartOfProject Value="True"/>
-      </Unit>
-      <Unit>
-        <Filename Value="../../freertos-fpc/task.pp"/>
-        <IsPartOfProject Value="True"/>
-      </Unit>
-      <Unit>
-        <Filename Value="../../freertos-fpc/list.pp"/>
-        <IsPartOfProject Value="True"/>
-      </Unit>
-      <Unit>
-        <Filename Value="../station/credentials.gitignore"/>
-        <IsPartOfProject Value="True"/>
-      </Unit>
-      <Unit>
-        <Filename Value="../common/wificonnect.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit>
-      <Unit>
-        <Filename Value="../../freertos-fpc/asmtest.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit>
+      </Unit0>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -109,56 +71,42 @@
       <Filename Value="fpcthreads"/>
     </Target>
     <SearchPaths>
-      <IncludeFiles Value="$(ProjOutDir);../../freertos-fpc;../../../cc/rtl/inc;../../freertos-fpc/esp-idf"/>
+      <IncludeFiles Value="$(ProjOutDir);../../freertos-fpc;../../freertos-fpc/esp-idf"/>
       <Libraries Value="/home/christo/xtensa/esp-idf/libs/;../../../../.espressif/tools/xtensa-esp32-elf/esp-2019r2-8.2.0/xtensa-esp32-elf/xtensa-esp32-elf/lib;../../../../.espressif/tools/xtensa-esp32-elf/esp-2019r2-8.2.0/xtensa-esp32-elf/lib/gcc/xtensa-esp32-elf/8.2.0"/>
-      <OtherUnitFiles Value="../../freertos-fpc;../../freertos-fpc/esp-idf;../common"/>
-      <UnitOutputDirectory Value="lib/$(TargetCPU)-freertos"/>
+      <OtherUnitFiles Value="../../freertos-fpc;../../freertos-fpc/esp-idf"/>
+      <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
-    <CodeGeneration>
-      <HeapSize Value="2048"/>
-      <TargetProcessor Value="lx6"/>
-      <TargetCPU Value="xtensa"/>
-      <TargetOS Value="freertos"/>
-    </CodeGeneration>
     <Linking>
       <Debugging>
-        <DebugInfoType Value="dsDwarf2"/>
+        <DebugInfoType Value="dsDwarf3"/>
         <UseLineInfoUnit Value="False"/>
       </Debugging>
     </Linking>
     <Other>
-      <WriteFPCLogo Value="False"/>
       <ConfigFile>
         <DontUseConfigFile Value="True"/>
         <CustomConfigFile Value="True"/>
         <ConfigFilePath Value="~/fpc/3.3.1/fpc.cfg"/>
       </ConfigFile>
-      <CustomOptions Value="-Tfreertos
--Wpesp32
--Cawindowed
--XPxtensa-esp32-elf-
--al"/>
+      <CustomOptions Value="-Tfreertos 
+-Wpesp32 
+-Cawindowed 
+-XP/home/christo/.espressif/tools/xtensa-esp32-elf/esp-2020r1-8.2.0/xtensa-esp32-elf/bin/xtensa-esp32-elf-
+-Ff/home/christo/xtensa/esp-idf"/>
       <CompilerPath Value="/home/christo/fpc/3.3.1/compiler/ppcrossxtensa"/>
-      <ExecuteBefore>
-        <CompileReasons Run="False"/>
-      </ExecuteBefore>
-      <ExecuteAfter>
-        <CompileReasons Run="False"/>
-      </ExecuteAfter>
     </Other>
-    <CompileReasons Run="False"/>
   </CompilerOptions>
   <Debugging>
-    <Exceptions>
-      <Item>
+    <Exceptions Count="3">
+      <Item1>
         <Name Value="EAbort"/>
-      </Item>
-      <Item>
+      </Item1>
+      <Item2>
         <Name Value="ECodetoolError"/>
-      </Item>
-      <Item>
+      </Item2>
+      <Item3>
         <Name Value="EFOpenError"/>
-      </Item>
+      </Item3>
     </Exceptions>
   </Debugging>
 </CONFIG>
