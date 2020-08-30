@@ -167,8 +167,6 @@ var
   i: integer;
 
 begin
-  esp_log_level_set(TAG, ESP_LOG_INFO); // set display log level for this example to info
-
   //Allow other core to finish initialization
   vTaskDelay(pdMS_TO_TICKS(100));
 
