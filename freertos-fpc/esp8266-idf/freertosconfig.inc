@@ -1,3 +1,4 @@
+{$inline on}
 {$include sdkconfig.inc}
 
 {$define portNUM_PROCESSORS       := 1}
