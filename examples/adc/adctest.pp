@@ -3,7 +3,8 @@ program adctest;
 {$include sdkconfig.inc}
 
 uses
-  esp_err, gpio, adc, esp_adc_cal, adc_types, freertos;
+  esp_err, gpio, adc, esp_adc_cal, adc_types, freertos,
+  task, portmacro;
 
 const
   DEFAULT_VREF   = 1100;        //Use adc2_vref_to_gpio() to obtain a better estimate
