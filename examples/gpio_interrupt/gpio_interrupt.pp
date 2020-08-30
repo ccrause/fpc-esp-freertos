@@ -56,6 +56,9 @@ begin
   cfg.pull_down_en := GPIO_PULLDOWN_DISABLE;
   cfg.intr_type := GPIO_INTR_DISABLE;
   gpio_config(cfg);
+  writeln;
+  writeln('Pin ', LED, ' configured as output which will toglle on GPIO interrupt.');
+  writeln;
 
   // Input
   cfg.pin_bit_mask := 1 shl ord(INPUT_PIN);
@@ -64,6 +67,9 @@ begin
   cfg.pull_down_en := GPIO_PULLDOWN_DISABLE;
   cfg.intr_type := GPIO_INTR_NEGEDGE;
   gpio_config(cfg);
+  writeln;
+  writeln('Pin ', INPUT_PIN, 'configured as input to trigger GPIO interrupt on negative edge.');
+  writeln;
 
   //create a queue to handle gpio event from isr
   gpio_evt_queue := xQueueCreate(10, sizeof(uint32));
@@ -81,6 +87,6 @@ begin
   // On ESP8266 it seems that only a reset signal can wake cpu from deep sleep.
   repeat
     writeln('.');
-    sleep(1000);
+    sleep(5000);
   until false;
 end.
