@@ -1,5 +1,3 @@
 # Blink
-This example demonstrates the following:
-* Configure a GPIO pin (GPIO2 in example) for output mode.
-* Set pin low (0) for a second), then high for a second (1).
-* Also write out a __.__ when pin is low and __*__ when pin is high for debugging.
+This example demonstrates the simple blinking of an LED connected to one of the pins. Ensure that the constant LED (close to the top of blink.pp) is configured to a pin connected to an LED. The LED pin should alternate between logical high and low every 1 second.
+
