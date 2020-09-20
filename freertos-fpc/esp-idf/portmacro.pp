@@ -274,13 +274,6 @@ begin
   xthal_get_ccount;
 end;
 
-{$ifdef CONFIG_FREERTOS_RUN_TIME_STATS_USING_ESP_TIMER}
-function portALT_GET_RUN_TIME_COUNTER_VALUE: uint32; inline;
-begin
-  portALT_GET_RUN_TIME_COUNTER_VALUE := esp_timer_get_time;
-end;
-{$endif}
-
 procedure portYIELD_WITHIN_API; inline;
 begin
   esp_crosscore_int_send_yield(xPortGetCoreID());
