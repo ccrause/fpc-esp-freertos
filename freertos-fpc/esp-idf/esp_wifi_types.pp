@@ -302,7 +302,7 @@ type
     sgi: 0..1;              // 1
     {$ifdef CONFIG_IDF_TARGET_ESP32}
     noise_floor: 0..255;    // 8
-    {$else}//$elif CONFIG_IDF_TARGET_ESP32S2BETA}
+    {$else CONFIG_IDF_TARGET_ESP32S2BETA}
     reserved5: 0..255;     // 8
     {$endif}
     ampdu_cnt: 0..255;     // 8

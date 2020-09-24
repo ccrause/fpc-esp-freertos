@@ -5,7 +5,7 @@ unit i2c;
 interface
 
 uses
-  esp_err, soc, i2c_caps, portmacro, gpio, gpio_types;
+  esp_err, soc, portmacro, gpio, gpio_types;
 
 const
   // Constants from i2c_caps.h
