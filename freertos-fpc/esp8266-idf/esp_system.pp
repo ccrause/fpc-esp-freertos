@@ -1,5 +1,7 @@
 unit esp_system;
 
+{$include freertosconfig.inc}
+
 interface
 
 uses
@@ -7,6 +9,10 @@ uses
 
 const
   CRYSTAL_USED = 26;
+  CHIP_FEATURE_EMB_FLASH  = BIT0;      // Chip has embedded flash memory
+  CHIP_FEATURE_WIFI_BGN   = BIT1;      // Chip has 2.4GHz WiFi
+  CHIP_FEATURE_BLE        = BIT4;      // Chip has Bluetooth LE
+  CHIP_FEATURE_BT         = BIT5;      // Chip has Bluetooth Classic
 
 type
   Pesp_mac_type = ^Tesp_mac_type;
@@ -18,21 +24,19 @@ type
     ESP_RST_TASK_WDT, ESP_RST_WDT, ESP_RST_DEEPSLEEP,
     ESP_RST_BROWNOUT, ESP_RST_SDIO);
 
-
 function esp_base_mac_addr_set(mac: PByte): Tesp_err; external;
 function esp_base_mac_addr_get(mac: PByte): Tesp_err; external;
 function esp_efuse_mac_get_default(mac: PByte): Tesp_err; external;
 function esp_read_mac(mac: PByte; _type: Tesp_mac_type): Tesp_err; external;
-function esp_derive_local_mac(local_mac: PByte; universal_mac: PByte): Tesp_err;
-  external;
+function esp_derive_local_mac(local_mac: PByte; universal_mac: PByte): Tesp_err; external;
 
 type
   Pesp_cpu_freq = ^Tesp_cpu_freq;
   Tesp_cpu_freq = (ESP_CPU_FREQ_80M = 1, ESP_CPU_FREQ_160M = 2);
 
 procedure esp_set_cpu_freq(cpu_freq: Tesp_cpu_freq); external;
-procedure system_restore; external; noreturn;
-procedure esp_restart; external; noreturn;
+procedure system_restore; noreturn; external;
+procedure esp_restart; noreturn; external;
 function esp_reset_reason: Tesp_reset_reason; external;
 function esp_get_free_heap_size: uint32; external;
 function esp_get_minimum_free_heap_size: uint32; external;
@@ -50,12 +54,6 @@ type
 
   Pesp_chip_model = ^Tesp_chip_model;
   Tesp_chip_model = (CHIP_ESP8266 = 0, CHIP_ESP32 = 1);
-
-const
-  CHIP_FEATURE_EMB_FLASH = BIT0;
-  CHIP_FEATURE_WIFI_BGN  = BIT1;
-  CHIP_FEATURE_BLE       = BIT4;
-  CHIP_FEATURE_BT        = BIT5;
 
 type
   Pesp_chip_info = ^Tesp_chip_info;

@@ -5,9 +5,9 @@ interface
 uses
   esp_err, esp_wifi, esp_wifi_types, esp_netif, esp_event,
   {$ifdef CPULX6}
-  esp_netif_types, esp_wifi_default, esp_event_base, esp_bit_defs,
+  esp_netif_types, esp_wifi_default, esp_event_base, esp_bit_defs, esp_netif_ip_addr,
   {$else}
-  nvs_flash, eagle_soc, tcpip_adapter, esp_event_loop,
+  nvs_flash, eagle_soc, tcpip_adapter, esp_event_loop, ip4_addr,
   {$endif}
   nvs, event_groups,
   esp_interface, projdefs, portmacro;
@@ -19,13 +19,18 @@ uses
 // {$define PWD := 'password for AP'}
 //{$include credentials.ignore}
 
-procedure connectWifi(const APName, APassword: string);
+// Connect to an external access point using provided credetials
+procedure connectWifiAP(const APName, APassword: string);
+
+// Create a wifi access point with the given name and password
+procedure createWifiAP(const APName, APassword: string);
 
 implementation
 
 const
   MaxRetries     = 5;
   WifiConnected  = BIT0;
+  APStarted      = BIT0;
   WifiFail       = BIT1;
 
 var
@@ -118,6 +123,14 @@ begin
     writeln('Got ip: ',  addr and $FF, '.', (addr shr 8) and $FF, '.', (addr shr 16) and $FF, '.', addr shr 24);
     retries := 0;
     xEventGroupSetBits(WifiEventGroup, WifiConnected);
+  end
+  else if (event^.event_id = SYSTEM_EVENT_AP_START) then
+  begin
+    xEventGroupSetBits(WifiEventGroup, APStarted);
+  end
+  else
+  begin
+    writeln(  'Wifi event received: ', event^.event_id);
   end;
   result := ESP_OK;
 end;
@@ -158,6 +171,7 @@ begin
 
   // Wait until either WifiConnected or WifiFail bit gets set
   // by xEventGroupSetBits call in EventHandler_ESP32
+
   bits := xEventGroupWaitBits(WifiEventGroup,
           WifiConnected or WifiFail,
           pdFALSE,
@@ -179,7 +193,7 @@ begin
   vEventGroupDelete(WifiEventGroup);
 end;
 
-procedure connectWifi(const APName, APassword: string);
+procedure connectWifiAP(const APName, APassword: string);
 begin
   // In case default logging causes flood of messages
   //esp_log_level_set('*', ESP_LOG_WARN);
@@ -196,6 +210,88 @@ begin
   EspErrorCheck(ret);
 
   WifiInitStationMode(APName, APassword);
+end;
+
+procedure createWifiAP(const APName, APassword: string);
+var
+  cfg: Twifi_init_config;
+  wifi_config: Twifi_config;
+  bits: TEventBits;
+  {$ifdef CPULX106}
+  info: Ttcpip_adapter_ip_info;
+  {$else}
+  netif_handle: Pesp_netif;
+  info: Tesp_netif_ip_info;
+  {$endif}
+begin
+  WifiEventGroup := xEventGroupCreate();
+
+  FillByte(info, 0, sizeof(info));
+	info.ip.addr := IP4ToAddress(192, 168, 10, 1);
+  info.gw.addr := IP4ToAddress(192, 168, 10, 1);
+  info.netmask.addr := IP4ToAddress(255, 255, 255, 0);
+  {$ifdef CPULX106}
+  tcpip_adapter_init;
+  EspErrorCheck(tcpip_adapter_dhcps_stop(TCPIP_ADAPTER_IF_AP));
+  EspErrorCheck(tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_AP, @info));
+  EspErrorCheck(tcpip_adapter_dhcps_start(TCPIP_ADAPTER_IF_AP));
+  {$else}
+  netif_handle := esp_netif_create_default_wifi_ap();
+  esp_netif_dhcps_stop(netif_handle);
+  esp_netif_set_ip_info(netif_handle, @info);
+  esp_netif_dhcps_start(netif_handle);
+  {$endif}
+
+  EspErrorCheck(esp_netif_init());
+  EspErrorCheck(esp_event_loop_create_default());
+  //{$ifdef CPULX6}
+  //esp_netif_create_default_wifi_sta();
+  //{$endif}
+  WIFI_INIT_CONFIG_DEFAULT(cfg);
+  EspErrorCheck(esp_wifi_init(@cfg));
+  esp_wifi_set_storage(WIFI_STORAGE_RAM);
+  {$ifdef CPULX6}
+  EspErrorCheck(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, Tesp_event_handler(@EventHandler_ESP32), nil));
+  EspErrorCheck(esp_event_handler_register(IP_EVENT, ord(IP_EVENT_STA_GOT_IP), Tesp_event_handler(@EventHandler_ESP32), nil));
+  {$else}
+  EspErrorCheck(esp_event_loop_init(Tsystem_event_cb(@EventHandler_ESP8266), nil));
+  {$endif}
+  // Seems like the name and password are not treated as NULL terminated
+  // so zero everything
+  FillChar(wifi_config, sizeof(wifi_config), #0);
+  if APassword = '' then
+    wifi_config.ap.authmode := WIFI_AUTH_OPEN
+  else
+  begin
+    CopyStringToBuffer(APassword, @(wifi_config.ap.password[0]));
+    wifi_config.ap.authmode := WIFI_AUTH_WPA2_PSK;
+  end;
+  CopyStringToBuffer(APName, @(wifi_config.ap.ssid[0]));
+  wifi_config.ap.ssid_len := length(APName);
+  wifi_config.ap.channel := 1;
+  wifi_config.ap.ssid_hidden := 0;
+  wifi_config.ap.beacon_interval := 100;
+  wifi_config.ap.max_connection := 4;
+
+  EspErrorCheck(esp_wifi_set_mode(WIFI_MODE_AP));
+  EspErrorCheck(esp_wifi_set_config(WIFI_IF_AP, @wifi_config));
+  EspErrorCheck(esp_wifi_start());
+
+  // Wait until APStarted bit gets set
+  // by xEventGroupSetBits call in EventHandler_ESP32
+  writeln('Waiting for AP to start');
+  bits := xEventGroupWaitBits(WifiEventGroup,
+          APStarted,
+          pdFALSE,
+          pdFALSE,
+          portMAX_DELAY);
+
+  // Done, now clean up event group
+  {$ifdef CPULX6}
+  EspErrorCheck(esp_event_handler_unregister(IP_EVENT, ord(IP_EVENT_STA_GOT_IP), Tesp_event_handler(@EventHandler_ESP32)));
+  EspErrorCheck(esp_event_handler_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, Tesp_event_handler(@EventHandler_ESP32)));
+  {$endif}
+  vEventGroupDelete(WifiEventGroup);
 end;
 
 end.

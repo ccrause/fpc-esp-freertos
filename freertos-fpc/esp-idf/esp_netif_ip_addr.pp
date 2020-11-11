@@ -1,6 +1,7 @@
 unit esp_netif_ip_addr;
 
 {$include sdkconfig.inc}
+{$inline on}
 
 interface
 
@@ -36,6 +37,9 @@ type
   Tesp_ip_addr = Tip_addr;
   Pesp_ip_addr = ^Tesp_ip_addr;
 
+// Utility function to convert an IP address of the form a.b.c.d to a 32 bit value
+function IP4ToAddress(a, b, c, d: byte): uint32; inline;
+
 {$if defined(BYTE_ORDER) and (BYTE_ORDER = BIG_ENDIAN)}
 function esp_netif_htonl(x: longint): uint32;
 {$else}
@@ -50,6 +54,12 @@ begin
   esp_netif_htonl := uint32(x);
 end;
 {$else}
+
+function IP4ToAddress(a, b, c, d: byte): uint32;
+begin
+  result := (uint32(d) shl 24) or (uint32(c) shl 16) or (uint32(b) shl 8) or a;
+end;
+
 function esp_netif_htonl(x : longint) : longint;
 begin
   esp_netif_htonl := ((x and $000000ff) shl 24) or

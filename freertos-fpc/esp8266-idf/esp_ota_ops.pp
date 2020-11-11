@@ -1,6 +1,7 @@
 unit esp_ota_ops;
 
 {$linklib app_update, static}
+{$linklib bootloader_support, static}
 
 interface
 

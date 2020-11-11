@@ -1,5 +1,7 @@
 unit ip4_addr;
 
+{$inline on}
+
 interface
 
 const
@@ -35,6 +37,9 @@ type
 
   Tnetif = record end;
   Pnetif = ^Tnetif;
+
+// Utility function to convert an IP address of the form a.b.c.d to a 32 bit value
+function IP4ToAddress(a, b, c, d: byte): uint32; inline;
 
 function ip4_addr_isbroadcast_u32(addr: uint32; netif: Pnetif): byte; external;
 function ipaddr_addr(cp: PChar): uint32; external;
@@ -209,6 +214,12 @@ function ip_ntoa(ipaddr: longint): longint;
 
 
 implementation
+
+function IP4ToAddress(a, b, c, d: byte): uint32; inline;
+begin
+  result := (uint32(d) shl 24) or (uint32(c) shl 16) or (uint32(b) shl 8) or a;
+end;
+
 {
 function IP_CLASSA(a: longint): longint;
 begin
