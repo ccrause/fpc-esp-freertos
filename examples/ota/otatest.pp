@@ -34,7 +34,7 @@ const
     ' if (event.lengthComputable) {'#13#10 +
     '  var pctComplete = event.loaded / event.total * 100;'#13#10 +
     '  document.getElementById("feedback").innerHTML = `Progress: ${pctComplete}%`;'#13#10 +
-    ' } else { document.getElementById("feedback").innerHTML = `Progress: ${event.loaded} bytes`;'#13#10 +
+    ' } else { document.getElementById("feedback").innerHTML = `Progress: ${event.loaded} bytes`};'#13#10 +
     '}'#13#10 +
 
     'function uploaded() { document.getElementById("feedback").innerHTML = xhr.response; }'#13#10 +
@@ -85,13 +85,13 @@ var
 
   update_handle: Tesp_ota_handle = 0;
   update_partition: Pesp_partition = nil;
-
 begin
+  writeln('Received upload post');
   result := ESP_OK;
   recv := httpd_req_get_hdr_value_str(req, 'Content-Length', @contentlength[1], length(contentlength));
   setlength(contentlength, recv);
-  WriteLn('Content length: ', contentlength);
-  writeln('File content:');
+  //WriteLn('Content length: ', contentlength);
+  //writeln('File content:');
   totalRecv := 0;
   imageMagicOK := false;
   while (totalRecv < uint32(req^.content_len)) do
@@ -101,14 +101,14 @@ begin
     if recv > 0 then
     begin
       totalRecv := totalRecv + uint32(recv);
-      writeln('Received data: (', totalRecv, '/', req^.content_len, ')');
+      //writeln('Received data: (', totalRecv, '/', req^.content_len, ')');
       // Only check magic byte on first iteration
       if not imageMagicOK then
       begin
         imageMagicOK := buf[0] = #$E9;
         if imageMagicOK then
         begin
-          writeln('Magic byte OK');
+          //writeln('Magic byte OK');
           update_partition := esp_ota_get_next_update_partition(nil);
           if (update_partition = nil) then
           begin
@@ -117,7 +117,7 @@ begin
             break;
           end;
 
-          writeln('Writing to partition subtype ', update_partition^.subtype, ' at offset $', HexStr(update_partition^.address, 8));
+          //writeln('Writing to partition subtype ', update_partition^.subtype, ' at offset $', HexStr(update_partition^.address, 8));
           err := esp_ota_begin(update_partition, Tsize(OTA_SIZE_UNKNOWN), @update_handle);
           if (err <> ESP_OK) then
           begin
@@ -125,7 +125,7 @@ begin
             err := -1;
             break;
           end;
-          writeln('esp_ota_begin succeeded');
+          //writeln('esp_ota_begin succeeded');
         end
         else
         begin
@@ -162,22 +162,38 @@ begin
       end;
       break;
     end;
+    // Upload messaging seems slow, try to yield here to make esp8266 slicing smoother
+    vTaskDelay(1);
   end;
 
-  if err = ESP_OK then err := esp_ota_end(update_handle);
-  if err = ESP_OK then err := esp_ota_set_boot_partition(update_partition);
-
-  if err < ESP_OK then
+  if err = ESP_OK then
   begin
-    httpd_resp_send(req, errMsg, length(errMsg));
+    writeln('Upload done');
+    err := esp_ota_end(update_handle);
+    if err = ESP_OK then
+    begin
+      err := esp_ota_set_boot_partition(update_partition);
+      if err = ESP_OK then
+      begin
+        httpd_resp_send(req, successMsg, length(successMsg));
+        // Try to complete sending response before rebooting
+        writeln('Restarting...');
+        vTaskDelay(10);
+        esp_restart;
+      end
+      else
+      begin
+        writeln('esp_ota_set_boot_partition FAILED');
+        httpd_resp_send(req, errMsg, length(errMsg));
+      end;
+    end
+    else
+      writeln('esp_ota_end FAILED');
   end
   else
-  begin
-    httpd_resp_send(req, successMsg, length(successMsg));
-    // Try to complete sending response before rebooting
-    vTaskDelay(10);
-    esp_restart;
-  end;
+    writeln('Upload FAILED');
+
+  result := ESP_OK;
 end;
 
 function start_webserver: Thttpd_handle;
@@ -287,6 +303,15 @@ end.
 // 0x8000 ~/xtensa/examples/simple-ota-esp8266/build/partitions_two_ota.bin
 // 0x10000 firmware.bin
 
-// Flash ota partition information and firmaware:
+// Flash ota partition information and firmaware for esp8266:
 // esptool.py -p /dev/ttyUSB0 -b 500000 --chip auto --before default_reset --after hard_reset  write_flash --flash_mode dio --flash_size detect --flash_freq 40m 0x0000 ~/xtensa/examples/simple-ota-esp8266/build/bootloader/bootloader.bin 0xd000 ~/xtensa/examples/simple-ota-esp8266/build/ota_data_initial.bin 0x8000 ~/xtensa/examples/simple-ota-esp8266/build/partitions_two_ota.bin 0x10000 otatest.bin
+
+// Flash ota partition and firmware for esp32:
+// esptool.py --chip auto -p /dev/ttyUSB0 --baud 500000 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0x1000 ~/xtensa/examples/simple_ota_example/build/bootloader/bootloader.bin 0xd000 ~/xtensa/examples/simple_ota_example/build/ota_data_initial.bin 0x8000 ~/xtensa/examples/simple_ota_example/build/partitions_two_ota.bin 0x10000 firmware.bin
+
+// Flash mapping:
+// 0x1000 ~/xtensa/examples/simple_ota_example/build/bootloader/bootloader.bin
+// 0xd000 ~/xtensa/examples/simple_ota_example/build/ota_data_initial.bin
+// 0x8000 ~/xtensa/examples/simple_ota_example/build/partitions_two_ota.bin
+// 0x10000 firmware.bin
 
