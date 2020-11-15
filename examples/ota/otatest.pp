@@ -20,7 +20,7 @@ var
   part_conf, part_running: Pesp_partition;
 
 const
-  versionStr = 'V0.2';
+  versionStr = 'V0.3';
   //uploadForm = '<form action="/upload" method="POST" enctype="multipart/form-data">'#13#10 +
   //  '<input type="file" name="Uploaded file" required="required" accept="application/octet-stream">'#13#10 +
   //  '<button type="submit">Upload</button>'#13#10 +
@@ -32,7 +32,7 @@ const
     'var xhr = new XMLHttpRequest();'#13#10 +
     'function uploadProgress(event) {'#13#10 +
     ' if (event.lengthComputable) {'#13#10 +
-    '  var pctComplete = event.loaded / event.total * 100;'#13#10 +
+    '  var pctComplete = Math.round(event.loaded / event.total * 100);'#13#10 +
     '  document.getElementById("feedback").innerHTML = `Progress: ${pctComplete}%`;'#13#10 +
     ' } else { document.getElementById("feedback").innerHTML = `Progress: ${event.loaded} bytes`};'#13#10 +
     '}'#13#10 +
@@ -60,7 +60,7 @@ const
     '<input type="file" id="filename" required="required">'#13#10 +
     '<input type="button" name="Upload" value="Upload" onClick="doUpload()">'#13#10 +
     '</form>'#13#10 +
-    '<p id="feedback">Waiting to upload file</p>'#13#10 +
+    '<p id="feedback">Click [Browse...] to select a file, then click [Upload] to start uploading process</p>'#13#10 +
     '</body></html>';
 
 function root_handler(req: Phttpd_req): Tesp_err;
@@ -80,7 +80,7 @@ var
   recv: int32;
   totalRecv: uint32;
   err: Tesp_err;
-  contentlength: shortstring;
+  //contentlength: shortstring;
   imageMagicOK: boolean;
 
   update_handle: Tesp_ota_handle = 0;
@@ -88,10 +88,11 @@ var
 begin
   writeln('Received upload post');
   result := ESP_OK;
-  recv := httpd_req_get_hdr_value_str(req, 'Content-Length', @contentlength[1], length(contentlength));
-  setlength(contentlength, recv);
-  //WriteLn('Content length: ', contentlength);
-  //writeln('File content:');
+  if req^.content_len = 0 then
+  begin
+    writeln('Empty content in upload');
+    exit;
+  end;
   totalRecv := 0;
   imageMagicOK := false;
   while (totalRecv < uint32(req^.content_len)) do
@@ -101,14 +102,12 @@ begin
     if recv > 0 then
     begin
       totalRecv := totalRecv + uint32(recv);
-      //writeln('Received data: (', totalRecv, '/', req^.content_len, ')');
       // Only check magic byte on first iteration
       if not imageMagicOK then
       begin
         imageMagicOK := buf[0] = #$E9;
         if imageMagicOK then
         begin
-          //writeln('Magic byte OK');
           update_partition := esp_ota_get_next_update_partition(nil);
           if (update_partition = nil) then
           begin
@@ -117,7 +116,6 @@ begin
             break;
           end;
 
-          //writeln('Writing to partition subtype ', update_partition^.subtype, ' at offset $', HexStr(update_partition^.address, 8));
           err := esp_ota_begin(update_partition, Tsize(OTA_SIZE_UNKNOWN), @update_handle);
           if (err <> ESP_OK) then
           begin
@@ -125,7 +123,6 @@ begin
             err := -1;
             break;
           end;
-          //writeln('esp_ota_begin succeeded');
         end
         else
         begin
@@ -192,8 +189,6 @@ begin
   end
   else
     writeln('Upload FAILED');
-
-  result := ESP_OK;
 end;
 
 function start_webserver: Thttpd_handle;
@@ -235,12 +230,11 @@ begin
   end;
 end;
 
-
 begin
   writeln('Version string: ', versionStr);
   writeln;
-  //createWifiAP('sensor', '');
-  connectWifiAP(AP_NAME, PWD);
+  createWifiAP('sensor', '');
+  //connectWifiAP(AP_NAME, PWD);
   writeln('Starting web server...');
   start_webserver;
 
