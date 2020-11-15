@@ -14,4 +14,7 @@ In some cases it can cause problems with flashing firmware. Recover with esptool
 
 Common functionality that is expected from config:
 * CONFIG_LOG_SET_LEVEL - used to change verbosity at runtime
-* CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS - used when reporting CPU usage of tasks
+* CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS - used when reporting CPU usage of tasks  
+ 
+TODO:
+* CONFIG_HTTPD_MAX_REQ_HDR_LEN to be increased to 1024 bytes, else some browsers (e.g.Chrome) may exceed the default header size
