@@ -279,8 +279,6 @@ begin
   end;
   EspErrorCheck(ret);
 
-//  WifiEventGroup := xEventGroupCreate();
-
   EspErrorCheck(esp_netif_init());
   EspErrorCheck(esp_event_loop_create_default());
 
@@ -300,8 +298,6 @@ begin
   //esp_netif_set_ip_info(netif_handle, @info);
   //esp_netif_dhcps_start(netif_handle);
   {$endif}
-
-  //esp_wifi_set_storage(WIFI_STORAGE_RAM);
 
   WIFI_INIT_CONFIG_DEFAULT(cfg);
   EspErrorCheck(esp_wifi_init(@cfg));
@@ -334,22 +330,6 @@ begin
   EspErrorCheck(esp_wifi_set_mode(WIFI_MODE_AP));
   EspErrorCheck(esp_wifi_set_config(WIFI_IF_AP, @wifi_config));
   EspErrorCheck(esp_wifi_start());
-
-  // Wait until APStarted bit gets set
-  // by xEventGroupSetBits call in EventHandler_ESP32
-  //writeln('Waiting for AP to start');
-  //bits := xEventGroupWaitBits(WifiEventGroup,
-  //        APStarted,
-  //        pdFALSE,
-  //        pdFALSE,
-  //        portMAX_DELAY);
-
-  // Done, now clean up event group
-  {$ifdef CPULX6}
-  //EspErrorCheck(esp_event_handler_unregister(IP_EVENT, ord(IP_EVENT_STA_GOT_IP), Tesp_event_handler(@EventHandler_ESP32)));
-  //EspErrorCheck(esp_event_handler_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, Tesp_event_handler(@EventHandler_ESP32)));
-  {$endif}
-  //vEventGroupDelete(WifiEventGroup);
 end;
 
 end.
