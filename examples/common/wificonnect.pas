@@ -27,6 +27,9 @@ procedure createWifiAP(const APName, APassword: string);
 
 implementation
 
+uses
+  task; //debugging only!
+
 const
   MaxRetries     = 5;
   WifiConnected  = BIT0;
@@ -61,33 +64,56 @@ var
   event: Pip_event_got_ip;
   addr: uint32;
 begin
-  writeln('Event: ', AEventBase, ' - eventid: ', AEventID);
-  if (AEventBase = WIFI_EVENT) and (Twifi_event(AEventID) = WIFI_EVENT_STA_START) then
+  if (AEventBase = WIFI_EVENT) then
   begin
-    writeln('Wifi started, now connecting...');
-    esp_wifi_connect();
-  end
-  else if (AEventBase = WIFI_EVENT) and (Twifi_event(AEventID) = WIFI_EVENT_STA_DISCONNECTED) then
-  begin
-    if (retries < MaxRetries) then
-    begin
-      esp_wifi_connect();
-      inc(retries);
-      writeln('Reconnect #, ', retries);
-    end
-    else
-    begin
-      xEventGroupSetBits(WifiEventGroup, WifiFail);
-      writeln('### Connect to the AP fail');
+    case Twifi_event(AEventID) of
+      WIFI_EVENT_STA_START:
+      begin
+        writeln('Wifi started, now connecting...');
+        esp_wifi_connect();
+      end;
+      WIFI_EVENT_STA_DISCONNECTED:
+      begin
+        if (retries < MaxRetries) then
+        begin
+          esp_wifi_connect();
+          inc(retries);
+          writeln('Reconnect #, ', retries);
+        end
+        else
+        begin
+          writeln('### Connect to the AP fail');
+          if assigned(WifiEventGroup) then
+            xEventGroupSetBits(WifiEventGroup, WifiFail);
+        end;
+      end;
+      WIFI_EVENT_AP_START:
+      begin
+        writeln('Wifi AP started...');
+        if assigned(WifiEventGroup) then
+          xEventGroupSetBits(WifiEventGroup, APStarted);
+      end;
+      else
+      begin
+        writeln('Received Wifi event: ', Twifi_event(AEventID));
+      end;
     end;
   end
-  else if (AEventBase = IP_EVENT) and (Tip_event(AEventID) = IP_EVENT_STA_GOT_IP) then
+  else if (AEventBase = IP_EVENT) then
   begin
-    event := Pip_event_got_ip(AEventData);
-    addr := event^.ip_info.ip.addr;
-    writeln('Got ip: ',  addr and $FF, '.', (addr shr 8) and $FF, '.', (addr shr 16) and $FF, '.', addr shr 24);
-    retries := 0;
-    xEventGroupSetBits(WifiEventGroup, WifiConnected);
+    case Tip_event(AEventID) of
+      IP_EVENT_STA_GOT_IP:
+      begin
+        event := Pip_event_got_ip(AEventData);
+        addr := event^.ip_info.ip.addr;
+        writeln('Got ip: ',  addr and $FF, '.', (addr shr 8) and $FF, '.', (addr shr 16) and $FF, '.', addr shr 24);
+        retries := 0;
+        if assigned(WifiEventGroup) then
+          xEventGroupSetBits(WifiEventGroup, WifiConnected);
+      end
+      else
+        writeln('Received IP event: ', Tip_event(AEventID));
+    end;
   end
   else
     writeln('Received event base = ', AEventBase, 'event ID = ', AEventID);
@@ -113,8 +139,9 @@ begin
     end
     else
     begin
-      xEventGroupSetBits(WifiEventGroup, WifiFail);
       writeln('### Connect to the AP fail');
+      if assigned(WifiEventGroup) then
+        xEventGroupSetBits(WifiEventGroup, WifiFail);
     end;
   end
   else if (event^.event_id = SYSTEM_EVENT_STA_GOT_IP) then
@@ -122,11 +149,14 @@ begin
     addr := event^.event_info.got_ip.ip_info.ip.addr;
     writeln('Got ip: ',  addr and $FF, '.', (addr shr 8) and $FF, '.', (addr shr 16) and $FF, '.', addr shr 24);
     retries := 0;
-    xEventGroupSetBits(WifiEventGroup, WifiConnected);
+    writeln('### Connect to the AP fail');
+    if assigned(WifiEventGroup) then
+      xEventGroupSetBits(WifiEventGroup, WifiConnected);
   end
   else if (event^.event_id = SYSTEM_EVENT_AP_START) then
   begin
-    xEventGroupSetBits(WifiEventGroup, APStarted);
+    if assigned(WifiEventGroup) then
+      xEventGroupSetBits(WifiEventGroup, APStarted);
   end
   else
   begin
@@ -142,18 +172,30 @@ var
   wifi_config: Twifi_config;
   bits: TEventBits;
 begin
+  writeln('xEventGroupCreate');
+  vTaskDelay(10);
   WifiEventGroup := xEventGroupCreate();
   {$ifdef CPULX106}
   tcpip_adapter_init;
   {$endif}
+  writeln('esp_netif_init');
+  vTaskDelay(10);
   EspErrorCheck(esp_netif_init());
+  writeln('esp_event_loop_create_default');
+  vTaskDelay(10);
   EspErrorCheck(esp_event_loop_create_default());
   {$ifdef CPULX6}
   esp_netif_create_default_wifi_sta();
   {$endif}
+  writeln('WIFI_INIT_CONFIG_DEFAULT');
+  vTaskDelay(10);
   WIFI_INIT_CONFIG_DEFAULT(cfg);
+  writeln('esp_wifi_init');
+  vTaskDelay(10);
   EspErrorCheck(esp_wifi_init(@cfg));
   {$ifdef CPULX6}
+  writeln('esp_event_handler_register');
+  vTaskDelay(10);
   EspErrorCheck(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, Tesp_event_handler(@EventHandler_ESP32), nil));
   EspErrorCheck(esp_event_handler_register(IP_EVENT, ord(IP_EVENT_STA_GOT_IP), Tesp_event_handler(@EventHandler_ESP32), nil));
   {$else}
@@ -165,6 +207,8 @@ begin
   CopyStringToBuffer(APName, @(wifi_config.sta.ssid[0]));
   CopyStringToBuffer(APassword, @(wifi_config.sta.password[0]));
 
+  writeln('esp_wifi_set_mode');
+  vTaskDelay(10);
   EspErrorCheck(esp_wifi_set_mode(WIFI_MODE_STA) );
   EspErrorCheck(esp_wifi_set_config(ESP_IF_WIFI_STA, @wifi_config));
   EspErrorCheck(esp_wifi_start());
@@ -224,35 +268,49 @@ var
   info: Tesp_netif_ip_info;
   {$endif}
 begin
-  WifiEventGroup := xEventGroupCreate();
+  writeln('nvs_flash_init');
+  ret := nvs_flash_init();
+  if (ret = ESP_ERR_NVS_NO_FREE_PAGES) {$ifdef CPULX6}or (ret = ESP_ERR_NVS_NEW_VERSION_FOUND){$endif} then
+  begin
+    writeln('nvs_flash_erase');
+    EspErrorCheck(nvs_flash_erase());
+    writeln('nvs_flash_init()');
+    ret := nvs_flash_init();
+  end;
+  EspErrorCheck(ret);
 
-  FillByte(info, 0, sizeof(info));
-	info.ip.addr := IP4ToAddress(192, 168, 10, 1);
-  info.gw.addr := IP4ToAddress(192, 168, 10, 1);
-  info.netmask.addr := IP4ToAddress(255, 255, 255, 0);
+//  WifiEventGroup := xEventGroupCreate();
+
+  EspErrorCheck(esp_netif_init());
+  EspErrorCheck(esp_event_loop_create_default());
+
   {$ifdef CPULX106}
   tcpip_adapter_init;
+  FillByte(info, 0, sizeof(info));
+	info.ip.addr := IP4ToAddress(192, 168, 4, 1);
+  info.gw.addr := IP4ToAddress(192, 168, 4, 1);
+  info.netmask.addr := IP4ToAddress(255, 255, 255, 0);
   EspErrorCheck(tcpip_adapter_dhcps_stop(TCPIP_ADAPTER_IF_AP));
   EspErrorCheck(tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_AP, @info));
   EspErrorCheck(tcpip_adapter_dhcps_start(TCPIP_ADAPTER_IF_AP));
   {$else}
   netif_handle := esp_netif_create_default_wifi_ap();
-  esp_netif_dhcps_stop(netif_handle);
-  esp_netif_set_ip_info(netif_handle, @info);
-  esp_netif_dhcps_start(netif_handle);
+  // This doesn't seem to work on ESP32
+  //esp_netif_dhcps_stop(netif_handle);
+  //esp_netif_set_ip_info(netif_handle, @info);
+  //esp_netif_dhcps_start(netif_handle);
   {$endif}
 
-  EspErrorCheck(esp_netif_init());
-  EspErrorCheck(esp_event_loop_create_default());
-  //{$ifdef CPULX6}
-  //esp_netif_create_default_wifi_sta();
-  //{$endif}
+  //esp_wifi_set_storage(WIFI_STORAGE_RAM);
+
   WIFI_INIT_CONFIG_DEFAULT(cfg);
   EspErrorCheck(esp_wifi_init(@cfg));
-  esp_wifi_set_storage(WIFI_STORAGE_RAM);
+
   {$ifdef CPULX6}
-  EspErrorCheck(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, Tesp_event_handler(@EventHandler_ESP32), nil));
-  EspErrorCheck(esp_event_handler_register(IP_EVENT, ord(IP_EVENT_STA_GOT_IP), Tesp_event_handler(@EventHandler_ESP32), nil));
+  // Writing from these events seem to cause an error 101 later on
+  //writeln('esp_event_handler_register');
+  //EspErrorCheck(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, Tesp_event_handler(@EventHandler_ESP32), nil));
+  //EspErrorCheck(esp_event_handler_register(IP_EVENT, ord(IP_EVENT_AP_STAIPASSIGNED), Tesp_event_handler(@EventHandler_ESP32), nil));
   {$else}
   EspErrorCheck(esp_event_loop_init(Tsystem_event_cb(@EventHandler_ESP8266), nil));
   {$endif}
@@ -279,19 +337,19 @@ begin
 
   // Wait until APStarted bit gets set
   // by xEventGroupSetBits call in EventHandler_ESP32
-  writeln('Waiting for AP to start');
-  bits := xEventGroupWaitBits(WifiEventGroup,
-          APStarted,
-          pdFALSE,
-          pdFALSE,
-          portMAX_DELAY);
+  //writeln('Waiting for AP to start');
+  //bits := xEventGroupWaitBits(WifiEventGroup,
+  //        APStarted,
+  //        pdFALSE,
+  //        pdFALSE,
+  //        portMAX_DELAY);
 
   // Done, now clean up event group
   {$ifdef CPULX6}
-  EspErrorCheck(esp_event_handler_unregister(IP_EVENT, ord(IP_EVENT_STA_GOT_IP), Tesp_event_handler(@EventHandler_ESP32)));
-  EspErrorCheck(esp_event_handler_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, Tesp_event_handler(@EventHandler_ESP32)));
+  //EspErrorCheck(esp_event_handler_unregister(IP_EVENT, ord(IP_EVENT_STA_GOT_IP), Tesp_event_handler(@EventHandler_ESP32)));
+  //EspErrorCheck(esp_event_handler_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, Tesp_event_handler(@EventHandler_ESP32)));
   {$endif}
-  vEventGroupDelete(WifiEventGroup);
+  //vEventGroupDelete(WifiEventGroup);
 end;
 
 end.
