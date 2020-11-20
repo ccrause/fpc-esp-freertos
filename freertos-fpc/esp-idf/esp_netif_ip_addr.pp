@@ -23,7 +23,6 @@ type
   Tesp_ip4_addr = record
     addr: uint32;
   end;
-  //Tesp_ip4_addr = Tesp_ip4_addr;
 
   Pip_addr = ^Tip_addr;
   Tip_addr = record
