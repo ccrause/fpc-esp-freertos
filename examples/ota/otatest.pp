@@ -154,7 +154,7 @@ end.
 // esptool.py -p /dev/ttyUSB0 -b 500000 --chip auto --before default_reset --after hard_reset  write_flash --flash_mode dio --flash_size detect --flash_freq 40m 0x0000 ~/xtensa/examples/simple-ota-esp8266/build/bootloader/bootloader.bin 0xd000 ~/xtensa/examples/simple-ota-esp8266/build/ota_data_initial.bin 0x8000 ~/xtensa/examples/simple-ota-esp8266/build/partitions_two_ota.bin 0x10000 otatest.bin
 
 // Flash ota partition and firmware for esp32:
-// esptool.py --chip auto -p /dev/ttyUSB0 --baud 500000 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0x1000 ~/xtensa/examples/simple_ota_example/build/bootloader/bootloader.bin 0xd000 ~/xtensa/examples/simple_ota_example/build/ota_data_initial.bin 0x8000 ~/xtensa/examples/simple_ota_example/build/partitions_two_ota.bin 0x10000 firmware.bin
+// esptool.py --chip auto -p /dev/ttyUSB0 --baud 500000 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0x1000 ~/fpc/xtensa/fpc-esp-idf/libs/bootloader.bin 0xd000 ~/fpc/xtensa/fpc-esp-idf/libs/ota_data_initial.bin 0x8000 ~/fpc/xtensa/fpc-esp-idf/libs/partitions_two_ota.bin 0x10000 otatest.bin
 
 // Flash mapping:
 // 0x1000 ~/xtensa/examples/simple_ota_example/build/bootloader/bootloader.bin

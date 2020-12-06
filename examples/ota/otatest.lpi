@@ -41,14 +41,14 @@
             <ConfigFile>
               <DontUseConfigFile Value="True"/>
               <CustomConfigFile Value="True"/>
-              <ConfigFilePath Value="~/fpc/3.3.1/fpc.cfg"/>
+              <ConfigFilePath Value="~/fpc/cc/fpc.cfg"/>
             </ConfigFile>
             <CustomOptions Value="-Tfreertos 
 -Wpesp8266
 -Cacall0
 -XPxtensa-lx106-elf-
 -Ff/home/christo/xtensa/ESP8266_RTOS_SDK_V3_3"/>
-            <CompilerPath Value="/home/christo/fpc/3.3.1/compiler/ppcrossxtensa"/>
+            <CompilerPath Value="/home/christo/fpc/cc/compiler/ppcrossxtensa"/>
           </Other>
         </CompilerOptions>
       </Item2>
@@ -61,7 +61,7 @@
       <FormatVersion Value="2"/>
       <Modes Count="0"/>
     </RunParams>
-    <Units Count="2">
+    <Units Count="3">
       <Unit0>
         <Filename Value="otatest.pp"/>
         <IsPartOfProject Value="True"/>
@@ -70,6 +70,10 @@
         <Filename Value="../common/wificonnect.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit1>
+      <Unit2>
+        <Filename Value="../common/otapush.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit2>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -96,14 +100,14 @@
       <ConfigFile>
         <DontUseConfigFile Value="True"/>
         <CustomConfigFile Value="True"/>
-        <ConfigFilePath Value="~/fpc/3.3.1/fpc.cfg"/>
+        <ConfigFilePath Value="~/fpc/cc/fpc.cfg"/>
       </ConfigFile>
       <CustomOptions Value="-Tfreertos 
 -Wpesp32 
 -Cawindowed 
 -XP/home/christo/.espressif/tools/xtensa-esp32-elf/esp-2020r1-8.2.0/xtensa-esp32-elf/bin/xtensa-esp32-elf-
 -Ff/home/christo/fpc/xtensa/fpc-esp-idf"/>
-      <CompilerPath Value="/home/christo/fpc/3.3.1/compiler/ppcrossxtensa"/>
+      <CompilerPath Value="/home/christo/fpc/cc/compiler/ppcrossxtensa"/>
     </Other>
   </CompilerOptions>
   <Debugging>
