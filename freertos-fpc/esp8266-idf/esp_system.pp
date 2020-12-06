@@ -1,6 +1,9 @@
 unit esp_system;
 
 {$include freertosconfig.inc}
+{$linklib util, static}             // required for esp_crc8
+{$linklib wpa, static}              // required for esp_random
+{$linklib wpa_supplicant, static}   // required for pbkdf2_sha1
 
 interface
 
