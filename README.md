@@ -42,7 +42,7 @@ Another way is to reset the ota data (see [CONFIG_BOOTLOADER_FACTORY_RESET](http
 , but this is not enabled in the default bootloader).
 
 ### Revert from OTA to single app
-If OTA functionalityis no longer required then the configuration can be returned to a single app partition using the following command:
+If OTA functionality is no longer required then the configuration can be returned to a single app partition using the following command:
 ```
 esptool.py -p /dev/ttyUSB0 -b 500000 --before default_reset --after hard_reset --chip auto  write_flash --flash_mode dio --flash_size detect --flash_freq 40m 0x8000 PATH_TO_LIBS/partitions_singleapp.bin 0x10000 blink.bin
 ```
