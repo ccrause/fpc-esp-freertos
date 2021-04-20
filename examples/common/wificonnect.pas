@@ -1,5 +1,7 @@
 unit wificonnect;
 
+{$include freertosconfig.inc}
+
 interface
 
 uses
@@ -19,11 +21,14 @@ uses
 // {$define PWD := 'password for AP'}
 //{$include credentials.ignore}
 
+var
+  StationConnected: boolean;
+
 // Connect to an external access point using provided credetials
-procedure connectWifiAP(const APName, APassword: string);
+procedure connectWifiAP(const APName, APassword: shortstring);
 
 // Create a wifi access point with the given name and password
-procedure createWifiAP(const APName, APassword: string);
+procedure createWifiAP(const APName, APassword: shortstring);
 
 implementation
 
@@ -31,7 +36,7 @@ uses
   task; //debugging only!
 
 const
-  MaxRetries     = 5;
+  MaxRetries     = 100; // or loop until reconnected?
   WifiConnected  = BIT0;
   APStarted      = BIT0;
   WifiFail       = BIT1;
@@ -42,7 +47,7 @@ var
   retries: uint32 = 0;
 
 // Rather use StrPLCopy, but while sysutils are not yet working...
-procedure CopyStringToBuffer(const s: string; const buf: PChar);
+procedure CopyStringToBuffer(const s: shortstring; const buf: PChar);
 var
   i: integer;
   pc: Pchar;
@@ -131,27 +136,36 @@ begin
   end
   else if (event^.event_id = SYSTEM_EVENT_STA_DISCONNECTED) then
   begin
+    StationConnected := false;
     if (retries < MaxRetries) then
     begin
       esp_wifi_connect();
       inc(retries);
       writeln('Reconnect #, ', retries);
+      vTaskDelay(10000 div portTICK_PERIOD_MS);  // debug, try to avoid watchdog timeout
     end
     else
     begin
       writeln('### Connect to the AP fail');
+      vTaskDelay(1);  // debug, try to avoid watchdog timeout
+
       if assigned(WifiEventGroup) then
         xEventGroupSetBits(WifiEventGroup, WifiFail);
     end;
   end
   else if (event^.event_id = SYSTEM_EVENT_STA_GOT_IP) then
   begin
+    StationConnected := true;
     addr := event^.event_info.got_ip.ip_info.ip.addr;
     writeln('Got ip: ',  addr and $FF, '.', (addr shr 8) and $FF, '.', (addr shr 16) and $FF, '.', addr shr 24);
     retries := 0;
-    writeln('### Connect to the AP fail');
     if assigned(WifiEventGroup) then
       xEventGroupSetBits(WifiEventGroup, WifiConnected);
+  end
+  else if (event^.event_id = SYSTEM_EVENT_STA_LOST_IP) then
+  begin
+    StationConnected := false;
+    writeln('Lost IP');
   end
   else if (event^.event_id = SYSTEM_EVENT_AP_START) then
   begin
@@ -166,51 +180,56 @@ begin
 end;
 {$endif}
 
-procedure WifiInitStationMode(const APName, APassword: string);
+procedure WifiInitStationMode(const APName, APassword: shortstring);
+const
+  eventLoopInitDone: boolean = false;
 var
   cfg: Twifi_init_config;
   wifi_config: Twifi_config;
   bits: TEventBits;
 begin
-  writeln('xEventGroupCreate');
-  vTaskDelay(10);
+  retries := 0;
   WifiEventGroup := xEventGroupCreate();
   {$ifdef CPULX106}
   tcpip_adapter_init;
   {$endif}
   writeln('esp_netif_init');
-  vTaskDelay(10);
   EspErrorCheck(esp_netif_init());
   writeln('esp_event_loop_create_default');
-  vTaskDelay(10);
   EspErrorCheck(esp_event_loop_create_default());
   {$ifdef CPULX6}
   esp_netif_create_default_wifi_sta();
   {$endif}
-  writeln('WIFI_INIT_CONFIG_DEFAULT');
-  vTaskDelay(10);
   WIFI_INIT_CONFIG_DEFAULT(cfg);
   writeln('esp_wifi_init');
-  vTaskDelay(10);
   EspErrorCheck(esp_wifi_init(@cfg));
   {$ifdef CPULX6}
-  writeln('esp_event_handler_register');
-  vTaskDelay(10);
   EspErrorCheck(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, Tesp_event_handler(@EventHandler_ESP32), nil));
   EspErrorCheck(esp_event_handler_register(IP_EVENT, ord(IP_EVENT_STA_GOT_IP), Tesp_event_handler(@EventHandler_ESP32), nil));
   {$else}
-  EspErrorCheck(esp_event_loop_init(Tsystem_event_cb(@EventHandler_ESP8266), nil));
+  if not eventLoopInitDone then
+  begin
+    eventLoopInitDone := true;
+    writeln('esp_event_loop_init');
+    EspErrorCheck(esp_event_loop_init(Tsystem_event_cb(@EventHandler_ESP8266), nil));
+  end;
   {$endif}
-  // Seems like the name and password are not treated as NULL terminated
-  // so zero everything
-  FillChar(wifi_config, sizeof(wifi_config), #0);
-  CopyStringToBuffer(APName, @(wifi_config.sta.ssid[0]));
-  CopyStringToBuffer(APassword, @(wifi_config.sta.password[0]));
 
   writeln('esp_wifi_set_mode');
-  vTaskDelay(10);
   EspErrorCheck(esp_wifi_set_mode(WIFI_MODE_STA) );
-  EspErrorCheck(esp_wifi_set_config(ESP_IF_WIFI_STA, @wifi_config));
+
+  // If no AP name is given, just start wifi - it should use the previously saved credentials if available
+  if APName <> '' then
+  begin
+    // Seems like the name and password are not treated as NULL terminated
+    // so zero everything
+    FillChar(wifi_config, sizeof(wifi_config), #0);
+    CopyStringToBuffer(APName, @(wifi_config.sta.ssid[0]));
+    CopyStringToBuffer(APassword, @(wifi_config.sta.password[0]));
+    writeln('esp_wifi_set_config');
+    EspErrorCheck(esp_wifi_set_config(ESP_IF_WIFI_STA, @wifi_config));
+  end;
+  writeln('esp_wifi_start');
   EspErrorCheck(esp_wifi_start());
 
   // Wait until either WifiConnected or WifiFail bit gets set
@@ -220,10 +239,15 @@ begin
           WifiConnected or WifiFail,
           pdFALSE,
           pdFALSE,
-          portMAX_DELAY);
+          10 * configTICK_RATE_HZ);  // timeout after 10 seconds
+          //portMAX_DELAY);
 
+  //StationConnected := false;
   if (bits and WifiConnected) = WifiConnected then
+  begin
+    //StationConnected := true;
     writeln('Connected. Test connection by pinging the above IP address from the same network')
+  end
   else if (bits and WifiFail) = WifiFail then
     writeln('### Failed to connect')
   else
@@ -237,7 +261,7 @@ begin
   vEventGroupDelete(WifiEventGroup);
 end;
 
-procedure connectWifiAP(const APName, APassword: string);
+procedure connectWifiAP(const APName, APassword: shortstring);
 begin
   // In case default logging causes flood of messages
   //esp_log_level_set('*', ESP_LOG_WARN);
@@ -250,13 +274,14 @@ begin
     EspErrorCheck(nvs_flash_erase());
     writeln('nvs_flash_init()');
     ret := nvs_flash_init();
-  end;
-  EspErrorCheck(ret);
+  end
+  else if ret <> ESP_OK then
+    writeln('nvs_flash_init error: ', ret);
 
   WifiInitStationMode(APName, APassword);
 end;
 
-procedure createWifiAP(const APName, APassword: string);
+procedure createWifiAP(const APName, APassword: shortstring);
 var
   cfg: Twifi_init_config;
   wifi_config: Twifi_config;

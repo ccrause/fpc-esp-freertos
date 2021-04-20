@@ -5,6 +5,11 @@ interface
 uses
   esp_http_server, esp_err;
 
+var
+  // Global flag to indicate upload in progress
+  // can be used to skip time consuming actions to free up capacity for http handling
+  busyWithUpload: boolean = false;
+
 // Display form with file select option to initiate upload
 function uploadGetHandler(req: Phttpd_req): Tesp_err;
 // Receive post with file to upload
@@ -76,6 +81,7 @@ var
   update_partition: Pesp_partition = nil;
 begin
   writeln('Received upload post');
+  busyWithUpload := true;
   result := ESP_OK;
   if req^.content_len = 0 then
   begin
@@ -144,7 +150,10 @@ begin
         if totalRecv = uint32(req^.content_len) then
           err := ESP_OK
         else
+        begin
+          writeln('Error not all data received before connection closed');
           err := -1;
+        end;
       end;
       break;
     end;
@@ -178,6 +187,8 @@ begin
   end
   else
     writeln('Upload FAILED');
+
+  busyWithUpload := false;
 end;
 
 end.

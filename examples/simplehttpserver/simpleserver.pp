@@ -106,7 +106,7 @@ begin
 end;
 
 begin
-  connectWifi(AP_NAME, PWD);
+  connectWifiAP(AP_NAME, PWD);
   writeln('Starting web server...');
   start_webserver;
 
