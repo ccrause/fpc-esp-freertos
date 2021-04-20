@@ -6,7 +6,7 @@ unit esp_ota_ops;
 interface
 
 uses
-  esp_err, esp_partition, spi_flash;
+  esp_err, esp_partition;
 
 const
   OTA_SIZE_UNKNOWN = $ffffffff;

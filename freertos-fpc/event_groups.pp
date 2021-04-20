@@ -5,7 +5,7 @@ unit event_groups;
 interface
 
 uses
-  portmacro, portable, timers;
+  portmacro, timers;
 
 type
   PEventGroupHandle = ^TEventGroupHandle;

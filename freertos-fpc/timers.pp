@@ -5,7 +5,7 @@ unit timers;
 interface
 
 uses
-  portable, portmacro, task;
+  portmacro, task;
 
 const
    tmrCOMMAND_EXECUTE_CALLBACK_FROM_ISR 	=  -2;
