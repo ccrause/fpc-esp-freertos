@@ -1,5 +1,6 @@
 unit semphr;
 
+{$inline on}
 {$include freertosconfig.inc}
 
 interface
@@ -17,54 +18,54 @@ const
   semGIVE_BLOCK_TIME = 0;
 
 {$if defined(configSUPPORT_DYNAMIC_ALLOCATION) and (configSUPPORT_DYNAMIC_ALLOCATION = 1)}
-function vSemaphoreCreateBinary: TSemaphoreHandle;
-function xSemaphoreCreateBinary: TSemaphoreHandle;
+  function vSemaphoreCreateBinary: TSemaphoreHandle; inline;
+  function xSemaphoreCreateBinary: TSemaphoreHandle; inline;
 {$endif}
 
 {$if defined(configSUPPORT_STATIC_ALLOCATION) and (configSUPPORT_STATIC_ALLOCATION = 1 )}
-function xSemaphoreCreateBinaryStatic(pxStaticSemaphore: PStaticQueue): TQueueHandle;
+  function xSemaphoreCreateBinaryStatic(pxStaticSemaphore: PStaticQueue): TQueueHandle; inline;
 {$endif}
 
-function xSemaphoreTake(xSemaphore: TSemaphoreHandle; xBlockTime: TTickType): TBaseType;
-function xSemaphoreTakeRecursive(xMutex: TSemaphoreHandle; xBlockTime: TTickType): TBaseType;
-function xSemaphoreAltTake(xSemaphore: TSemaphoreHandle; xBlockTime: TTickType): TBaseType;
-function xSemaphoreGive(xSemaphore: TSemaphoreHandle): TBaseType;
-function xSemaphoreGiveRecursive(xMutex: TSemaphoreHandle): TBaseType;
-function xSemaphoreAltGive(xSemaphore: TSemaphoreHandle): TBaseType;
+function xSemaphoreTake(xSemaphore: TSemaphoreHandle; xBlockTime: TTickType): TBaseType; inline;
+function xSemaphoreTakeRecursive(xMutex: TSemaphoreHandle; xBlockTime: TTickType): TBaseType; inline;
+function xSemaphoreAltTake(xSemaphore: TSemaphoreHandle; xBlockTime: TTickType): TBaseType; inline;
+function xSemaphoreGive(xSemaphore: TSemaphoreHandle): TBaseType; inline; inline;
+function xSemaphoreGiveRecursive(xMutex: TSemaphoreHandle): TBaseType; inline;
+function xSemaphoreAltGive(xSemaphore: TSemaphoreHandle): TBaseType; inline;
 function xSemaphoreGiveFromISR(xSemaphore: TSemaphoreHandle; pxHigherPriorityTaskWoken: PBaseType)
-  : TBaseType;
+  : TBaseType; inline;
 function xSemaphoreTakeFromISR(xSemaphore: TSemaphoreHandle; pxHigherPriorityTaskWoken: PBaseType)
-  : TBaseType;
+  : TBaseType; inline;
 
 {$if defined(configSUPPORT_DYNAMIC_ALLOCATION) and (configSUPPORT_DYNAMIC_ALLOCATION = 1)}
-  function xSemaphoreCreateMutex: TSemaphoreHandle;
+  function xSemaphoreCreateMutex: TSemaphoreHandle; inline;
 {$endif}
 
 {$if defined(configSUPPORT_STATIC_ALLOCATION) and (configSUPPORT_STATIC_ALLOCATION = 1)}
-  function xSemaphoreCreateMutexStatic(pxMutexBuffer: PStaticQueue): TSemaphoreHandle_t;
+  function xSemaphoreCreateMutexStatic(pxMutexBuffer: PStaticQueue): TSemaphoreHandle; inline;
 {$endif}
 
 {$if (configSUPPORT_DYNAMIC_ALLOCATION = 1) and (configUSE_RECURSIVE_MUTEXES = 1)}
-  function xSemaphoreCreateRecursiveMutex: TSemaphoreHandle;
+  function xSemaphoreCreateRecursiveMutex: TSemaphoreHandle; inline;
 {$endif}
 
 {$if defined(configSUPPORT_STATIC_ALLOCATION) and defined(configUSE_RECURSIVE_MUTEXES) and
       (configSUPPORT_STATIC_ALLOCATION = 1 ) and ( configUSE_RECURSIVE_MUTEXES = 1)}
-  function xSemaphoreCreateRecursiveMutexStatic(pxStaticSemaphore: PStaticQueue): TSemaphoreHandle_t;
+  function xSemaphoreCreateRecursiveMutexStatic(pxStaticSemaphore: PStaticQueue): TSemaphoreHandle;  inline;
 {$endif}
 
-{$if( configSUPPORT_DYNAMIC_ALLOCATION = 1 )}
-  function xSemaphoreCreateCounting(uxMaxCount, uxInitialCount: longint): TSemaphoreHandle;
+{$if defined(configSUPPORT_DYNAMIC_ALLOCATION) and (configSUPPORT_DYNAMIC_ALLOCATION = 1)}
+  function xSemaphoreCreateCounting(uxMaxCount, uxInitialCount: longint): TSemaphoreHandle; inline;
 {$endif}
 
 {$if defined(configSUPPORT_STATIC_ALLOCATION) and (configSUPPORT_STATIC_ALLOCATION = 1)}
   function xSemaphoreCreateCountingStatic(uxMaxCount, uxInitialCount: TUBaseType;
-    pxSemaphoreBuffer: PStaticQueue): TSemaphoreHandle_t;
+    pxSemaphoreBuffer: PStaticQueue): TSemaphoreHandle;  inline;
 {$endif}
 
-procedure vSemaphoreDelete(xSemaphore: TSemaphoreHandle);
-function xSemaphoreGetMutexHolder(xSemaphore: TSemaphoreHandle): pointer;
-function uxSemaphoreGetCount(xSemaphore: TSemaphoreHandle): longint;
+procedure vSemaphoreDelete(xSemaphore: TSemaphoreHandle); inline;
+function xSemaphoreGetMutexHolder(xSemaphore: TSemaphoreHandle): pointer; inline;
+function uxSemaphoreGetCount(xSemaphore: TSemaphoreHandle): longint; inline;
 
 implementation
 
@@ -72,28 +73,28 @@ function xQueueGenericCreate(uxQueueLength, uxItemSize: TUBaseType;
   ucQueueType: byte): TQueueHandle; external;
 
 {$if defined(configSUPPORT_DYNAMIC_ALLOCATION) and (configSUPPORT_DYNAMIC_ALLOCATION = 1)}
-function vSemaphoreCreateBinary: TSemaphoreHandle;
-begin
-  vSemaphoreCreateBinary := xQueueGenericCreate(1, semSEMAPHORE_QUEUE_ITEM_LENGTH,
-    queueQUEUE_TYPE_BINARY_SEMAPHORE);
-  if not (vSemaphoreCreateBinary = nil) then
-    xSemaphoreGive(vSemaphoreCreateBinary);
-end;
+  function vSemaphoreCreateBinary: TSemaphoreHandle;
+  begin
+    vSemaphoreCreateBinary := xQueueGenericCreate(1, semSEMAPHORE_QUEUE_ITEM_LENGTH,
+      queueQUEUE_TYPE_BINARY_SEMAPHORE);
+    if not (vSemaphoreCreateBinary = nil) then
+      xSemaphoreGive(vSemaphoreCreateBinary);
+  end;
 
-function xSemaphoreCreateBinary: TSemaphoreHandle;
-begin
-  xSemaphoreCreateBinary := xQueueGenericCreate(1, semSEMAPHORE_QUEUE_ITEM_LENGTH,
-    queueQUEUE_TYPE_BINARY_SEMAPHORE);
-end;
+  function xSemaphoreCreateBinary: TSemaphoreHandle;
+  begin
+    xSemaphoreCreateBinary := xQueueGenericCreate(1, semSEMAPHORE_QUEUE_ITEM_LENGTH,
+      queueQUEUE_TYPE_BINARY_SEMAPHORE);
+  end;
 {$endif}
 
 {$if defined(configSUPPORT_STATIC_ALLOCATION) and (configSUPPORT_STATIC_ALLOCATION = 1 )}
-function xSemaphoreCreateBinaryStatic(pxStaticSemaphore: PStaticQueue): TQueueHandle;
-begin
-  xSemaphoreCreateBinaryStatic :=
-    xQueueGenericCreateStatic(TUBaseType(1), semSEMAPHORE_QUEUE_ITEM_LENGTH,
-    nil, pxStaticSemaphore, queueQUEUE_TYPE_BINARY_SEMAPHORE);
-end;
+  function xSemaphoreCreateBinaryStatic(pxStaticSemaphore: PStaticQueue): TQueueHandle;
+  begin
+    xSemaphoreCreateBinaryStatic :=
+      xQueueGenericCreateStatic(TUBaseType(1), semSEMAPHORE_QUEUE_ITEM_LENGTH,
+      nil, pxStaticSemaphore, queueQUEUE_TYPE_BINARY_SEMAPHORE);
+  end;
 {$endif}
 
 function xSemaphoreTake(xSemaphore: TSemaphoreHandle; xBlockTime: TTickType): TBaseType;
@@ -146,11 +147,11 @@ begin
 end;
 
 {$if defined(configSUPPORT_STATIC_ALLOCATION) and (configSUPPORT_STATIC_ALLOCATION = 1)}
-function xSemaphoreCreateMutexStatic(pxMutexBuffer: PStaticQueue): longint;
-begin
-  xSemaphoreCreateMutexStatic :=
-    xQueueCreateMutexStatic(queueQUEUE_TYPE_MUTEX, pxMutexBuffer);
-end;
+  function xSemaphoreCreateMutexStatic(pxMutexBuffer: PStaticQueue): TSemaphoreHandle;
+  begin
+    xSemaphoreCreateMutexStatic :=
+      xQueueCreateMutexStatic(queueQUEUE_TYPE_MUTEX, pxMutexBuffer);
+  end;
 {$endif}
 
 function xSemaphoreCreateRecursiveMutex: TSemaphoreHandle;
@@ -160,24 +161,28 @@ end;
 
 {$if defined(configSUPPORT_STATIC_ALLOCATION) and defined(configUSE_RECURSIVE_MUTEXES) and
       (configSUPPORT_STATIC_ALLOCATION = 1 ) and ( configUSE_RECURSIVE_MUTEXES = 1)}
-function xSemaphoreCreateRecursiveMutexStatic(pxStaticSemaphore: PStaticQueue): TSemaphoreHandle_t;
-begin
-  xSemaphoreCreateRecursiveMutexStatic :=
-    xQueueCreateMutexStatic(queueQUEUE_TYPE_RECURSIVE_MUTEX, pxStaticSemaphore);
-end;
+  function xSemaphoreCreateRecursiveMutexStatic(pxStaticSemaphore: PStaticQueue): TSemaphoreHandle;
+  begin
+    xSemaphoreCreateRecursiveMutexStatic :=
+      xQueueCreateMutexStatic(queueQUEUE_TYPE_RECURSIVE_MUTEX, pxStaticSemaphore);
+  end;
 {$endif}
 
-function xSemaphoreCreateCounting(uxMaxCount, uxInitialCount: longint): TSemaphoreHandle;
-begin
-  xSemaphoreCreateCounting := xQueueCreateCountingSemaphore(uxMaxCount, uxInitialCount);
-end;
+{$if defined(configSUPPORT_DYNAMIC_ALLOCATION) and (configSUPPORT_DYNAMIC_ALLOCATION = 1)}
+  function xSemaphoreCreateCounting(uxMaxCount, uxInitialCount: longint): TSemaphoreHandle;
+  begin
+    xSemaphoreCreateCounting := xQueueCreateCountingSemaphore(uxMaxCount, uxInitialCount);
+  end;
+{$endif}
 
-function xSemaphoreCreateCountingStatic(uxMaxCount, uxInitialCount: TUBaseType;
-  pxSemaphoreBuffer: PStaticQueue): TSemaphoreHandle;
-begin
-  xSemaphoreCreateCountingStatic :=
-    xQueueCreateCountingSemaphoreStatic(uxMaxCount, uxInitialCount, pxSemaphoreBuffer);
-end;
+{$if defined(configSUPPORT_STATIC_ALLOCATION) and (configSUPPORT_STATIC_ALLOCATION = 1)}
+  function xSemaphoreCreateCountingStatic(uxMaxCount, uxInitialCount: TUBaseType;
+    pxSemaphoreBuffer: PStaticQueue): TSemaphoreHandle;
+  begin
+    xSemaphoreCreateCountingStatic :=
+      xQueueCreateCountingSemaphoreStatic(uxMaxCount, uxInitialCount, pxSemaphoreBuffer);
+  end;
+{$endif}
 
 procedure vSemaphoreDelete(xSemaphore: TSemaphoreHandle);
 begin

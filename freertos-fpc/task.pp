@@ -8,11 +8,10 @@ uses
   projdefs, portmacro, portable, list;
 
 const
-  // Valid for ESP8266_RTOS_SDK V3.3
-  // esp-idf V4.1 sits at V8.2.0, but some functionality has been mapped to V10.0
-  tskKERNEL_VERSION_NUMBER = 'V10.0.1';
+  // ESP8266_RTOS_SDK V3.4 sits at V10.0
+  tskKERNEL_VERSION_NUMBER = 'V10.2.1';
   tskKERNEL_VERSION_MAJOR = 10;
-  tskKERNEL_VERSION_MINOR = 0;
+  tskKERNEL_VERSION_MINOR = 2;
   tskKERNEL_VERSION_BUILD = 1;
 
 type
@@ -64,6 +63,9 @@ type
     ulRunTimeCounter: uint32;
     pxStackBase: PStackType;
     usStackHighWaterMark: uint16;
+    {$if defined(configTASKLIST_INCLUDE_COREID)}
+    	xCoreID: TBaseType;
+    {$endif}
   end;
   PTaskStatus = ^TTaskStatus;
 
@@ -77,6 +79,8 @@ type
   end;
   PTaskSnapshot = ^TTaskSnapshot;
 
+
+
 const
   tskIDLE_PRIORITY = 0;
   tskNO_AFFINITY = $7FFFFFFF; //CONFIG_FREERTOS_NO_AFFINITY, define for compatibility with ESP32 (SMP) code
@@ -84,9 +88,19 @@ const
   taskSCHEDULER_NOT_STARTED = TBaseType(1);
   taskSCHEDULER_RUNNING = TBaseType(2);
 
-procedure taskYIELD; inline;
-function taskENTER_CRITICAL_FROM_ISR: longint; inline;
+procedure taskYIELD; external name 'portYIELD';
+{$if defined(portNUM_PROCESSORS) and (portNUM_PROCESSORS = 1)}
+  procedure taskENTER_CRITICAL(); external name 'vTaskEnterCritical';
+{$else}
+  procedure taskENTER_CRITICAL(mux: PportMUX_TYPE); external name 'vTaskEnterCritical';
+{$endif}
+function taskENTER_CRITICAL_FROM_ISR: uint32; inline;
+procedure taskENTER_CRITICAL_ISR(mux: PportMUX_TYPE); inline;
+
+procedure taskEXIT_CRITICAL(mux: PportMUX_TYPE); inline;
+
 procedure taskEXIT_CRITICAL_FROM_ISR(state: uint32); inline;
+
 procedure taskDISABLE_INTERRUPTS; inline;
 procedure taskENABLE_INTERRUPTS; inline;
 procedure vTaskAllocateMPURegions(xTask: TTaskHandle; pxRegions: PMemoryRegion); external;
@@ -309,14 +323,19 @@ implementation
   end;
 {$endif portNUM_PROCESSORS}
 
-procedure taskYIELD;
-begin
-  portYIELD;
-end;
-
 function taskENTER_CRITICAL_FROM_ISR: longint;
 begin
   taskENTER_CRITICAL_FROM_ISR := portSET_INTERRUPT_MASK_FROM_ISR;
+end;
+
+procedure taskENTER_CRITICAL_ISR(mux: PportMUX_TYPE);
+begin
+  portENTER_CRITICAL_ISR(mux)
+end;
+
+procedure taskEXIT_CRITICAL(mux: PportMUX_TYPE);
+begin
+  portEXIT_CRITICAL(mux;)
 end;
 
 procedure taskEXIT_CRITICAL_FROM_ISR(state: uint32);

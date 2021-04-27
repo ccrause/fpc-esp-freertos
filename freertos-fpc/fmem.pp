@@ -1,5 +1,5 @@
-// Copied mostly from cmem.pp
 unit fmem;
+// Copied mostly from cmem.pp
 
 interface
 

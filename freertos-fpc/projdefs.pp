@@ -1,5 +1,6 @@
 unit projdefs;
 
+{$inline on}
 {$include freertosconfig.inc}
 
 interface
@@ -21,21 +22,8 @@ const
 type
   TTaskFunction = procedure(para1: pointer);
 
-function pdMS_TO_TICKS(xTimeInMs: TTickType): uint32;
-function pdTICKS_TO_MS(xTicks: uint32): uint32;
-
-{$ifndef configUSE_LIST_DATA_INTEGRITY_CHECK_BYTES}
-const
-  configUSE_LIST_DATA_INTEGRITY_CHECK_BYTES = 0; // Should actually be a define
-{$endif}
-
-{$if (configUSE_16_BIT_TICKS = 1)}
-const
-  pdINTEGRITY_CHECK_VALUE = $5a5a;
-{$else}
-const
-  pdINTEGRITY_CHECK_VALUE = $5a5a5a5a;
-{$endif}
+function pdMS_TO_TICKS(xTimeInMs: TTickType): uint32; inline;
+function pdTICKS_TO_MS(xTicks: uint32): uint32; inline;
 
 implementation
 

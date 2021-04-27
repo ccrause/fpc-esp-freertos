@@ -44,20 +44,15 @@ const
 type
 {$endif}
 
-  TportMUX_TYPE = record
+  // Definition taken from esp_hw_support/include/soc/spinlock.h
+  TSpinlock = record
   	owner: uint32;
   	count: uint32;
-  {$ifdef CONFIG_FREERTOS_PORTMUX_DEBUG}
-  	lastLockedFn: PChar;
-  	lastLockedLine: int32;
-  {$endif}
   end;
   PportMUX_TYPE = ^TportMUX_TYPE;
+  TportMUX_TYPE = TSpinlock;
 
 const
-  // Defined in FreeRTOSConfig, break cyclic dependence by redeclaring constant here
-  //configTICK_RATE_HZ = CONFIG_FREERTOS_HZ;
-
   portMUX_FREE_VAL		= $B33FFFFF;
   portMUX_NO_TIMEOUT  = (-1);
   portMUX_TRY_LOCK    = 0;
