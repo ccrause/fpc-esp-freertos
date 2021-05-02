@@ -79,8 +79,6 @@ type
   end;
   PTaskSnapshot = ^TTaskSnapshot;
 
-
-
 const
   tskIDLE_PRIORITY = 0;
   tskNO_AFFINITY = $7FFFFFFF; //CONFIG_FREERTOS_NO_AFFINITY, define for compatibility with ESP32 (SMP) code
@@ -89,18 +87,7 @@ const
   taskSCHEDULER_RUNNING = TBaseType(2);
 
 procedure taskYIELD; external name 'portYIELD';
-{$if defined(portNUM_PROCESSORS) and (portNUM_PROCESSORS = 1)}
-  procedure taskENTER_CRITICAL(); external name 'vTaskEnterCritical';
-{$else}
-  procedure taskENTER_CRITICAL(mux: PportMUX_TYPE); external name 'vTaskEnterCritical';
-{$endif}
 function taskENTER_CRITICAL_FROM_ISR: uint32; inline;
-procedure taskENTER_CRITICAL_ISR(mux: PportMUX_TYPE); inline;
-
-procedure taskEXIT_CRITICAL(mux: PportMUX_TYPE); inline;
-
-procedure taskEXIT_CRITICAL_FROM_ISR(state: uint32); inline;
-
 procedure taskDISABLE_INTERRUPTS; inline;
 procedure taskENABLE_INTERRUPTS; inline;
 procedure vTaskAllocateMPURegions(xTask: TTaskHandle; pxRegions: PMemoryRegion); external;
@@ -221,45 +208,38 @@ function uxTaskGetSnapshotAll(pxTaskSnapshotArray: PTaskSnapshot;
   {$endif}
 {$endif portNUM_PROCESSORS}
 
-// Separate FreeRTOS V8 signatures from V10 and remap to V10 if possible
+
+function pcTaskGetName(xTaskToQuery: TTaskHandle): PChar; external;
+function xTaskGetHandle(pcNameToQuery: PChar): TTaskHandle; external;
+function xTaskNotifyFromISR(xTaskToNotify: TTaskHandle; ulValue: uint32;
+  eAction: TeNotifyAction; pxHigherPriorityTaskWoken: PBaseType): TBaseType; inline;
+function xTaskNotify(xTaskToNotify: TTaskHandle; ulValue: uint32; eAction: TeNotifyAction): TBaseType; inline;
+function xTaskAbortDelay(xTask: TTaskHandle): TBaseType; external;
+procedure vTaskGetInfo(xTask: TTaskHandle; pxTaskStatus: PTaskStatus;
+  xGetFreeStackSpace: TBaseType; eState: TeTaskState); external;
+function xTaskGenericNotify(xTaskToNotify: TTaskHandle; ulValue: uint32;
+  eAction: TeNotifyAction; pulPreviousNotificationValue: Puint32): TBaseType; external;
+function xTaskNotifyAndQuery(xTaskToNotify: TTaskHandle; ulValue: uint32; eAction: TeNotifyAction;
+  pulPreviousNotifyValue: puint32): TBaseType; inline;
+function xTaskGenericNotifyFromISR(xTaskToNotify: TTaskHandle;
+  ulValue: uint32; eAction: TeNotifyAction; pulPreviousNotificationValue: Puint32;
+  pxHigherPriorityTaskWoken: PBaseType): TBaseType; external;
+function xTaskNotifyAndQueryFromISR(xTaskToNotify: TTaskHandle;
+  ulValue: uint32; eAction: TeNotifyAction; pulPreviousNotificationValue: Puint32;
+  pxHigherPriorityTaskWoken: PBaseType): TBaseType; inline;
+function xTaskNotifyStateClear(xTask: TTaskHandle): TBaseType; external;
+procedure vTaskPlaceOnEventListRestricted(pxEventList: PList; xTicksToWait: TTickType; xWaitIndefinitely: TBaseType); external;
+function xTaskPriorityInherit(pxMutexHolder: TTaskHandle): TBaseType; external;
+procedure vTaskPriorityDisinheritAfterTimeout(pxMutexHolder: TTaskHandle;
+  uxHighestPriorityWaitingTask: TUBaseType); external;
+procedure vTaskInternalSetTimeOutState(pxTimeOut: PTimeOut); external;
+
 {$if defined(FPC_MCU_ESP32) or defined(FPC_MCU_ESP32S2)}
-  // FreeRTOS V8 name, followed by V10 compatible alias
-  function pcTaskGetTaskName(xTaskToQuery: TTaskHandle): PChar; external;
-  function pcTaskGetName(xTaskToQuery: TTaskHandle): PChar; external name 'pcTaskGetTaskName';
-  // Not sure if there is a FreeRTOS V10 version of this function
   function pxTaskGetStackStart(xTask: TTaskHandle): PByte; external;
-  function xTaskNotifyFromISR(xTaskToNotify: TTaskHandle; ulValue: uint32;
-    eAction: TeNotifyAction; pxHigherPriorityTaskWoken: PBaseType): TBaseType; external;
-  function xTaskNotify(xTaskToNotify: TTaskHandle; ulValue: uint32; eAction: TeNotifyAction): TBaseType; external;
-  procedure vTaskPriorityInherit(pxMutexHolder: TTaskHandle); external;
   function xTaskGetAffinity(xTask: TTaskHandle): TBaseType; external;
+  function xTaskRemoveFromUnorderedEventList(pxEventListItem: PListItem; xItemValue: TTickType): TBaseType; external;
 {$else neither ESP32 nor ESP32S2}
-  function pcTaskGetName(xTaskToQuery: TTaskHandle): PChar; external;
-  // FreeRTOS V10 functionality not available in older esp-idf SDK
-  function xTaskAbortDelay(xTask: TTaskHandle): TBaseType; external;
-  procedure vTaskGetInfo(xTask: TTaskHandle; pxTaskStatus: PTaskStatus;
-    xGetFreeStackSpace: TBaseType; eState: TeTaskState); external;
-  function xTaskGetHandle(pcNameToQuery: PChar): TTaskHandle; external;
-  function xTaskGenericNotify(xTaskToNotify: TTaskHandle; ulValue: uint32;
-    eAction: TeNotifyAction; pulPreviousNotificationValue: Puint32): TBaseType; external;
-  function xTaskNotifyFromISR(xTaskToNotify: TTaskHandle; ulValue: uint32;
-    eAction: TeNotifyAction; pulPreviousNotificationValue: Puint32;  pxHigherPriorityTaskWoken: PBaseType): TBaseType; inline;
-  function xTaskNotify(xTaskToNotify: TTaskHandle; ulValue: uint32; eAction: TeNotifyAction): TBaseType; inline;
-  function xTaskNotifyAndQuery(xTaskToNotify: TTaskHandle; ulValue: uint32; eAction: TeNotifyAction;
-    pulPreviousNotifyValue: puint32): TBaseType; inline;
-  function xTaskGenericNotifyFromISR(xTaskToNotify: TTaskHandle;
-    ulValue: uint32; eAction: TeNotifyAction; pulPreviousNotificationValue: Puint32;
-    pxHigherPriorityTaskWoken: PBaseType): TBaseType; external;
-  function xTaskNotifyAndQueryFromISR(xTaskToNotify: TTaskHandle;
-    ulValue: uint32; eAction: TeNotifyAction; pulPreviousNotificationValue: Puint32;
-    pxHigherPriorityTaskWoken: PBaseType): TBaseType; inline;
-  function xTaskNotifyStateClear(xTask: TTaskHandle): TBaseType; external;
-  procedure vTaskPlaceOnEventListRestricted(pxEventList: PList; xTicksToWait: TTickType; xWaitIndefinitely: TBaseType); external;
   procedure vTaskRemoveFromUnorderedEventList(pxEventListItem: PListItem; xItemValue: TTickType); external;
-  function xTaskPriorityInherit(pxMutexHolder: TTaskHandle): TBaseType; external;
-  procedure vTaskPriorityDisinheritAfterTimeout(pxMutexHolder: TTaskHandle;
-    uxHighestPriorityWaitingTask: TUBaseType); external;
-  procedure vTaskInternalSetTimeOutState(pxTimeOut: PTimeOut); external;
 {$endif}
 
 // Functionality dependent on configuration options
@@ -323,19 +303,9 @@ implementation
   end;
 {$endif portNUM_PROCESSORS}
 
-function taskENTER_CRITICAL_FROM_ISR: longint;
+function taskENTER_CRITICAL_FROM_ISR: uint32;
 begin
   taskENTER_CRITICAL_FROM_ISR := portSET_INTERRUPT_MASK_FROM_ISR;
-end;
-
-procedure taskENTER_CRITICAL_ISR(mux: PportMUX_TYPE);
-begin
-  portENTER_CRITICAL_ISR(mux)
-end;
-
-procedure taskEXIT_CRITICAL(mux: PportMUX_TYPE);
-begin
-  portEXIT_CRITICAL(mux;)
 end;
 
 procedure taskEXIT_CRITICAL_FROM_ISR(state: uint32);
@@ -353,41 +323,40 @@ begin
   portENABLE_INTERRUPTS;
 end;
 
+function xTaskNotifyFromISR(xTaskToNotify: TTaskHandle; ulValue: uint32;
+  eAction: TeNotifyAction; pxHigherPriorityTaskWoken: PBaseType): TBaseType;
+begin
+  xTaskNotifyFromISR := xTaskGenericNotifyFromISR(xTaskToNotify,
+    ulValue, eAction, nil, pxHigherPriorityTaskWoken);
+end;
+
+function xTaskNotify(xTaskToNotify: TTaskHandle; ulValue: uint32; eAction: TeNotifyAction): TBaseType;
+begin
+  xTaskNotify := xTaskGenericNotify(xTaskToNotify, ulValue, eAction, nil);
+end;
+
+function xTaskNotifyAndQuery(xTaskToNotify: TTaskHandle; ulValue: uint32; eAction: TeNotifyAction;
+  pulPreviousNotifyValue: puint32): TBaseType;
+begin
+  xTaskNotifyAndQuery := xTaskGenericNotify(xTaskToNotify, ulValue,
+    eAction, pulPreviousNotifyValue);
+end;
+
+function xTaskNotifyAndQueryFromISR(xTaskToNotify: TTaskHandle;
+  ulValue: uint32; eAction: TeNotifyAction; pulPreviousNotificationValue: Puint32;
+  pxHigherPriorityTaskWoken: PBaseType): TBaseType;
+begin
+  xTaskNotifyAndQueryFromISR :=
+    xTaskGenericNotifyFromISR(xTaskToNotify, ulValue, eAction,
+    pulPreviousNotificationValue, pxHigherPriorityTaskWoken);
+end;
+
 {$if defined(FPC_MCU_ESP32) or defined(FPC_MCU_ESP32S2)}
   function xTaskNotifyGive(xTaskToNotify: TTaskHandle): TBaseType;
   begin
     xTaskNotifyGive := xTaskNotify(xTaskToNotify, 0, eIncrement);
   end;
 {$else}
-  function xTaskNotify(xTaskToNotify: TTaskHandle; ulValue: uint32; eAction: TeNotifyAction): TBaseType;
-  begin
-    xTaskNotify := xTaskGenericNotify(xTaskToNotify, ulValue, eAction, nil);
-  end;
-
-  function xTaskNotifyFromISR(xTaskToNotify: TTaskHandle;
-    ulValue: uint32; eAction: TeNotifyAction; pulPreviousNotificationValue: Puint32;
-    pxHigherPriorityTaskWoken: PBaseType): TBaseType;
-  begin
-    xTaskNotifyFromISR := xTaskGenericNotifyFromISR(xTaskToNotify,
-      ulValue, eAction, nil, pxHigherPriorityTaskWoken);
-  end;
-
-  function xTaskNotifyAndQuery(xTaskToNotify: TTaskHandle; ulValue: uint32; eAction: TeNotifyAction;
-    pulPreviousNotifyValue: puint32): TBaseType;
-  begin
-    xTaskNotifyAndQuery := xTaskGenericNotify(xTaskToNotify, ulValue,
-      eAction, pulPreviousNotifyValue);
-  end;
-
-  function xTaskNotifyAndQueryFromISR(xTaskToNotify: TTaskHandle;
-    ulValue: uint32; eAction: TeNotifyAction; pulPreviousNotificationValue: Puint32;
-    pxHigherPriorityTaskWoken: PBaseType): TBaseType;
-  begin
-    xTaskNotifyAndQueryFromISR :=
-      xTaskGenericNotifyFromISR(xTaskToNotify, ulValue, eAction,
-      pulPreviousNotificationValue, pxHigherPriorityTaskWoken);
-  end;
-
   function xTaskNotifyGive(xTaskToNotify: TTaskHandle): TBaseType;
   begin
     xTaskNotifyGive := xTaskGenericNotify(xTaskToNotify, 0, eIncrement, nil);

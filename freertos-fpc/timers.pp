@@ -1,5 +1,6 @@
 unit timers;
 
+{$inline on}
 {$include freertosconfig.inc}
 
 interface
@@ -51,16 +52,16 @@ function xTimerGetTimerDaemonTaskHandle: TTaskHandle; external;
 function xTimerGetPeriod(xTimer: TTimerHandle): TTickType; external;
 function xTimerGetExpiryTime(xTimer: TTimerHandle ): TTickType; external;
 
-function xTimerStart(xTimer: TTimerHandle; xTicksToWait: TTickType): TBaseType;
-function xTimerStop(xTimer: TTimerHandle; xTicksToWait: TTickType): TBaseType;
-function xTimerChangePeriod(xTimer: TTimerHandle; xNewPeriod, xTicksToWait: TTickType): longint;
-function xTimerDelete(xTimer: TTimerHandle; xTicksToWait: TTickType): TBaseType;
-function xTimerReset(xTimer: TTimerHandle; xTicksToWait: TTickType): TBaseType;
-function xTimerStartFromISR(xTimer: TTimerHandle; pxHigherPriorityTaskWoken: PBaseType): TBaseType;
-function xTimerStopFromISR(xTimer: TTimerHandle; pxHigherPriorityTaskWoken: PBaseType): TBaseType;
+function xTimerStart(xTimer: TTimerHandle; xTicksToWait: TTickType): TBaseType; inline;
+function xTimerStop(xTimer: TTimerHandle; xTicksToWait: TTickType): TBaseType; inline;
+function xTimerChangePeriod(xTimer: TTimerHandle; xNewPeriod, xTicksToWait: TTickType): longint; inline;
+function xTimerDelete(xTimer: TTimerHandle; xTicksToWait: TTickType): TBaseType; inline;
+function xTimerReset(xTimer: TTimerHandle; xTicksToWait: TTickType): TBaseType; inline;
+function xTimerStartFromISR(xTimer: TTimerHandle; pxHigherPriorityTaskWoken: PBaseType): TBaseType; inline;
+function xTimerStopFromISR(xTimer: TTimerHandle; pxHigherPriorityTaskWoken: PBaseType): TBaseType; inline;
 function xTimerChangePeriodFromISR(xTimer: TTimerHandle; xNewPeriod: TTickType;
-  pxHigherPriorityTaskWoken: PBaseType): TBaseType;
-function xTimerResetFromISR(xTimer: TTimerHandle; pxHigherPriorityTaskWoken: PBaseType): TBaseType;
+  pxHigherPriorityTaskWoken: PBaseType): TBaseType; inline;
+function xTimerResetFromISR(xTimer: TTimerHandle; pxHigherPriorityTaskWoken: PBaseType): TBaseType; inline;
 
 function xTimerPendFunctionCallFromISR(xFunctionToPend: TPendedFunction;
   pvParameter1: pointer; ulParameter2: uint32;
