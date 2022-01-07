@@ -1,6 +1,8 @@
 unit esp_wifi;
 
 {$include freertosconfig.inc}
+{$linklib wpa_supplicant, static}
+{$linklib mbedtls, static}
 
 interface
 

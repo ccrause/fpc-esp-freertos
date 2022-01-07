@@ -1,5 +1,9 @@
 unit esp_event;
 
+{$if IDF_VERSION > 30300}
+  {$linklib esp_event,static}
+{$endif}
+
 interface
 
 uses

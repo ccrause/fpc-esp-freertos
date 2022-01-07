@@ -8,26 +8,11 @@ interface
 uses
   esp_idf_version
 {$if defined(configUSE_NEWLIB_REENTRANT) and (configUSE_NEWLIB_REENTRANT = 1)}
-{$ifndef CONFIG_NEWLIB_LIBRARY_CUSTOMER}
+  {$ifndef CONFIG_NEWLIB_LIBRARY_CUSTOMER}
   , esp_newlib
-
-//{$define _impure_ptr _global_impure_ptr}
-
-//{$undef _REENT_INIT_PTR}
-//{$define _REENT_INIT_PTR(p) esp_reent_init(p)
-{$endif}
+  {$endif}
 {$endif}
 ;
-
-// Add libraries for older V3.3 which are missing in esp8266.pp
-{$if declared(ESP_IDF_VERSION_MAJOR) and (ESP_IDF_VERSION_MAJOR = 3) and
-     declared(ESP_IDF_VERSION_MINOR) and (ESP_IDF_VERSION_MINOR = 3)}
-  {$linklib lwip, static}
-  {$linklib wpa, static}
-  {$linklib wpa_supplicant, static}
-  {$linklib mbedtls, static}
-  {$linklib util, static}
-{$endif}
 
 type
   portCHAR        = char;

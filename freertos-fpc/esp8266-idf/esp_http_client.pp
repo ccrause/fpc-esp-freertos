@@ -4,6 +4,7 @@ unit esp_http_client;
 {$linklib esp_http_client, static}
 {$linklib tcp_transport, static}
 {$linklib esp-tls, static}
+{$linklib mbedtls, static}
 
 interface
 
