@@ -1,6 +1,7 @@
 unit freertos;
 
 {$include freertosconfig.inc}
+{$include portmacro_defs.inc}
 {$linklib freertos, static}
 
 interface
