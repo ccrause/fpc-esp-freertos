@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectOptions>
-    <Version Value="11"/>
+    <Version Value="12"/>
     <General>
       <Flags>
         <MainUnitHasCreateFormStatements Value="False"/>
         <MainUnitHasTitleStatement Value="False"/>
         <MainUnitHasScaledStatement Value="False"/>
+        <CompatibilityMode Value="True"/>
       </Flags>
       <SessionStorage Value="InProjectDir"/>
-      <MainUnit Value="0"/>
       <Title Value="wifiscan"/>
       <UseAppBundle Value="False"/>
       <ResourceType Value="res"/>
@@ -20,33 +20,24 @@
         <CompilerOptions>
           <Version Value="11"/>
           <Target>
-            <Filename Value="wifiscan"/>
+            <Filename Value="bin/wifiscan"/>
           </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir);../../freertos-fpc;../../freertos-fpc/esp8266-idf"/>
-            <Libraries Value="../../../../xtensa/ESP8266_RTOS_SDK_V3_3/libs;../../../../xtensa/xtensa-lx106-elf/xtensa-lx106-elf/sysroot/lib"/>
-            <OtherUnitFiles Value="../../freertos-fpc;../../freertos-fpc/esp8266-idf"/>
+            <OtherUnitFiles Value="../../freertos-fpc;../../freertos-fpc/esp8266-idf;../common"/>
             <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
           </SearchPaths>
+          <CodeGeneration>
+            <TargetProcessor Value="lx106"/>
+            <TargetCPU Value="xtensa"/>
+            <TargetOS Value="freertos"/>
+          </CodeGeneration>
           <Linking>
             <Debugging>
               <DebugInfoType Value="dsDwarf3"/>
               <UseLineInfoUnit Value="False"/>
             </Debugging>
           </Linking>
-          <Other>
-            <ConfigFile>
-              <DontUseConfigFile Value="True"/>
-              <CustomConfigFile Value="True"/>
-              <ConfigFilePath Value="~/fpc/3.3.1/fpc.cfg"/>
-            </ConfigFile>
-            <CustomOptions Value="-Tfreertos 
--Wpesp8266
--Cacall0
--XPxtensa-lx106-elf-
--Ff/home/christo/xtensa/ESP8266_RTOS_SDK_V3_3"/>
-            <CompilerPath Value="/home/christo/fpc/3.3.1/compiler/ppcrossxtensa"/>
-          </Other>
         </CompilerOptions>
       </Item2>
     </BuildModes>
@@ -56,7 +47,6 @@
     </PublishOptions>
     <RunParams>
       <FormatVersion Value="2"/>
-      <Modes Count="0"/>
     </RunParams>
     <Units Count="1">
       <Unit0>
@@ -68,33 +58,24 @@
   <CompilerOptions>
     <Version Value="11"/>
     <Target>
-      <Filename Value="wifiscan"/>
+      <Filename Value="bin/wifiscan"/>
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir);../../freertos-fpc;../../freertos-fpc/esp-idf"/>
-      <Libraries Value="/home/christo/xtensa/esp-idf/libs/;../../../../.espressif/tools/xtensa-esp32-elf/esp-2019r2-8.2.0/xtensa-esp32-elf/xtensa-esp32-elf/lib;../../../../.espressif/tools/xtensa-esp32-elf/esp-2019r2-8.2.0/xtensa-esp32-elf/lib/gcc/xtensa-esp32-elf/8.2.0"/>
-      <OtherUnitFiles Value="../../freertos-fpc;../../freertos-fpc/esp-idf"/>
+      <OtherUnitFiles Value="../../freertos-fpc;../../freertos-fpc/esp-idf;../common"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
+    <CodeGeneration>
+      <TargetProcessor Value="lx6"/>
+      <TargetCPU Value="xtensa"/>
+      <TargetOS Value="freertos"/>
+    </CodeGeneration>
     <Linking>
       <Debugging>
         <DebugInfoType Value="dsDwarf3"/>
         <UseLineInfoUnit Value="False"/>
       </Debugging>
     </Linking>
-    <Other>
-      <ConfigFile>
-        <DontUseConfigFile Value="True"/>
-        <CustomConfigFile Value="True"/>
-        <ConfigFilePath Value="~/fpc/3.3.1/fpc.cfg"/>
-      </ConfigFile>
-      <CustomOptions Value="-Tfreertos 
--Wpesp32 
--Cawindowed 
--XP/home/christo/.espressif/tools/xtensa-esp32-elf/esp-2020r1-8.2.0/xtensa-esp32-elf/bin/xtensa-esp32-elf-
--Ff/home/christo/xtensa/esp-idf"/>
-      <CompilerPath Value="/home/christo/fpc/3.3.1/compiler/ppcrossxtensa"/>
-    </Other>
   </CompilerOptions>
   <Debugging>
     <Exceptions Count="3">

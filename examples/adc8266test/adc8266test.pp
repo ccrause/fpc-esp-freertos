@@ -1,4 +1,4 @@
-program adctest;
+program adcesp8266test;
 
 {$include freertosconfig.inc}
 

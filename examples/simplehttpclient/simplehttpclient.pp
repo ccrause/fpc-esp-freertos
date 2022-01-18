@@ -1,4 +1,4 @@
-program simpleclient;
+program simplehttpclient;
 
 {$include freertosconfig.inc}
 uses

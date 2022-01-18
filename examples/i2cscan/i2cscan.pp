@@ -1,4 +1,4 @@
-program i2c_scan;
+program i2cscan;
 
 uses
   freertos, gpio, task, portmacro, esp_err

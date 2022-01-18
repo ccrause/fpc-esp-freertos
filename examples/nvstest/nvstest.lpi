@@ -1,21 +1,45 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectOptions>
-    <Version Value="11"/>
+    <Version Value="12"/>
     <General>
       <Flags>
         <MainUnitHasCreateFormStatements Value="False"/>
         <MainUnitHasTitleStatement Value="False"/>
         <MainUnitHasScaledStatement Value="False"/>
+        <CompatibilityMode Value="True"/>
       </Flags>
       <SessionStorage Value="InProjectDir"/>
-      <MainUnit Value="0"/>
-      <Title Value="adctest"/>
+      <Title Value="nvstest"/>
       <UseAppBundle Value="False"/>
       <ResourceType Value="res"/>
     </General>
-    <BuildModes Count="1">
+    <BuildModes Count="2">
       <Item1 Name="ESP32" Default="True"/>
+      <Item2 Name="ESP8266">
+        <CompilerOptions>
+          <Version Value="11"/>
+          <Target>
+            <Filename Value="bin/nvstest"/>
+          </Target>
+          <SearchPaths>
+            <IncludeFiles Value="$(ProjOutDir);../../freertos-fpc;../../freertos-fpc/esp8266-idf"/>
+            <OtherUnitFiles Value="../../freertos-fpc;../../freertos-fpc/esp8266-idf;../common"/>
+            <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
+          </SearchPaths>
+          <CodeGeneration>
+            <TargetProcessor Value="lx106"/>
+            <TargetCPU Value="xtensa"/>
+            <TargetOS Value="freertos"/>
+          </CodeGeneration>
+          <Linking>
+            <Debugging>
+              <DebugInfoType Value="dsDwarf3"/>
+              <UseLineInfoUnit Value="False"/>
+            </Debugging>
+          </Linking>
+        </CompilerOptions>
+      </Item2>
     </BuildModes>
     <PublishOptions>
       <Version Value="2"/>
@@ -23,11 +47,10 @@
     </PublishOptions>
     <RunParams>
       <FormatVersion Value="2"/>
-      <Modes Count="0"/>
     </RunParams>
     <Units Count="1">
       <Unit0>
-        <Filename Value="adctest.pp"/>
+        <Filename Value="nvstest.pp"/>
         <IsPartOfProject Value="True"/>
       </Unit0>
     </Units>
@@ -35,33 +58,24 @@
   <CompilerOptions>
     <Version Value="11"/>
     <Target>
-      <Filename Value="adctest"/>
+      <Filename Value="bin/nvstest"/>
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir);../../freertos-fpc;../../freertos-fpc/esp-idf"/>
-      <Libraries Value="/home/christo/xtensa/esp-idf/libs/;../../../../.espressif/tools/xtensa-esp32-elf/esp-2019r2-8.2.0/xtensa-esp32-elf/xtensa-esp32-elf/lib;../../../../.espressif/tools/xtensa-esp32-elf/esp-2019r2-8.2.0/xtensa-esp32-elf/lib/gcc/xtensa-esp32-elf/8.2.0"/>
-      <OtherUnitFiles Value="../../freertos-fpc;../../freertos-fpc/esp-idf"/>
+      <OtherUnitFiles Value="../../freertos-fpc;../../freertos-fpc/esp-idf;../common"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
+    <CodeGeneration>
+      <TargetProcessor Value="lx6"/>
+      <TargetCPU Value="xtensa"/>
+      <TargetOS Value="freertos"/>
+    </CodeGeneration>
     <Linking>
       <Debugging>
         <DebugInfoType Value="dsDwarf3"/>
         <UseLineInfoUnit Value="False"/>
       </Debugging>
     </Linking>
-    <Other>
-      <ConfigFile>
-        <DontUseConfigFile Value="True"/>
-        <CustomConfigFile Value="True"/>
-        <ConfigFilePath Value="~/fpc/3.3.1/fpc.cfg"/>
-      </ConfigFile>
-      <CustomOptions Value="-Tfreertos 
--Wpesp32 
--Cawindowed 
--XP/home/christo/.espressif/tools/xtensa-esp32-elf/esp-2020r1-8.2.0/xtensa-esp32-elf/bin/xtensa-esp32-elf-
--Ff/home/christo/xtensa/esp-idf"/>
-      <CompilerPath Value="/home/christo/fpc/3.3.1/compiler/ppcrossxtensa"/>
-    </Other>
   </CompilerOptions>
   <Debugging>
     <Exceptions Count="3">

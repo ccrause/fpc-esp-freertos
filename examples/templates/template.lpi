@@ -10,7 +10,7 @@
         <CompatibilityMode Value="True"/>
       </Flags>
       <SessionStorage Value="InProjectDir"/>
-      <Title Value="realtimestats"/>
+      <Title Value="%%APPNAME%%"/>
       <UseAppBundle Value="False"/>
       <ResourceType Value="res"/>
     </General>
@@ -20,7 +20,7 @@
         <CompilerOptions>
           <Version Value="11"/>
           <Target>
-            <Filename Value="bin/realtimestats"/>
+            <Filename Value="bin/%%APPNAME%%"/>
           </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir);../../freertos-fpc;../../freertos-fpc/esp8266-idf"/>
@@ -50,7 +50,7 @@
     </RunParams>
     <Units Count="1">
       <Unit0>
-        <Filename Value="realtimestats.pp"/>
+        <Filename Value="%%APPNAME%%.pp"/>
         <IsPartOfProject Value="True"/>
       </Unit0>
     </Units>
@@ -58,7 +58,7 @@
   <CompilerOptions>
     <Version Value="11"/>
     <Target>
-      <Filename Value="bin/realtimestats"/>
+      <Filename Value="bin/%%APPNAME%%"/>
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir);../../freertos-fpc;../../freertos-fpc/esp-idf"/>

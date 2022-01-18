@@ -4,4 +4,7 @@
 *.ld
 **/lib
 **/backup
+**/bin
 *.bak
+.DS_Store
+*.lps

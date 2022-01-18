@@ -1,4 +1,4 @@
-program simpleserver;
+program simplehttpserver;
 
 uses
   freertos,
