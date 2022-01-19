@@ -1,4 +1,4 @@
-program nvs_test;
+program nvstest;
 
 uses
   nvs, {$ifdef CPULX106}nvs_flash,{$endif} esp_err;
