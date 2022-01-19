@@ -86,7 +86,7 @@ const
   taskSCHEDULER_NOT_STARTED = TBaseType(1);
   taskSCHEDULER_RUNNING = TBaseType(2);
 
-procedure taskYIELD; external name 'portYIELD';
+procedure taskYIELD; inline;
 function taskENTER_CRITICAL_FROM_ISR: uint32; inline;
 procedure taskDISABLE_INTERRUPTS; inline;
 procedure taskENABLE_INTERRUPTS; inline;
@@ -302,6 +302,12 @@ implementation
     xTaskGetCurrentTaskHandleForCPU := xTaskGetCurrentTaskHandle;
   end;
 {$endif portNUM_PROCESSORS}
+
+procedure taskYIELD;
+begin
+  // Redirect to portmacro
+  portYIELD;
+end;
 
 function taskENTER_CRITICAL_FROM_ISR: uint32;
 begin
