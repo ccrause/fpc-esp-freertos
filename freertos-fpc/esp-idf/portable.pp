@@ -60,32 +60,8 @@ function xPortInterruptedFromISRContext: TBaseType; external;
   procedure vPortReleaseTaskMPUSettings(xMPUSettings: PxMPU_SETTINGS); external;
 {$endif}
 
-function xPortGetTickRateHz: uint32; external;
 procedure uxPortCompareSetExtram(addr: PUint32; compare: uint32; set_: PUint32); external;
 
-function xPortGetCoreID: uint32;
-function xPortCanYield: longbool;
-
 implementation
-
-function xPortGetCoreID: uint32; assembler; // IRAM_ATTR
-asm
-  rsr.prid a2            // Read special register Processor ID.
-  extui a2, a2, 13, 1    // Extract and return bit 13
-end ['a2'];
-
-function xPortCanYield: longbool; assembler;
-label
-  trueLabel, endLabel;
-asm
-  rsr.ps a2
-  extui a2, a2, 0, 4  // Extract INTLEVEL
-  beqz a2, trueLabel  // If INTLEVEL = 0 then return true
-  movi a2, 0
-  j endLabel
-trueLabel:
-  movi a2, -1
-endLabel:
-end ['a2'];
 
 end.

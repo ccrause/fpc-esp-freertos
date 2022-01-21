@@ -9,13 +9,13 @@ uses
   hal, esp_heap_caps, xtruntime, crosscore_int, core_isa, portbenchmark;
 
 type
-  portCHAR		   = int8;
-  portFLOAT		   = single;
-  portDOUBLE		 = double;
-  portLONG		   = int32;
-  portSHORT		   = int16;
-  portSTACK_TYPE = byte;
-  portBASE_TYPE	 = int32;
+  portCHAR        = int8;
+  portFLOAT       = single;
+  portDOUBLE      = double;
+  portLONG        = int32;
+  portSHORT       = int16;
+  portSTACK_TYPE  = byte;
+  portBASE_TYPE	  = int32;
   // Relocate, it is easier to start with type defs in this unit...
   TStackType      = portSTACK_TYPE;
   PStackType      = ^TStackType;
@@ -34,26 +34,30 @@ type
   PTickType   = ^TTickType;
 
 {$if defined(configUSE_16_BIT_TICKS) and (configUSE_16_BIT_TICKS = 1)}
-	TTickType = uint16;
-	const
-    portMAX_DELAY := $ffff;
+  TTickType = uint16;
+const
+  portMAX_DELAY := $ffff;
 {$else}
-	TTickType = uint32;
+  TTickType = uint32;
 const
   portMAX_DELAY = $ffffffff;
-type
 {$endif}
 
+type
   // Definition taken from esp_hw_support/include/soc/spinlock.h
   TSpinlock = record
-  	owner: uint32;
-  	count: uint32;
+    owner: uint32;
+    count: uint32;
+  {$if defined(CONFIG_FREERTOS_PORTMUX_DEBUG)}
+    lastLockedFn: pchar;
+    lastLockedLine: integer;
+  {$endif}
   end;
   PportMUX_TYPE = ^TportMUX_TYPE;
   TportMUX_TYPE = TSpinlock;
 
 const
-  portMUX_FREE_VAL		= $B33FFFFF;
+  portMUX_FREE_VAL    = $B33FFFFF;
   portMUX_NO_TIMEOUT  = (-1);
   portMUX_TRY_LOCK    = 0;
 
@@ -61,33 +65,32 @@ const
   portMUX_INITIALIZER_UNLOCKED: TportMUX_TYPE =
     (owner: portMUX_FREE_VAL; count: 0
   {$ifdef CONFIG_FREERTOS_PORTMUX_DEBUG}
-  	; lastLockedFn: '(never locked)'
+    ; lastLockedFn: '(never locked)'
     ; lastLockedLine: -1
   {$endif}
     );
 
-procedure portASSERT_IF_IN_ISR; inline;
+procedure portASSERT_IF_IN_ISR; external name 'vPortAssertIfInISR';
 procedure vPortAssertIfInISR; external;
 
 const
   portCRITICAL_NESTING_IN_TCB = 1;
 
 procedure vPortCPUInitializeMutex(mux: PportMUX_TYPE); external;
-
-procedure vTaskExitCritical(mux: PportMUX_TYPE); external;
-procedure vTaskEnterCritical(mux: PportMUX_TYPE); external;
+procedure vPortEnterCritical(mux: PportMUX_TYPE); external;
+procedure vPortExitCritical(mux: PportMUX_TYPE); external;
 procedure vPortCPUAcquireMutex(mux: PportMUX_TYPE); external;
 function vPortCPUAcquireMutexTimeout(mux: PportMUX_TYPE; timeout_cycles: int32): longbool; external;
 procedure vPortCPUReleaseMutex(mux: PportMUX_TYPE); external;
 
-procedure portENTER_CRITICAL(mux: PportMUX_TYPE); external name 'vTaskEnterCritical';
-procedure portEXIT_CRITICAL(mux: PportMUX_TYPE); external name 'vTaskExitCritical';
+procedure portENTER_CRITICAL(mux: PportMUX_TYPE); external name 'vPortEnterCritical';
+procedure portEXIT_CRITICAL(mux: PportMUX_TYPE); external name 'vPortExitCritical';
 
 procedure portENTER_CRITICAL; inline;
 procedure portEXIT_CRITICAL; inline;
 
-procedure portENTER_CRITICAL_ISR(mux: PportMUX_TYPE); external name 'vTaskEnterCritical'; // inline;
-procedure portEXIT_CRITICAL_ISR(mux: PportMUX_TYPE); external name 'vTaskExitCritical'; // inline;
+procedure portENTER_CRITICAL_ISR(mux: PportMUX_TYPE); external name 'vPortEnterCritical';
+procedure portEXIT_CRITICAL_ISR(mux: PportMUX_TYPE); external name 'vPortExitCritical';
 
 function portENTER_CRITICAL_NESTED: uint32; inline;
 procedure portEXIT_CRITICAL_NESTED(const state: uint32); inline;
@@ -135,12 +138,12 @@ function pvPortMallocStackMem(size: uint32): pointer; inline;
 
 
 const
-  portSTACK_GROWTH		=	-1;
-  portTICK_PERIOD_MS	=	1000 div configTICK_RATE_HZ;
-  portBYTE_ALIGNMENT	= 4;
+  portSTACK_GROWTH   = -1;
+  portTICK_PERIOD_MS = 1000 div configTICK_RATE_HZ;
+  portBYTE_ALIGNMENT = 4;
 
-procedure portNOP; inline;
-procedure portGET_RUN_TIME_COUNTER_VALUE; inline;
+//procedure portNOP; inline;
+procedure portGET_RUN_TIME_COUNTER_VALUE; external name 'xthal_get_ccount';
 
 {$ifdef CONFIG_FREERTOS_RUN_TIME_STATS_USING_ESP_TIMER}
 function portALT_GET_RUN_TIME_COUNTER_VALUE: uint32; external name 'esp_timer_get_time';
@@ -150,9 +153,10 @@ procedure vPortYield; external;
 procedure _frxt_setup_switch; external;
 
 procedure portYIELD; external name 'vPortYield';
-procedure portYIELD_FROM_ISR; external name '_frxt_setup_switch'; // inline;
-
-function xPortGetCoreID: uint32; external;
+// portYIELD_FROM_ISR is a simplified version with no parameters
+// so it will always call _frxt_setup_switch.
+// Also no tracing macro is called
+procedure portYIELD_FROM_ISR; external name '_frxt_setup_switch';
 
 procedure portYIELD_WITHIN_API; inline;
 
@@ -179,19 +183,16 @@ procedure esp_vApplicationTickHook; external;
 procedure _xt_coproc_release(coproc_sa_base: pointer); external;
 procedure vApplicationSleep(xExpectedIdleTime: TTickType); external;
 procedure portSUPPRESS_TICKS_AND_SLEEP(idleTime: TTickType); external name 'vApplicationSleep';
+procedure vPortYieldOtherCore(coreid: TBaseType); external;
+procedure vPortSetStackWatchpoint(pxStackStart: pointer); external;
+function xPortInIsrContext: TBaseType; external;
+function xPortInterruptedFromISRContext: TBaseType; external;
+function xPortGetCoreID: TBaseType; external name 'cpu_hal_get_core_id';
+function xPortGetTickRateHz: uint32; external;
 
-// Dummy implementation
-//procedure traceISR_EXIT_TO_SCHEDULER; inline;
+function xPortCanYield: longbool;
 
 implementation
-
-uses
-  portable;
-
-procedure portASSERT_IF_IN_ISR; inline;
-begin
-  vPortAssertIfInISR;
-end;
 
 // ESP32 requires a mux parameter for vTaskEnter/ExitCritical
 // To create a normal FreeRTOS compatible port(ENTER/EXIT)_CRITICAL functionality
@@ -199,19 +200,19 @@ end;
 var
   mux: TportMUX_TYPE = (owner: portMUX_FREE_VAL; count: 0
   {$ifdef CONFIG_FREERTOS_PORTMUX_DEBUG}
-  	; lastLockedFn: '(never locked)'
+    ; lastLockedFn: '(never locked)'
     ; lastLockedLine: -1
   {$endif}
     );
 
 procedure portENTER_CRITICAL; inline;
 begin
-  vTaskEnterCritical(@mux);
+  vPortEnterCritical(@mux);
 end;
 
 procedure portEXIT_CRITICAL; inline;
 begin
-  vTaskExitCritical(@mux)
+  vPortExitCritical(@mux)
 end;
 
 procedure portDISABLE_INTERRUPTS; inline;
@@ -234,8 +235,8 @@ end;
 
 function portENTER_CRITICAL_NESTED: uint32;
 begin
-	portENTER_CRITICAL_NESTED := XTOS_SET_INTLEVEL(XCHAL_EXCM_LEVEL);
-	portbenchmarkINTERRUPT_DISABLE();
+  portENTER_CRITICAL_NESTED := XTOS_SET_INTLEVEL(XCHAL_EXCM_LEVEL);
+  portbenchmarkINTERRUPT_DISABLE();
 end;
 
 function portSET_INTERRUPT_MASK_FROM_ISR: uint32; inline;
@@ -260,18 +261,26 @@ end;
 
 procedure portNOP; inline;
 begin
-  // Was defined to call XT_NOP, but that is nowhere to be found...
   asm nop end;
-end;
-
-procedure portGET_RUN_TIME_COUNTER_VALUE; inline;
-begin
-  xthal_get_ccount;
 end;
 
 procedure portYIELD_WITHIN_API; inline;
 begin
   esp_crosscore_int_send_yield(xPortGetCoreID());
 end;
+
+function xPortCanYield: longbool; assembler;
+label
+  trueLabel, endLabel;
+asm
+  rsr.ps a2
+  extui a2, a2, 0, 4  // Extract INTLEVEL
+  beqz a2, trueLabel  // If INTLEVEL = 0 then return true
+  movi a2, 0
+  j endLabel
+trueLabel:
+  movi a2, -1
+endLabel:
+end ['a2'];
 
 end.
