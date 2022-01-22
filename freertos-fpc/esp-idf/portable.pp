@@ -66,10 +66,6 @@ function xPortGetMinimumEverFreeHeapSize: uint32; external name 'esp_get_minimum
 function xPortStartScheduler: TBaseType; external;
 procedure vPortEndScheduler; external;
 
-{$ifdef CONFIG_SPIRAM}
-procedure uxPortCompareSetExtram(addr: PUint32; compare: uint32; set_: PUint32); external name 'compare_and_set_extram';
-{$endif}
-
 implementation
 
 end.

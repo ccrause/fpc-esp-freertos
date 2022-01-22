@@ -193,6 +193,10 @@ function xPortGetTickRateHz: uint32; external;
 
 function xPortCanYield: longbool;
 
+{$ifdef CONFIG_SPIRAM}
+procedure uxPortCompareSetExtram(addr: PUint32; compare: uint32; set_: PUint32); external name 'compare_and_set_extram';
+{$endif}
+
 implementation
 
 // ESP32 requires a mux parameter for vTaskEnter/ExitCritical
