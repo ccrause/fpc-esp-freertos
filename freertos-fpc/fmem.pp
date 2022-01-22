@@ -9,7 +9,7 @@ implementation
 // such as NewLib, C, or FreeRTOS.
 // Rely on inclusion of implementation mapping in portable.pp
 uses
-  portable;
+  portable{$ifdef CPUXTENSA}, esp_heap_caps{$endif};
 
 function fGetMem(Size: ptruint): pointer;
 begin
@@ -43,9 +43,10 @@ end;
 
 function fAllocMem(Size: ptruint): pointer;
 begin
-  fAllocMem := pvPortCalloc(Size + sizeof(ptruint), 1);
+  fAllocMem := pvPortMalloc(Size + sizeof(ptruint));
   if (fAllocMem <> nil) then
   begin
+    FillByte(fAllocMem^, Size + sizeof(ptruint), 0);
     Pptruint(fAllocMem)^ := size;
     inc(fAllocMem, sizeof(ptruint));
   end;
@@ -70,7 +71,15 @@ begin
     else
     begin
       dec(p, sizeof(ptruint));
-      p := pvPortRealloc(p, size);
+      {$ifdef CPUXTENSA}
+      heap_caps_realloc(p, size, MALLOC_CAP_8BIT);
+      {$else}
+      // Not provided by FreeRTOS's heap_x implementations
+      // so a custom implementation is required in general
+      // for now mark with error
+      {$error "realloc" functionality not provided by standard FreeRTOS heap manager}
+      //p := pvPortRealloc(p, size);
+      {$endif}
     end;
     if (p <> nil) then
     begin
