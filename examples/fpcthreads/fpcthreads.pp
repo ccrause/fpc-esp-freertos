@@ -13,13 +13,11 @@ const
   taskArraySafetyMargin   = 5;          // Safety margin to cater for new tasks launched
 
 var
-  taskName: string;
-  s: string;
   startSpinTask: PRTLEvent;
   blinkCS: TRTLCriticalSection;
 
 // To avoid using one of the util units
-procedure printLeftAlignedPadded(const s: string; width: uint32);
+procedure printLeftAlignedPadded(const s: shortstring; width: uint32);
 var
   numPads: int32;
 begin
@@ -41,7 +39,7 @@ var
   elapsedTime: uint32;
   i, j, k: int32;
   taskElapsedTime, percentageTime: uint32;
-  s: string;
+  s: shortstring;
 begin
   result := ESP_OK;
   startTaskArraySize := uxTaskGetNumberOfTasks() + taskArraySafetyMargin;
@@ -171,9 +169,9 @@ begin
     EnterCriticalSection(blinkCS);
     LeaveCriticalSection(blinkCS); // immediately release CS again, it is used as a gate only
     gpio_set_level(LED, 0);
-    vTaskDelay(100 div portTICK_PERIOD_MS);
+    vTaskDelay(250 div portTICK_PERIOD_MS);
     gpio_set_level(LED, 1);
-    vTaskDelay(100 div portTICK_PERIOD_MS);
+    vTaskDelay(250 div portTICK_PERIOD_MS);
   until false;
 end;
 
@@ -182,6 +180,7 @@ var
   blinkID: TThreadID;
   statsTick: uint32;
   loopcount: uint32 = 0;
+  taskName: shortstring;
 
 begin
   InitCriticalSection(blinkCS);
@@ -203,8 +202,8 @@ begin
   //Create spin tasks
   for i := 0 to numSpinTasks-1 do
   begin
-    Str(i, s);
-    taskName := 'spin-' + s;
+    Str(i, taskName);
+    insert('spin-', taskName, 1);
     writeln('Creating Task', i);
     // Pass i as parameter to task
     // Larger i will run fewer spin cycles
@@ -216,6 +215,7 @@ begin
   end;
 
   vTaskDelay(pdMS_TO_TICKS(100));
+  writeln('Starting spinTasks');
   //Start all the spin tasks
   for i := 0 to numSpinTasks-1 do
   begin

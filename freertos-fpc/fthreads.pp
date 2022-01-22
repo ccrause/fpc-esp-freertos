@@ -250,13 +250,13 @@ function SysBeginThread (SA: pointer; StackSize : PtrUInt;
                          ThreadFunction: TThreadFunc; P: pointer;
                          CreationFlags: dword; var ThreadId: TThreadID): TThreadID;
 var
-  s: string;
+  s: shortstring;
 begin
   inc(threadCount);
   Str(threadCount, s);
-  s := 'fpc-' + s;
+  insert('fpc-', s, 1);
 
-  SysBeginThread := fBeginThreadNamed(StackSize, ThreadFunction, P, ThreadId, S);
+  SysBeginThread := fBeginThreadNamed(StackSize, ThreadFunction, P, ThreadId, s);
 end;
 
 procedure SysEndThread (ExitCode: cardinal);
