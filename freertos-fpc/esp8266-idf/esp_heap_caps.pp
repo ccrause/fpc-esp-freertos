@@ -51,15 +51,16 @@ function heap_caps_get_free_size(caps: uint32): Tsize; external;
 function heap_caps_get_minimum_free_size(caps: uint32): Tsize; external;
 procedure esp_heap_caps_init_region(region: Pheap_region; max_num: Tsize);
   external;
-function _heap_caps_malloc(size: Tsize; caps: uint32; afile: PChar;
-  line: Tsize): pointer; external;
-procedure _heap_caps_free(ptr: pointer; afile: PChar; line: Tsize); external;
-function _heap_caps_calloc(Count: Tsize; size: Tsize; caps: uint32;
-  afile: PChar; line: Tsize): pointer; external;
-function _heap_caps_realloc(mem: pointer; newsize: Tsize; caps: uint32;
-  afile: PChar; line: Tsize): pointer; external;
-function _heap_caps_zalloc(size: Tsize; caps: uint32; afile: PChar;
-  line: Tsize): pointer; external;
+
+function heap_caps_malloc(size: Tsize; caps: uint32; afile: PChar = nil;
+  line: Tsize = 0): pointer; external name '_heap_caps_malloc';
+procedure heap_caps_free(ptr: pointer; afile: PChar = nil; line: Tsize = 0); external name '_heap_caps_free';
+function heap_caps_calloc(Count: Tsize; size: Tsize; caps: uint32;
+  afile: PChar = nil; line: Tsize = 0): pointer; external name '_heap_caps_calloc';
+function heap_caps_realloc(mem: pointer; newsize: Tsize; caps: uint32;
+  afile: PChar = nil; line: Tsize = 0): pointer; external name '_heap_caps_realloc';
+function heap_caps_zalloc(size: Tsize; caps: uint32; afile: PChar = nil;
+  line: Tsize = 0): pointer; external name '_heap_caps_zalloc';
 
 implementation
 
