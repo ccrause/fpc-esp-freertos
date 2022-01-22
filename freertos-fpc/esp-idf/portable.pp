@@ -19,9 +19,7 @@ type
 
 const
   portBYTE_ALIGNMENT_MASK = portBYTE_ALIGNMENT - 1;
-
 {$ifndef portNUM_CONFIGURABLE_REGIONS}
-const
   portNUM_CONFIGURABLE_REGIONS = 1;
 {$endif}
 
@@ -33,34 +31,44 @@ const
     pvParameters: pointer): PStackType; external;
 {$endif}
 
-// Malloc/free provided by Newlib
+{$ifdef configUSE_FREERTOS_PROVIDED_HEAP}
+type
+  THeapRegion = record
+    pucStartAddress: pbyte;
+    xSizeInBytes: TSize;
+  end;
+  PHeapRegion = ^THeapRegion;
+
+  TxHeapStats = record
+    xAvailableHeapSpaceInBytes: TSize;
+    xSizeOfLargestFreeBlockInBytes: TSize;
+    xSizeOfSmallestFreeBlockInBytes: TSize;
+    xNumberOfFreeBlocks: TSize;
+    xMinimumEverFreeBytesRemaining: TSize;
+    xNumberOfSuccessfulAllocations: TSize;
+    xNumberOfSuccessfulFrees: TSize;
+  end;
+
+procedure vPortDefineHeapRegions(const pxHeapRegions: PHeapRegions); external;
+procedure vPortGetHeapStats(pxHeapStats: PHeapStats); external;
+function pvPortMalloc(xSize: TSize): pointer; external;
+procedure vPortFree( void *pv ); external;
+procedure vPortInitialiseBlocks( void ); external;
+function xPortGetFreeHeapSize: TSize; external;
+function xPortGetMinimumEverFreeHeapSize: TSize; external;
+{$else}  // configUSE_FREERTOS_PROVIDED_HEAP
 function pvPortMalloc(size: uint32): pointer; external name 'malloc';
 procedure vPortFree(APointer: pointer); external name 'free';
-function pvPortZalloc(s: longint): pointer; external name 'zalloc';
-function pvPortCalloc(count, sz: Tsize): pointer; external name 'calloc';
-function pvPortRealloc(memptr: pointer; sz: Tsize): pointer; external name 'realloc';
 function xPortGetFreeHeapSize: uint32; external name 'esp_get_free_heap_size';
 function xPortGetMinimumEverFreeHeapSize: uint32; external name 'esp_get_minimum_free_heap_size';
-function xPortStartScheduler: TBaseType; external;
-procedure vPortEndScheduler; external;
-procedure vPortYieldOtherCore(coreid: TBaseType); external;
-procedure vPortSetStackWatchpoint(pxStackStart: pointer); external;
-function xPortInIsrContext: TBaseType; external;
-function xPortInterruptedFromISRContext: TBaseType; external;
-
-{$if defined(portUSING_MPU_WRAPPERS) and (portUSING_MPU_WRAPPERS = 1)}
-  type
-    PxMEMORY_REGION = ^TxMEMORY_REGION;
-    TxMEMORY_REGION = record
-      {undefined structure}
-    end;
-
-  procedure vPortStoreTaskMPUSettings(xMPUSettings: PxMPU_SETTINGS;
-    xRegions: PxMEMORY_REGION; pxBottomOfStack: PStackType_t; usStackDepth: uint32); external;
-  procedure vPortReleaseTaskMPUSettings(xMPUSettings: PxMPU_SETTINGS); external;
 {$endif}
 
-procedure uxPortCompareSetExtram(addr: PUint32; compare: uint32; set_: PUint32); external;
+function xPortStartScheduler: TBaseType; external;
+procedure vPortEndScheduler; external;
+
+{$ifdef CONFIG_SPIRAM}
+procedure uxPortCompareSetExtram(addr: PUint32; compare: uint32; set_: PUint32); external name 'compare_and_set_extram';
+{$endif}
 
 implementation
 
