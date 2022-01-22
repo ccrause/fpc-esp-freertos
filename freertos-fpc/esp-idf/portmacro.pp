@@ -187,7 +187,8 @@ procedure vPortYieldOtherCore(coreid: TBaseType); external;
 procedure vPortSetStackWatchpoint(pxStackStart: pointer); external;
 function xPortInIsrContext: TBaseType; external;
 function xPortInterruptedFromISRContext: TBaseType; external;
-function xPortGetCoreID: TBaseType; external name 'cpu_hal_get_core_id';
+
+function xPortGetCoreID: TBaseType;
 function xPortGetTickRateHz: uint32; external;
 
 function xPortCanYield: longbool;
@@ -268,6 +269,12 @@ procedure portYIELD_WITHIN_API; inline;
 begin
   esp_crosscore_int_send_yield(xPortGetCoreID());
 end;
+
+function xPortGetCoreID: TBaseType; assembler; // IRAM_ATTR
+asm
+  rsr.prid a2            // Read special register Processor ID.
+  extui a2, a2, 13, 1    // Extract and return bit 13
+end ['a2'];
 
 function xPortCanYield: longbool; assembler;
 label
