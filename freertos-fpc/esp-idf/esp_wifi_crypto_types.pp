@@ -2,13 +2,15 @@ unit esp_wifi_crypto_types;
 
 interface
 
+uses
+  portmacro;
+
 const
   ESP_WIFI_CRYPTO_VERSION = $00000001;
 
 type
   PUint32 = ^uint32;
   PInt32 = ^int32;
-  Tsize = int32;
 
   Pesp_crypto_hash_alg = ^Tesp_crypto_hash_alg;
   Tesp_crypto_hash_alg = (ESP_CRYPTO_HASH_ALG_MD5, ESP_CRYPTO_HASH_ALG_SHA1,

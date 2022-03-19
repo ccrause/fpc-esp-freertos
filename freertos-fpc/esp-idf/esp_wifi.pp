@@ -22,7 +22,7 @@ interface
 
 uses
   esp_err, esp_bit_defs, esp_event, esp_event_legacy, esp_wifi_types,
-  esp_wifi_crypto_types, wifi_os_adapter;
+  esp_wifi_crypto_types, wifi_os_adapter, portmacro;
 
 const
   ESP_ERR_WIFI_NOT_INIT = ESP_ERR_WIFI_BASE + 1;
@@ -112,11 +112,7 @@ var
 
 type
   TMac = array[0..5] of byte;
-  Pbool = ^longbool;
   Pint8 = ^int8;
-  //Puint16 = ^uint16;
-  //Puint32 = ^uint32;
-  //longbool = longbool;
 
   Pwifi_init_config = ^Twifi_init_config;
   Twifi_init_config = record
@@ -149,7 +145,6 @@ type
     sa: TMac; vnd_ie: Pvendor_ie_data; rssi: int32);
 
   Twifi_csi_cb = procedure(ctx: pointer; Data: Pwifi_csi_info);
-
 
 procedure WIFI_INIT_CONFIG_DEFAULT(var data: Twifi_init_config);
 

@@ -24,6 +24,9 @@ type
   TUBaseType      = SizeUInt;
   PUBaseType      = ^TUBaseType;
   Tsize           = SizeUInt;
+  Psize           = ^Tsize;
+  Tbool           = longbool;
+  Pbool           = ^Tbool;
 
   // Defined in freertos, but that creates circular dependencies
   configSTACK_DEPTH_TYPE = uint16;

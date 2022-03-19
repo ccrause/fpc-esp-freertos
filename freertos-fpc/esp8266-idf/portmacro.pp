@@ -1,18 +1,16 @@
 unit portmacro;
 
 {$include freertosconfig.inc}
-
+{$inline on}
 
 interface
 
-uses
-  esp_idf_version
 {$if defined(configUSE_NEWLIB_REENTRANT) and (configUSE_NEWLIB_REENTRANT = 1)}
   {$ifndef CONFIG_NEWLIB_LIBRARY_CUSTOMER}
-  , esp_newlib
+uses
+  esp_newlib;
   {$endif}
 {$endif}
-;
 
 type
   portCHAR        = char;
@@ -29,6 +27,9 @@ type
   TUBaseType      = SizeUInt;
   PUBaseType      = ^TUBaseType;
   Tsize           = SizeUInt;
+  Psize           = ^Tsize;
+  Tbool           = longbool;
+  Pbool           = ^Tbool;
 
   // Defined in freertos, but that creates circular dependencies
   configSTACK_DEPTH_TYPE = uint16;

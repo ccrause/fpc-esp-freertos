@@ -10,7 +10,7 @@ interface
 {$endif}
 
 uses
-  portmacro, portable
+  portmacro
 {$if configUSE_NEWLIB_REENTRANT = 1}
   , reent
 {$endif}

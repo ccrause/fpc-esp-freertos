@@ -3,7 +3,7 @@ unit nvs;
 interface
 
 uses
-  esp_err;
+  esp_err, portmacro;
 
 const
   ESP_ERR_NVS_BASE = $1100;
@@ -27,7 +27,6 @@ const
 type
   Pnvs_handle = ^Tnvs_handle;
   Tnvs_handle = uint32;
-  Psize = ^TSize;
   Pnvs_open_mode = ^Tnvs_open_mode;
   Tnvs_open_mode = (NVS_READONLY, NVS_READWRITE);
 

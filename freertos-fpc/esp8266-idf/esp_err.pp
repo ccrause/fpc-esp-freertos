@@ -2,10 +2,12 @@ unit esp_err;
 
 interface
 
+uses
+  portmacro;
+
 type
   Pesp_err = ^Tesp_err;
   Tesp_err = int32;
-  Tsize = int32;
 
 const
   ESP_OK = 0;

@@ -3,11 +3,9 @@ unit esp_flash;
 interface
 
 uses
-  esp_err, spi_flash_types;
+  esp_err, spi_flash_types, portmacro;
 
 type
-  Pbool = ^Tbool;
-  Tbool = longbool;
   Puint32 = ^uint32;
 
   Pspi_flash_chip = ^Tspi_flash_chip;
