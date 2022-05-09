@@ -3,7 +3,7 @@ unit esp_partition;
 interface
 
 uses
-  esp_err, esp_flash, esp_spi_flash;
+  esp_err, esp_flash, esp_spi_flash, portmacro;
 
 type
   Pesp_partition_type = ^Tesp_partition_type;

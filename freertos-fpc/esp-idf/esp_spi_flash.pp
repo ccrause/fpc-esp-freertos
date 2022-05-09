@@ -5,7 +5,7 @@ unit esp_spi_flash;
 interface
 
 uses
-  esp_err;
+  esp_err, portmacro;
 
 const
   ESP_ERR_FLASH_OP_FAIL = ESP_ERR_FLASH_BASE + 1;
