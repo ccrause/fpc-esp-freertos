@@ -130,11 +130,6 @@ var
 
 initialization
   GetMemoryManager(OldMemoryManager);
-
-  // TODO: Temporary testing code below can be removed
-  if OldMemoryManager.Getmem <> nil then
-    writeln('Replacing previous memory manager with fmem');
-
   SetMemoryManager(fMemoryManager);
 
 finalization

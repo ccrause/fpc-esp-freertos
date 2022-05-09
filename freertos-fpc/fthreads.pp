@@ -29,16 +29,18 @@ function GetCPUCount: LongWord;
 
 property CPUCount: LongWord read GetCPUCount;
 
-procedure SysInitMultithreading;
-
 function fBeginThreadNamed(StackSize: PtrUInt;
   ThreadFunction: TThreadFunc; P: pointer;
-  var ThreadId: TThreadID; aname: string): TThreadID;
+  var ThreadId: TThreadID; constref aname: shortstring): TThreadID;
 
 implementation
 
 uses
-  fmem, task, semphr, portmacro, portable;
+  // Should not hardcode the memory manager dependency,
+  // but checking if a valid memory manager is installed
+  // is not working properly.
+  fmem,
+  task, semphr, portmacro;
 
 {$include freertosconfig.inc}
 
@@ -203,9 +205,8 @@ begin
 end;
 
 // Keep the name short, FreeRTOS defaults to a 16 char length
-function fBeginThreadNamed(StackSize: PtrUInt;
-  ThreadFunction: TThreadFunc; P: pointer;
-  var ThreadId: TThreadID; aname: string): TThreadID;
+function fBeginThreadNamed(StackSize: PtrUInt; ThreadFunction: TThreadFunc;
+  P: pointer; var ThreadId: TThreadID; constref aname: shortstring): TThreadID;
 var
   TI: PThreadInfo;
   RC: cardinal;
@@ -580,14 +581,26 @@ begin
   SetThreadManager(FreeRTOSThreadManager);
 end;
 
+var
+  OldMemoryManager : TMemoryManager;
+
 initialization
   if ThreadingAlreadyUsed then
     begin
-      writeln('Threading has been used before cthreads was initialized.');
-      writeln('Make cthreads one of the first units in your uses clause.');
+      writeln('Threading has been used before fthreads was initialized.');
+      writeln('Make fthreads one of the first units in your uses clause.');
       runerror(211);
     end;
-  InitSystemThreads;
+
+  // For FreeRTOS IsMemoryManagerSet always returns false.
+  //if IsMemoryManagerSet then
+    InitSystemThreads;
+  //else
+  //  begin
+  //    writeln('Using fthreads requires a memory manager.');
+  //    writeln('For FreeRTOS include fmem as the first unit in your uses clause.');
+  //    runerror(211);
+  //  end;
 
 finalization
 
