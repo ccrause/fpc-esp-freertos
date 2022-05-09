@@ -21,6 +21,11 @@ const
   I2C_NUM_1 = 1;
   I2C_NUM_MAX = SOC_I2C_NUM;
 
+  // Flags for clk_flags entry of Ti2c_config
+  I2C_SCLK_SRC_FLAG_FOR_NOMAL   = 0;
+  I2C_SCLK_SRC_FLAG_AWARE_DFS   = 1;
+  I2C_SCLK_SRC_FLAG_LIGHT_SLEEP = 2;
+
 type
   // Types from i2c_types.h
   Pi2c_port = ^Ti2c_port;
@@ -59,13 +64,17 @@ type
     scl_pullup_en: boolean;
     case boolean of
       true:
-        (master:  record
+        (master: record
           clk_speed: uint32;
+          dummy1: uint32;     // Not used, but required to line up with the slave layout
+          clk_flags: uint32;  // This field is actually a common field at the end of the record, but Pascal doesn't allow fields after a variant part
         end);
       false:
         (slave: record
           addr_10bit_en: byte;
-          slave_addr: byte;
+          slave_addr: uint16;
+          maximum_speed: uint32;
+          clk_flags: uint32;
         end);
   end;
 
