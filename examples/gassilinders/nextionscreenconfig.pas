@@ -6,14 +6,18 @@ procedure startDisplayThread;
 
 procedure UpdateValvePositions(valveAOpen, valveBOpen: boolean);
 
+procedure doUploadSettingsToDisplay;
+
 implementation
 
 uses
   nextion, readadc, uart, uart_types,
-  shared, gpio, gpio_types, storage, portmacro;
+  shared, gpio, gpio_types, storage, portmacro, logtouart;
+
+{$include freertosconfig.inc} // To access configTICK_RATE_HZ
 
 const
-  UART_FIFO_BUFFER_SIZE = 1024;
+  UART_FIFO_BUFFER_SIZE = 2048;
   PrimaryUartPort = 0;
   PrimaryTX_PIN = 1;
   PrimaryRX_PIN = 3;
@@ -79,6 +83,8 @@ var
   nexValveA: TNextionComponent = (pid: 0; cid: 24);
   nexValveB: TNextionComponent = (pid: 0; cid: 25);
 
+  fUploadSettingsToDisplay: boolean;
+
 // Ensure number of ADC channels and Nextion display elements are the same
 // These constants are used for a compile time check only
 const
@@ -110,27 +116,98 @@ begin
   nexSecondary.setValue(nexValveB, v);
 end;
 
+procedure doUploadSettingsToDisplay;
+begin
+  fUploadSettingsToDisplay := true;
+end;
+
+procedure UploadSettingsToDisplay;
+var
+  nex: TNextionComponent;
+  i: integer;
+begin
+  nex.pid := 1;
+  for i := 0 to high(storage.PressureSettings.Warnings) do
+  begin
+    nex.cid := 4 + i;
+    NexPrimary.setValue(nex, storage.PressureSettings.Warnings[i]);
+    nex.cid := 9 + i;
+    NexPrimary.setValue(nex, storage.PressureSettings.LowPressures[i]);
+  end;
+
+  nex.pid := 2;
+  for i := 0 to high(storage.PhoneNumbers) do
+  begin
+    nex.cid := 4 + i;
+    NexPrimary.setValue(nex, storage.PhoneNumbers[i]);
+  end;
+  nex.cid := 9;
+  if snWarnPressure in storage.SMSNotificationSettings.Notifications then
+    i := 1
+  else
+    i := 0;
+  NexPrimary.setValue(nex, i);
+  nex.cid := 10;
+  if snLowPressure in storage.SMSNotificationSettings.Notifications then
+    i := 1
+  else
+    i := 0;
+  NexPrimary.setValue(nex, i);
+  nex.cid := 11;
+  if snAutoCylinderChangeOver in storage.SMSNotificationSettings.Notifications then
+    i := 1
+  else
+    i := 0;
+  NexPrimary.setValue(nex, i);
+  nex.cid := 12;
+  if snRepeatNotifications in storage.SMSNotificationSettings.Notifications then
+    i := 1
+  else
+    i := 0;
+  NexPrimary.setValue(nex, i);
+  nex.cid := 13;
+  NexPrimary.setValue(nex, storage.SMSNotificationSettings.RepeatInterval);
+
+  nex.pid := 3;
+  nex.cid := 4;
+  NexPrimary.setValue(nex, storage.CylinderChangeoverSettings.MinCylinderPressure);
+  nex.cid := 5;
+  NexPrimary.setValue(nex, storage.CylinderChangeoverSettings.Hysteresis);
+  nex.cid := 6;
+  NexPrimary.setValue(nex, storage.CylinderChangeoverSettings.CylinderChangeDelay div configTICK_RATE_HZ);
+  nex.cid := 7;
+  if storage.CylinderChangeoverSettings.PreferredCylinderMode then
+    i := 1
+  else
+    i := 0;
+  NexPrimary.setValue(nex, i);
+  nex.cid := 8;
+  NexPrimary.setValue(nex, storage.CylinderChangeoverSettings.PreferredCylinderIndex);
+  nex.cid := 9;
+  if storage.CylinderChangeoverSettings.ManualMode then
+    i := 1
+  else
+    i := 0;
+  NexPrimary.setValue(nex, i);
+  nex.cid := 10;
+  NexPrimary.setValue(nex, storage.CylinderChangeoverSettings.ManualCylinderSelected);
+end;
+
 procedure updateDisplays;
 var
   val: string[8];
-  i, tmp, pres, pct: integer;
+  i, pres, pct: integer;
 begin
-  for i := 0 to high(Inputs) do
+  for i := 0 to high(Pressures) do
   begin
-    tmp := Inputs[i];
-    // Clamp pressure to 0, else display bar doesn't update
-    if tmp < 200 then
-      tmp := 200;
-    tmp := (tmp - 200)*10; // P input: 0 - 220 bar, tmp : 0 - 23000
-    pres := (tmp * 22 + 1150) div 2300;
-
+    pres := Pressures[i];
     Str(pres, val);
     nexPrimary.setText(pressureTextArray[i], val);
     nexPrimary.processInputData;
     nexSecondary.setText(pressureTextArray[i], val);
     nexSecondary.processInputData;
 
-    pct := (tmp + 115) div 230;
+    pct := (pres*10 + 11) div 22;
     nexPrimary.setValue(pressureProgressArray[i], pct);
     nexPrimary.processInputData;
     nexSecondary.setValue(pressureProgressArray[i], pct);
@@ -154,7 +231,13 @@ begin
     nexPrimary.setValue(nexValveB, i);
     nexSecondary.setValue(nexValveB, i);
   end;
+
   Sleep(10);
+  if fUploadSettingsToDisplay then
+  begin
+    fUploadSettingsToDisplay := false;
+    UploadSettingsToDisplay;
+  end;
 end;
 
 procedure initPrimaryNextionUart;
@@ -200,7 +283,6 @@ begin
   cfg.pull_down_en := GPIO_PULLDOWN_DISABLE;
   cfg.intr_type := GPIO_INTR_DISABLE;
   gpio_config(cfg);
-  //gpio_set_direction(LED, GPIO_MODE_OUTPUT);
   gpio_set_level(SecondaryRSE_PIN, 1);
 
   Sleep(10);
@@ -208,8 +290,14 @@ begin
 end;
 
 procedure sendString(uartnum: integer; data: shortstring);
+var
+  len: integer;
 begin
-  uart_write_bytes(uartnum, @data[1], length(data));
+  len := uart_write_bytes(uartnum, @data[1], length(data));
+  if len < 0 then
+    logwriteln('Error in sendString')
+  else if len < length(data) then
+    logwriteln('Less data sent');
 end;
 
 procedure sendStringPrimary(data: shortstring);
@@ -235,6 +323,8 @@ begin
     SetLength(Result, len);
     FillByte(Result[1], 0, len);
     len := uart_read_bytes(uartnum, @Result[1], len, 1);
+    logwrite('>> ');
+    logwriteln(Result);
   end
   else
   begin
@@ -428,22 +518,24 @@ end;
 // Only attach to primary display for updating edited values
 procedure pageExitHandler(pid: integer);
 begin
+  logwriteln('#');
   case pid of
     // Pressure set points (warning, Low)
-    1: ;
+    1: savePressureSettings;
     // Phone numbers and notification settings
-    2: ;
+    2: saveNotificationSettings;
     // Cylinder changeover settings
-    3: ;
+    3: saveCylinderChangeoverSettings;
   end;
 end;
 
 procedure initDisplays;
 begin
+  flagUpdateValvePositions := false;
+{$ifndef debugprint}
   initSecondaryNextionUart;
-  // No need to read events from secondary display, only primary display is interactive
-  // nexSecondary.readHandler := @readStringSecondary;
   nexSecondary.writeHandler := @sendStringSecondary;
+{$endif}
   nexSecondary.init;
   // Try to discard possible junk in Nextion input buffer
   nexSecondary.sendCommand('');
@@ -466,6 +558,11 @@ begin
   nexSecondary.sendCommand('tsw 255,0');
   // Ensure displaying page 0
   nexSecondary.setCurrentPage(0);
+
+  // Wait for displays to restart before issuing commands
+  Sleep(100);
+  // Disable result codes on Nextion
+  nexPrimary.sendCommand('bkcmd=0');
 end;
 
 procedure handleDisplayMessages;
@@ -476,7 +573,6 @@ end;
 
 function displayThread(parameter : pointer): ptrint; noreturn;
 begin
-  flagUpdateValvePositions := false;
   initDisplays;
   repeat
     handleDisplayMessages;
