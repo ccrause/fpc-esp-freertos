@@ -3,7 +3,7 @@ unit storage;
 interface
 
 uses
-  nvs, esp_err; //*{$ifdef CPULX106}nvs_flash,{$endif} ;
+  nvs, esp_err;
 
 const
   numGasStations = 5;
@@ -57,7 +57,7 @@ procedure initDefaultSettings;
 implementation
 
 uses
-  portmacro;
+  portmacro, nextionscreenconfig, logtouart;
 
 var
   storageHandle: Tnvs_handle;
@@ -66,27 +66,27 @@ var
 
 function initNVS: Tesp_err;
 begin
-  writeln('nvs_flash_init');
+  logwriteln('nvs_flash_init');
   Result := nvs_flash_init();
   if (Result = ESP_ERR_NVS_NO_FREE_PAGES) {$ifdef CPULX6} or (Result = ESP_ERR_NVS_NEW_VERSION_FOUND){$endif} then
   begin
-    writeln('Erasing flash');
+    logwriteln('Erasing flash');
     EspErrorCheck(nvs_flash_erase());
     Result := nvs_flash_init();
   end;
   EspErrorCheck(Result);
 
-  writeln('nvs_open');
+  logwriteln('nvs_open');
   if Result = ESP_OK then
     Result := nvs_open('storage', NVS_READWRITE, @storageHandle);
 
   if not(Result = ESP_OK) then
   begin
     storageHandle := 0;
-    writeln('nvs_open failed:', Result);
+    logwriteln('nvs_open failed');
   end
   else
-    writeln('Storage handle = ', storageHandle);
+    //writeln('Storage handle = ', storageHandle);
 end;
 
 procedure initDefaultSettings;
@@ -99,47 +99,49 @@ begin
     PressureSettings.LowPressures[i] := 55;
   end;
 
-  PhoneNumbers[0] := 0836282990;
+  PhoneNumbers[0] := 0836282994;
   PhoneNumbers[1] := 0846801221;
   PhoneNumbers[2] := 0;
   PhoneNumbers[3] := 0;
   PhoneNumbers[4] := 0;
 
-  SMSNotificationSettings.Notifications := [snWarnPressure, snLowPressure, snAutoCylinderChangeOver];
+  SMSNotificationSettings.Notifications := [{snWarnPressure, snLowPressure,} snAutoCylinderChangeOver];
   SMSNotificationSettings.RepeatInterval := 24;
 
-  CylinderChangeoverSettings.MinCylinderPressure := 123;
+  CylinderChangeoverSettings.MinCylinderPressure := 20;
   CylinderChangeoverSettings.Hysteresis := 5;
-  CylinderChangeoverSettings.CylinderChangeDelay := 2 * configTICK_RATE_HZ; //portTICK_PERIOD_MS; // seconds
+  CylinderChangeoverSettings.CylinderChangeDelay := 2 * configTICK_RATE_HZ;
   CylinderChangeoverSettings.PreferredCylinderMode := false;
   CylinderChangeoverSettings.PreferredCylinderIndex := 0; // 0 = A, 1 = B
   CylinderChangeoverSettings.ManualMode := false;
   CylinderChangeoverSettings.ManualCylinderSelected := 0; // 0 = A, 1 = B
+
+  nextionscreenconfig.doUploadSettingsToDisplay;
 end;
 
 function loadSettings: Tesp_err;
 var
   sz: Tsize;
 begin
-  Result := initNVS;
+{  Result := initNVS;
 
-  //if Result = ESP_OK then
-  //begin
-  //  sz := 0;
-  //  writeln('Requesting nvs_get_blob with @PressureSettings = ', HexStr(@PressureSettings), ', @sz = ', HexStr(@sz));
-  //  Result := nvs_get_blob(storageHandle, 'PresSettings', @PressureSettings, @sz);
-  //  writeln('Result reading pressure settings: ', esp_err_to_name(Result));
-  //  writeln('Size read: ', sz);
-  //
-  //  //if {(Result <> ESP_OK) or} (sz <> SizeOf(PressureSettings)) then
-  //  //begin
-  //  //  writeln('Error reading pressure settings: ', esp_err_to_name(Result));
-  //  //  writeln('Size read: ', sz);
-  //  //  //Result := ESP_FAIL;
-  //  //end
-  //  //else
-  //  //  writeln('Read ', sz, ' bytes from PresSettings');
-  //end;
+  if Result = ESP_OK then
+  begin
+    sz := 0;
+    writeln('Requesting nvs_get_blob with @PressureSettings = ', HexStr(@PressureSettings), ', @sz = ', HexStr(@sz));
+    Result := nvs_get_blob(storageHandle, 'PresSettings', @PressureSettings, @sz);
+    writeln('Result reading pressure settings: ', esp_err_to_name(Result));
+    writeln('Size read: ', sz);
+
+    if {(Result <> ESP_OK) or} (sz <> SizeOf(PressureSettings)) then
+    begin
+      writeln('Error reading pressure settings: ', esp_err_to_name(Result));
+      writeln('Size read: ', sz);
+      //Result := ESP_FAIL;
+    end
+    else
+      writeln('Read ', sz, ' bytes from PresSettings');
+  end;
 
   if Result = ESP_OK then
   begin
@@ -151,43 +153,44 @@ begin
     end;
   end;
 
-  //if Result = ESP_OK then
-  //begin
-  //  Result := nvs_get_blob(storageHandle, 'SMSNotif', @SMSNotificationSettings, @sz);
-  //  if (Result <> ESP_OK) or (sz <> SizeOf(SMSNotificationSettings)) then
-  //  begin
-  //    Result := ESP_FAIL;
-  //    writeln('Error reading SMS notification settings: ', esp_err_to_name(Result));
-  //    //initDefaultSettingsSMSNotifications;
-  //  end;
-  //end;
+  if Result = ESP_OK then
+  begin
+    Result := nvs_get_blob(storageHandle, 'SMSNotif', @SMSNotificationSettings, @sz);
+    if (Result <> ESP_OK) or (sz <> SizeOf(SMSNotificationSettings)) then
+    begin
+      Result := ESP_FAIL;
+      writeln('Error reading SMS notification settings: ', esp_err_to_name(Result));
+      //initDefaultSettingsSMSNotifications;
+    end;
+  end;
 
-  //if Result = ESP_OK then
-  //begin
-  //  Result := nvs_get_blob(storageHandle, 'CylChangeover', @CylinderChangeoverSettings, @sz);
-  //  if (Result <> ESP_OK) or (sz <> SizeOf(SMSNotificationSettings)) then
-  //  begin
-  //    Result := ESP_FAIL;
-  //    writeln('Error reading cylinder changeover settings: ', esp_err_to_name(Result));
-  //    //initDefaultSettingsCylinderChangeover;
-  //  end;
-  //end;
+  if Result = ESP_OK then
+  begin
+    Result := nvs_get_blob(storageHandle, 'CylChangeover', @CylinderChangeoverSettings, @sz);
+    if (Result <> ESP_OK) or (sz <> SizeOf(SMSNotificationSettings)) then
+    begin
+      Result := ESP_FAIL;
+      writeln('Error reading cylinder changeover settings: ', esp_err_to_name(Result));
+      //initDefaultSettingsCylinderChangeover;
+    end;
+  end;
 
-  //if Result <> ESP_OK then
-  //begin
-  //  writeln('Loading default settings.');
-  //  initDefaultSettings;
-  //end;
+  if Result <> ESP_OK then
+  begin
+    writeln('Loading default settings.');
+    initDefaultSettings;
+  end;
 
   if storageHandle <> 0 then
     nvs_close(storageHandle)
   else
-    writeln('loadSettings: storageHandle = 0');
+    writeln('loadSettings: storageHandle = 0'); }
 end;
 
 function savePressureSettings: Tesp_err;
 begin
-  Result := initNVS;
+  logwriteln('savePressureSettings');
+{  Result := initNVS;
 
   if Result = ESP_OK then
   begin
@@ -208,12 +211,13 @@ begin
     nvs_close(storageHandle);
   end
   else
-    writeln('Error - storageHandle = 0');
+    writeln('Error - storageHandle = 0');  }
 end;
 
 function saveNotificationSettings: Tesp_err;
 begin
-  Result := initNVS;
+  logwriteln('saveNotificationSettings');
+{  Result := initNVS;
 
   if Result = ESP_OK then
     Result := nvs_set_blob(storageHandle, 'PhoneNumbers', @PhoneNumbers,
@@ -237,12 +241,13 @@ begin
     nvs_close(storageHandle);
   end
   else
-    writeln('Error - storageHandle = 0');
+    writeln('Error - storageHandle = 0'); }
 end;
 
 function saveCylinderChangeoverSettings: Tesp_err;
 begin
-  Result := initNVS;
+  logwriteln('saveCylinderChangeoverSettings');
+{  Result := initNVS;
 
   if Result = ESP_OK then
     Result := nvs_set_blob(storageHandle, 'CylChangeover', @CylinderChangeoverSettings,
@@ -255,7 +260,7 @@ begin
   begin
     Result := nvs_commit(storageHandle);
     nvs_close(storageHandle);
-  end;
+  end; }
 end;
 
 end.
