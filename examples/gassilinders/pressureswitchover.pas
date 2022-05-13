@@ -7,6 +7,9 @@ uses
 
 procedure startPressureMonitorThread;
 
+// Return currently selected open valve (A or B)
+function getCurrentOpenValve: char;
+
 // Non-thread methods
 procedure initCheckPressures;
 procedure checkPressures;
@@ -15,7 +18,7 @@ implementation
 
 uses
   portmacro, shared, task, nextionscreenconfig, pwm_pca9685, i2c_obj,
-  esp_err;
+  esp_err, handleSMS;
 
 type
   TValveOpen = (vsValveA, vsValveB);
@@ -30,6 +33,17 @@ const
 var
   fi2c: TI2cMaster;
   pwm: TPwmPca9685;
+  valveCurrentlyOpen: TValveOpen;
+  waitForChangeover: boolean;
+  timeoutStart: TTickType;
+
+function getCurrentOpenValve: char;
+begin
+  if valveCurrentlyOpen = vsValveA then
+    Result := 'A'
+  else
+    Result := 'B';
+end;
 
 procedure setValves(valveToOpen: TValveOpen);
 var
@@ -48,58 +62,15 @@ begin
     pwm.setOnMicroseconds(0, ServoClosedPos);
     pwm.setOnMicroseconds(1, ServoOpenPos);
   end;
-end;
-
-var
-  p1, p2: uint32;
-  valveCurrentlyOpen: TValveOpen;
-  waitForChangeover: boolean;
-  timeoutStart: TTickType;
-
-procedure dumpRegisters;
-const
-  regNames: array[0..1] of string[7] = (
-    'MODE1  ',
-    'MODE2  ');
-var
-  i, b: byte;
-  S: string[11];
-begin
-  for i := 0 to high(regNames) do
-  begin
-    EspErrorCheck(fi2c.ReadByteFromReg(byte($40), i, b));
-    writeln(regNames[i], ' : ', HexStr(b, 2));
-  end;
-  writeln;
-
-  // Only read LED 0 registers
-  for i := 6 to 9 do
-  begin
-    b := (i-6) div 4;
-    s := 'LED' + HexStr(b, 2);
-    b := (i-6) mod 4;
-    if b < 2 then
-      s := s + '_ON__'
-    else
-      s := s + '_OFF_';
-    if odd(b) then
-      s := s + 'H'
-    else
-      s := s + 'L';
-    EspErrorCheck(fi2c.ReadByteFromReg(byte($40), i, b));
-    writeln(i, ' : ', HexStr(b, 2));
-  end;
-
-  i := $FE; // Prescaler register
-  EspErrorCheck(fi2c.ReadByteFromReg(byte($40), i, b));
-  writeln('PRE_SCALE : ', HexStr(b, 2));
+  doNotifySMS;
 end;
 
 procedure initCheckPressures;
+var
+  p1, p2: uint32;
 begin
   fi2c.Initialize(0, 21, 22);  // I2C port, SDA pin, SCL pin
   pwm.Initialize(fi2c);
-  //dumpRegisters;
   pwm.setOscillatorFrequency(26050000);
   pwm.setPWMFreq(50);
   pwm.setOnMicroseconds(0, ServoClosedPos);
@@ -108,31 +79,25 @@ begin
   waitForChangeover := false;
   // Allow ADC to collect some readings
   //Sleep(500);
-  p1 := inputs[cylA];
-  p2 := inputs[cylB];
-  if p1 > p2 then
+  p1 := Pressures[cylA];
+  p2 := Pressures[cylB];
+  // Pick lower pressure cylinder to empty first
+  if p1 < p2 then
     valveCurrentlyOpen := vsValveA
   else
     valveCurrentlyOpen := vsValveB;
   setValves(valveCurrentlyOpen);
-  //dumpRegisters;
 end;
 
 procedure checkPressures;
+var
+  p1, p2: uint32;
 begin
-  p1 := inputs[cylA];
+  p1 := Pressures[cylA];
+  p2 := Pressures[cylB];
 
-  if p1 < 200 then
-    p1 := 200;
-  p1 := (p1 - 200)*10; // P input: 0 - 220 bar, tmp : 0 - 23000
-  p1 := (p1 * 22 + 1150) div 2300;
-
-  p2 := inputs[cylB];
-  if p2 < 200 then
-    p2 := 200;
-  p2 := (p2 - 200)*10; // P input: 0 - 220 bar, tmp : 0 - 23000
-  p2 := (p2 * 22 + 1150) div 2300;
-
+  // Default action: Pick a cylinder, then empty it completely
+  // before switching to the other cylinder
   if (valveCurrentlyOpen = vsValveA) then
   begin
     if (p1 < storage.CylinderChangeoverSettings.MinCylinderPressure) and
@@ -150,8 +115,8 @@ begin
         waitForChangeover := false;
       end;
     end
-    else if (p1 > storage.CylinderChangeoverSettings.MinCylinderPressure) and
-       (p1 > p2) then
+    // Cancel change-over if pressure is above minimum again
+    else if (p1 > storage.CylinderChangeoverSettings.MinCylinderPressure) then
     begin
       waitForChangeover := false;
     end;
@@ -173,8 +138,8 @@ begin
         waitForChangeover := false;
       end;
     end
-    else if (p2 > storage.CylinderChangeoverSettings.MinCylinderPressure) and
-       (p2 > p1) then
+    // Cancel change-over if pressure is above minimum again
+    else if (p2 > storage.CylinderChangeoverSettings.MinCylinderPressure) then
     begin
       waitForChangeover := false;
     end;
@@ -197,7 +162,7 @@ begin
   BeginThread(@monitorPressureThread,      // thread to launch
              nil,              // pointer parameter to be passed to thread function
              threadID,         // new thread ID, not used further
-             4024);            // stacksize
+             4096);            // stacksize
 end;
 
 
