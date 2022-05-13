@@ -11,9 +11,11 @@ const
   totalADCChannels = length(ADC1InputChannels) + length(ADC2InputChannels);
 
 var
-  //InputsCriticalSection: TRTLCriticalSection;
   // ADC input values in mV
-  inputs: array[0..length(ADC1InputChannels)+length(ADC2InputChannels)-1] of integer;
+  //inputs: array[0..length(ADC1InputChannels)+length(ADC2InputChannels)-1] of integer;
+
+  // Pressures in barG
+  Pressures: array[0..length(ADC1InputChannels)+length(ADC2InputChannels)-1] of integer;
 
 procedure startAdcThread;
 
@@ -31,6 +33,8 @@ const
   SampleBitWidth = ADC_WIDTH_BIT_12;
 var
   adc1_chars, adc2_chars: Tesp_adc_cal_characteristics;
+  // ADC input values in mV
+  inputs: array[0..length(ADC1InputChannels)+length(ADC2InputChannels)-1] of integer;
 
 procedure initADC;
 var
@@ -64,8 +68,14 @@ begin
       val := val div avgCount;
 
       tmp := esp_adc_cal_raw_to_voltage(val, @adc1_chars);
-      inputs[i] := (inputs[i] + tmp) div 2;
-      //inputs[i] := tmp;
+      tmp := (inputs[i] + tmp) div 2;
+      inputs[i] := tmp;
+
+      if tmp < 200 then
+        tmp := 200;
+      tmp := (tmp - 200)*10; // P input: 0 - 220 bar, tmp : 0 - 23000
+      Pressures[i] := (tmp * 22 + 1150) div 2300;
+
       // Give other tasks some breathing room
       vTaskDelay(1);
     end;
@@ -82,8 +92,14 @@ begin
       val := val div avgCount;
 
       tmp := esp_adc_cal_raw_to_voltage(val, @adc2_chars);
-      inputs[i+ADC2InputOffset] := (inputs[i+ADC2InputOffset] + tmp) div 2;
-      //inputs[i+ADC2InputOffset] := tmp;
+      tmp := (inputs[i+ADC2InputOffset] + tmp) div 2;
+      inputs[i+ADC2InputOffset] := tmp;
+
+      if tmp < 200 then
+        tmp := 200;
+      tmp := (tmp - 200)*10; // P input: 0 - 220 bar, tmp : 0 - 23000
+      Pressures[i+ADC2InputOffset] := (tmp * 22 + 1150) div 2300;
+
       // Give other tasks some breathing room
       vTaskDelay(1);
     end;
