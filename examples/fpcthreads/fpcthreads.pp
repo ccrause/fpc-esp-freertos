@@ -4,11 +4,11 @@ program fpcthreads;
 {$inline on}
 
 uses
-  fthreads, task, esp_err, portmacro, portable, projdefs,
+  fmem, fthreads, task, esp_err, portmacro, portable, projdefs,
   gpio {$ifdef CPULX6}, gpio_types {$endif};
 
 const
-  numSpinTasks            = 2;
+  numSpinTasks            = 5;
   MaxIterations           = 500;     // Actual CPU cycles used will depend on compiler optimization
   taskArraySafetyMargin   = 5;          // Safety margin to cater for new tasks launched
 
@@ -30,15 +30,12 @@ begin
   end;
 end;
 
-function printRealTimeStats(xTicksToWait: TTickType): Tesp_err;
+function printRealTimeStats: Tesp_err;
 var
   startTaskArray: PTaskStatus = nil;
-  endTaskArray: PTaskStatus = nil;
-  startTaskArraySize, endTaskArraySize: TUBaseType;
-  startRunTime, endRunTime: uint32;
-  elapsedTime: uint32;
-  i, j, k: int32;
-  taskElapsedTime, percentageTime: uint32;
+  startTaskArraySize: TUBaseType;
+  startRunTime: uint32;
+  i: int32;
   s: shortstring;
 begin
   result := ESP_OK;
@@ -51,83 +48,53 @@ begin
 
     if (startTaskArraySize > 0) then
     begin
-      // Wait while stats accumulate...
-      vTaskDelay(xTicksToWait);
-      endTaskArraySize := uxTaskGetNumberOfTasks() + taskArraySafetyMargin;
-      GetMem(endTaskArray, sizeof(TTaskStatus) * endTaskArraySize);
-      if (endTaskArray <> nil) then
+      // Now calculate and format results
+      writeln('=====================================================================================');
+      writeln('| Task             | Pinned to core | Run Time   | Min stack clearance | State      |');
+      writeln('|------------------+----------------+------------+---------------------+------------|');
+      // Match each task in startTaskArray to those in the endTaskArray
+      for i := 0 to startTaskArraySize-1 do
       begin
-        //Get post delay task states
-        endTaskArraySize := uxTaskGetSystemState(endTaskArray, endTaskArraySize, @endRunTime);
-        if (endTaskArraySize > 0) then
-        begin
-          elapsedTime := (endRunTime - startRunTime);
-          if (elapsedTime > 0) then
-          begin
-            // Now calculate and format results
-            writeln(' Task             | Run Time   | Percentage');
-            writeln('------------------+------------+-----------');
-            // Match each task in startTaskArray to those in the endTaskArray
-            for i := 0 to startTaskArraySize-1 do
-            begin
-              k := -1;
-              for j := 0 to endTaskArraySize-1 do
-              begin
-                if (startTaskArray[i].xHandle = endTaskArray[j].xHandle) then
-                begin
-                  k := j;
-                  //Mark that task have been matched by overwriting their handles
-                  startTaskArray[i].xHandle := nil;
-                  endTaskArray[j].xHandle := nil;
-                  break;
-                end;
-              end;
-              //Check if matching task found
-              if k >= 0 then
-              begin
-                taskElapsedTime := endTaskArray[k].ulRunTimeCounter - startTaskArray[i].ulRunTimeCounter;
-                percentageTime := (taskElapsedTime * 100) div (elapsedTime * portNUM_PROCESSORS);
-                write(' ');
-                printLeftAlignedPadded(startTaskArray[i].pcTaskName, 16);
-                write(' | ');
-                Str(taskElapsedTime, s);
-                printLeftAlignedPadded(s, 10);
-                writeln(' | ', percentageTime: 3, '%');
-              end;
-            end;
-            writeln('------------------+------------+-----------');
-
-            //Print unmatched tasks
-            for i := 0 to startTaskArraySize-1 do
-              if not(startTaskArray[i].xHandle = nil) then
-                writeln(startTaskArray[i].pcTaskName: 16, ' | Deleted');
-
-            for i := 0 to endTaskArraySize-1 do
-              if not(endTaskArray[i].xHandle = nil) then
-                writeln(endTaskArray[i].pcTaskName: 16, ' | Created');
-
-          end // elapsedTime > 0
-          else
-            Result := ESP_ERR_INVALID_STATE;
-
-        end // endTaskArraySize > 0
+        write('| ');
+        if (uint32(startTaskArray[i].pcTaskName) < $3f000000) or
+           (uint32(startTaskArray[i].pcTaskName) > $3fffffff) then
+          printLeftAlignedPadded('?????', 16)
         else
-          Result := ESP_ERR_INVALID_SIZE;
+          printLeftAlignedPadded(startTaskArray[i].pcTaskName, 16);
+        write(' | ');
 
-        FreeMem(endTaskArray);
-      end // endTaskArray <> nil
-      else
-        Result := ESP_ERR_NO_MEM;
+        {$if defined(configTASKLIST_INCLUDE_COREID)}
+        if startTaskArray[i].xCoreID = tskNO_AFFINITY then
+          printLeftAlignedPadded('no', 14)
+        else
+        begin
+          Str(startTaskArray[i].xCoreID, s);
+          printLeftAlignedPadded(s, 14);
+        end;
+        {$else}
+        printLeftAlignedPadded('-', 14);
+        {$endif}
+        write(' | ');
 
-    end  // startTaskArraySize > 0
-    else
-      Result := ESP_ERR_INVALID_SIZE;
+        Str(startTaskArray[i].ulRunTimeCounter, s);
+        printLeftAlignedPadded(s, 10);
+        write(' | ');
 
+        Str(startTaskArray[i].usStackHighWaterMark, s);
+        printLeftAlignedPadded(s, 19);
+
+        write(' | ');
+        Str(startTaskArray[i].eCurrentState, s);
+        printLeftAlignedPadded(s, 11);
+        writeln('|');
+      end;
+      writeln('=====================================================================================');
+    end; // startTaskArraySize > 0
     FreeMem(startTaskArray);
   end // startTaskArray <> nil
 end;
 
-function spinThread(arg: pointer): ptrint;
+function spinThread(arg: pointer): ptrint; noreturn;
 var
   Iterations: uint32 = 0;
   i: integer;
@@ -180,38 +147,20 @@ var
   blinkID: TThreadID;
   statsTick: uint32;
   loopcount: uint32 = 0;
-  taskName: shortstring;
 
 begin
-  InitCriticalSection(blinkCS);
-  EnterCriticalSection(blinkCS);  // blinkCS will now block
-
-  writeln('Starting blink thread');
-  // Calling BeginThread without a name will assign a default name 'fpc-#'
-  // where # is the number of unnamed threads started
-  BeginThread(@blinkThread,       // thread to launch
-             nil,                 // pointer parameter to be passed to thread function
-             blinkID,             // new thread ID
-             4*1024);             // stacksize
-
-  //Allow other core to finish initialization
-  vTaskDelay(pdMS_TO_TICKS(100));
-
-  //Create semaphores to synchronize
+  //Create RTL event to signal spin threads
   startSpinTask := RTLEventCreate;
   //Create spin tasks
   for i := 0 to numSpinTasks-1 do
   begin
-    Str(i, taskName);
-    insert('spin-', taskName, 1);
-    writeln('Creating Task', i);
+    writeln('Creating fpc task ', i);
     // Pass i as parameter to task
     // Larger i will run fewer spin cycles
-    fBeginThreadNamed(1024,         // stacksize
-                      @spinThread,  // thread to launch
-                      pointer(i),   // pointer parameter to be passed to thread function
-                      blinkID,      // the new thread ID
-                      taskName);
+    BeginThread(@spinThread,        // thread to launch
+               nil,//pointer(i),          // pointer parameter to be passed to thread function
+               blinkID,             // new thread ID
+               2*1024);             // stacksize
   end;
 
   vTaskDelay(pdMS_TO_TICKS(100));
@@ -226,6 +175,20 @@ begin
     // An alternative design could be a pair of ping-pong events.
     vTaskDelay(50);
   end;
+
+  // Blink thread...
+  InitCriticalSection(blinkCS);
+  EnterCriticalSection(blinkCS);  // blinkCS will now block
+  writeln('Starting blink thread');
+  fBeginThreadNamed(2*1024,        // stacksize
+                    @blinkThread,  // thread to launch
+                    nil,           // pointer parameter to be passed to thread function
+                    blinkID,       // the new thread ID
+                    'blink');
+
+  //Allow other core to finish initialization
+  vTaskDelay(pdMS_TO_TICKS(100));
+  writeln('After blink thread');
 
   writeln('Main running on core ID ', xPortGetCoreID);
   // Wait period between stats calls, in sys ticks
@@ -245,9 +208,7 @@ begin
     end;
     vTaskDelay(statsTick);
     writeln(#10'Getting real time stats over ',statsTick, ' ticks'#10);
-    if (printRealTimeStats(statsTick) = ESP_OK) then
-      writeln('Real time stats obtained')
-    else
+    if not(printRealTimeStats = ESP_OK) then
       writeln('Error getting real time stats'#10);
   until false;
 end.
