@@ -29,6 +29,10 @@ function GetCPUCount: LongWord;
 
 property CPUCount: LongWord read GetCPUCount;
 
+// Note: Calling fBeginThreadNamed directly does not properly initialize
+// threading yet.  If called, should NOT be the first threading call.
+// It should follow after a standard BeginThread call,
+// which would setup threading properly.
 function fBeginThreadNamed(StackSize: PtrUInt;
   ThreadFunction: TThreadFunc; P: pointer;
   var ThreadId: TThreadID; constref aname: shortstring): TThreadID;
@@ -251,13 +255,17 @@ function SysBeginThread (SA: pointer; StackSize : PtrUInt;
                          ThreadFunction: TThreadFunc; P: pointer;
                          CreationFlags: dword; var ThreadId: TThreadID): TThreadID;
 var
-  s: shortstring;
+  // TODO: The length of a task name is configurable, check configMAX_TASK_NAME_LEN in freertosconfig.inc
+  // configMAX_TASK_NAME_LEN is configurable during SDK build time
+  // Just hardcode a max length of 16 for now
+  threadName: string[16];
+  s: string[10];
 begin
   inc(threadCount);
   Str(threadCount, s);
-  insert('fpc-', s, 1);
+  threadName := 'fpc-' + s + #0;
 
-  SysBeginThread := fBeginThreadNamed(StackSize, ThreadFunction, P, ThreadId, s);
+  SysBeginThread := fBeginThreadNamed(StackSize, ThreadFunction, P, ThreadId, threadName);
 end;
 
 procedure SysEndThread (ExitCode: cardinal);
