@@ -1,9 +1,10 @@
 program gassilinders;
 
 uses
-  fthreads, freertos, task, nextion, portmacro, esp_err,
-  gpio_types, uart, uart_types, readadc, nextionscreenconfig, shared,
-  storage, pressureswitchover;
+  fmem, {fthreads,} freertos, task, nextion, portmacro, esp_err,
+  gpio_types, readadc, nextionscreenconfig, shared,
+  storage, pressureswitchover, handleSMS, logtouart,
+  esp_heap_caps;
 
 procedure testNVS;
 begin
@@ -24,16 +25,55 @@ begin
 
 end;
 
+var
+  //v: uint32;
+  //s: string[16];
+  loopcount: uint32;
+
 begin
-  startAdcThread;
-  startDisplayThread;
+  initLogUart;
+  //Sleep(1000);
+
+  logwriteln(#13#10'initADC');
+  initADC;
+
+  logwriteln(#13#10'startDisplayThread');
+  //startDisplayThread;
+  //startDisplayTask;
+  Sleep(100);
+
+  initDisplays;
+
   // While storage thread isn't running, at least load defaults
   storage.initDefaultSettings;
-  // Wait for displays to finish initializing
-  Sleep(500);
-  startPressureMonitorThread;
+
+  logwriteln(#13#10'initCheckPressures');
+  initCheckPressures;  // nonthreaded version
+
+  //initModem;
+
+  loopcount := 0;
   repeat
-    Sleep(250);
+    readAdcData;
+    Sleep(10);
+    checkPressures;
+    Sleep(10);
+    handleDisplayMessages;
+    //processModemEvents;
+    Sleep(480);
+
+    if ((loopcount and 3) = 0) or flagUpdateValvePositions then
+    begin
+      updateDisplays;
+    end;
+
+    //if (loopcount and 7) = 0 then
+    //begin
+    //  logwriteln('');
+    //  printTaskReport;
+    //  logwriteln('');
+    //end;
+    inc(loopcount);
   until false;
 end.
 

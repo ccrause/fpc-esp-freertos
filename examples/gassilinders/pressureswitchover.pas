@@ -18,7 +18,7 @@ implementation
 
 uses
   portmacro, shared, task, nextionscreenconfig, pwm_pca9685, i2c_obj,
-  esp_err, handleSMS;
+  esp_err, handleSMS, logtouart;
 
 type
   TValveOpen = (vsValveA, vsValveB);
@@ -28,7 +28,7 @@ const
   cylB = 9;
 
   ServoClosedPos = 500;
-  ServoOpenPos = 1500;
+  ServoOpenPos = 1200;
 
 var
   fi2c: TI2cMaster;
@@ -36,6 +36,7 @@ var
   valveCurrentlyOpen: TValveOpen;
   waitForChangeover: boolean;
   timeoutStart: TTickType;
+  skipSMSNotificationOnStartup: boolean;
 
 function getCurrentOpenValve: char;
 begin
@@ -49,6 +50,12 @@ procedure setValves(valveToOpen: TValveOpen);
 var
   A, B: boolean;
 begin
+  logwrite('Open valve ');
+  if valveToOpen = vsValveA then
+    logwrite('A')
+  else
+    logwrite('B');
+
   A := valveToOpen = vsValveA;
   B := valveToOpen = vsValveB;
   nextionscreenconfig.updateValvePositions(A, B);
@@ -62,18 +69,21 @@ begin
     pwm.setOnMicroseconds(0, ServoClosedPos);
     pwm.setOnMicroseconds(1, ServoOpenPos);
   end;
-  doNotifySMS;
+  if (snAutoCylinderChangeOver in storage.SMSNotificationSettings.Notifications) and
+     not skipSMSNotificationOnStartup then
+    doNotifySMS;
 end;
 
 procedure initCheckPressures;
 var
   p1, p2: uint32;
 begin
+  skipSMSNotificationOnStartup := true;
   fi2c.Initialize(0, 21, 22);  // I2C port, SDA pin, SCL pin
   pwm.Initialize(fi2c);
   pwm.setOscillatorFrequency(26050000);
   pwm.setPWMFreq(50);
-  pwm.setOnMicroseconds(0, ServoClosedPos);
+  pwm.setOnMicroseconds(0, ServoOpenPos);
   pwm.setOnMicroseconds(1, ServoClosedPos);
 
   waitForChangeover := false;
@@ -82,11 +92,12 @@ begin
   p1 := Pressures[cylA];
   p2 := Pressures[cylB];
   // Pick lower pressure cylinder to empty first
-  if p1 < p2 then
+  if (p1 < p2) and (p1 >= storage.CylinderChangeoverSettings.MinCylinderPressure) then
     valveCurrentlyOpen := vsValveA
   else
     valveCurrentlyOpen := vsValveB;
   setValves(valveCurrentlyOpen);
+  skipSMSNotificationOnStartup := false;
 end;
 
 procedure checkPressures;

@@ -2,25 +2,36 @@ unit nextionscreenconfig;
 
 interface
 
-procedure startDisplayThread;
+procedure initDisplays;
+procedure handleDisplayMessages;
+procedure updateDisplays;
+
+
+//procedure startDisplayTask;
+
+//procedure startDisplayThread;
 
 procedure UpdateValvePositions(valveAOpen, valveBOpen: boolean);
 
 procedure doUploadSettingsToDisplay;
 
+var
+  flagUpdateValvePositions: boolean;
+
 implementation
 
 uses
   nextion, readadc, uart, uart_types,
-  shared, gpio, gpio_types, storage, portmacro, logtouart;
+  shared, gpio, gpio_types, storage, portmacro, logtouart,
+  esp_err, task;
 
 {$include freertosconfig.inc} // To access configTICK_RATE_HZ
 
 const
-  UART_FIFO_BUFFER_SIZE = 2048;
+  UART_FIFO_BUFFER_SIZE = 2*2048;
   PrimaryUartPort = 0;
   PrimaryTX_PIN = 1;
-  PrimaryRX_PIN = 3;
+  PrimaryRX_PIN = 23;
 
   // Uart connected to RS485 driver.  Control driver direction with RSE pin
   SecondaryUartPort = 1;
@@ -53,19 +64,20 @@ const
 var
   nexPrimary, nexSecondary: TNextionHandler;
 
-  pressureTextArray: array[0..9] of TNextionComponent = (
-    (pid: 0; cid: 1),
-    (pid: 0; cid: 12),
-    (pid: 0; cid: 13),
-    (pid: 0; cid: 14),
-    (pid: 0; cid: 15),
-    (pid: 0; cid: 16),
-    (pid: 0; cid: 17),
-    (pid: 0; cid: 18),
+  pressureNumArray: array[0..9] of TNextionComponent = (
     (pid: 0; cid: 19),
-    (pid: 0; cid: 20));
+    (pid: 0; cid: 20),
+    (pid: 0; cid: 21),
+    (pid: 0; cid: 22),
+    (pid: 0; cid: 23),
+    (pid: 0; cid: 24),
+    (pid: 0; cid: 25),
+    (pid: 0; cid: 26),
+    (pid: 0; cid: 27),
+    (pid: 0; cid: 28));
 
   pressureProgressArray: array[0..9] of TNextionComponent = (
+    (pid: 0; cid: 1),
     (pid: 0; cid: 2),
     (pid: 0; cid: 3),
     (pid: 0; cid: 4),
@@ -74,21 +86,19 @@ var
     (pid: 0; cid: 7),
     (pid: 0; cid: 8),
     (pid: 0; cid: 9),
-    (pid: 0; cid: 10),
-    (pid: 0; cid: 11));
+    (pid: 0; cid: 10));
 
-  flagUpdateValvePositions: boolean;
   valveAIsOpen: boolean;
   valveBIsOpen: boolean;
-  nexValveA: TNextionComponent = (pid: 0; cid: 24);
-  nexValveB: TNextionComponent = (pid: 0; cid: 25);
+  nexValveA: TNextionComponent = (pid: 0; cid: 14);
+  nexValveB: TNextionComponent = (pid: 0; cid: 15);
 
   fUploadSettingsToDisplay: boolean;
 
 // Ensure number of ADC channels and Nextion display elements are the same
 // These constants are used for a compile time check only
 const
-  pressureTextArrayLength = length(pressureTextArray);
+  pressureTextArrayLength = length(pressureNumArray);
   pressureProgressArrayLength = length(pressureProgressArray);
 {$if (pressureTextArrayLength <> totalADCChannels)}
   {$error pressureTextArrayLength <> totalADCChannels}
@@ -195,16 +205,14 @@ end;
 
 procedure updateDisplays;
 var
-  val: string[8];
   i, pres, pct: integer;
 begin
   for i := 0 to high(Pressures) do
   begin
     pres := Pressures[i];
-    Str(pres, val);
-    nexPrimary.setText(pressureTextArray[i], val);
+    nexPrimary.setValue(pressureNumArray[i], pres);
     nexPrimary.processInputData;
-    nexSecondary.setText(pressureTextArray[i], val);
+    nexSecondary.setValue(pressureNumArray[i], pres);
     nexSecondary.processInputData;
 
     pct := (pres*10 + 11) div 22;
@@ -217,19 +225,20 @@ begin
   if flagUpdateValvePositions then
   begin
     flagUpdateValvePositions := false;
-    if valveAIsOpen then
-      i := 0
-    else
-      i := 1;
-    nexPrimary.setValue(nexValveA, i);
-    nexSecondary.setValue(nexValveA, i);
-
-    if valveBIsOpen then
-      i := 0
-    else
-      i := 1;
-    nexPrimary.setValue(nexValveB, i);
-    nexSecondary.setValue(nexValveB, i);
+    updateValvePositionsOnDisplays;
+    //if valveAIsOpen then
+    //  i := 0
+    //else
+    //  i := 1;
+    //nexPrimary.setValue(nexValveA, i);
+    //nexSecondary.setValue(nexValveA, i);
+    //
+    //if valveBIsOpen then
+    //  i := 0
+    //else
+    //  i := 1;
+    //nexPrimary.setValue(nexValveB, i);
+    //nexSecondary.setValue(nexValveB, i);
   end;
 
   Sleep(10);
@@ -293,6 +302,8 @@ procedure sendString(uartnum: integer; data: shortstring);
 var
   len: integer;
 begin
+  //logwrite('<< ');
+  //logwriteln(data);
   len := uart_write_bytes(uartnum, @data[1], length(data));
   if len < 0 then
     logwriteln('Error in sendString')
@@ -314,23 +325,24 @@ function readString(uartnum: integer): shortstring;
 var
   len: integer;
 begin
-  uart_get_buffered_data_len(uartnum, @len);
-  if len > 255 then
-    len := 255;
+  len := 250;
 
+  SetLength(Result, len);
+  FillByte(Result[1], 0, len);
+  len := uart_read_bytes(uartnum, @Result[1], len, 1);
   if len > 0 then
   begin
     SetLength(Result, len);
-    FillByte(Result[1], 0, len);
-    len := uart_read_bytes(uartnum, @Result[1], len, 1);
     logwrite('>> ');
     logwriteln(Result);
   end
   else
   begin
     Result := '';
+    //logwrite(':');
+    //logwrite(len);
     // Give another task some space
-    Sleep(10);
+    //Sleep(10);
   end;
 end;
 
@@ -352,6 +364,7 @@ var
 begin
   tmpNexObj.pid := 1;
   updated := false;
+  logwriteln('Reading warnings');
   for i := WarningPressureIdStart to WarningPressureIdEnd do
   begin
     tmpNexObj.cid:= i;
@@ -365,20 +378,25 @@ begin
       end;
     end;
   end;
+  logwriteln('Done reading warnings');
 
+  Sleep(10);
+
+  logwriteln('Reading lows');
   for i := LowPressureIdStart to LowPressureIdEnd do
   begin
     tmpNexObj.cid:= i;
     // Only update internal value if read succeeded
     if nexPrimary.getValue(tmpNexObj, v) then
     begin
-      if uint32(v) <> storage.PressureSettings.Warnings[i - LowPressureIdEnd] then
+      if uint32(v) <> storage.PressureSettings.LowPressures[i - LowPressureIdStart] then
       begin
         updated := true;
-        storage.PressureSettings.Warnings[i - LowPressureIdEnd] := v;
+        storage.PressureSettings.LowPressures[i - LowPressureIdStart] := v;
       end;
     end;
   end;
+  logwriteln('Done reading page1');
 
   if updated then
   begin
@@ -456,9 +474,13 @@ begin
   // TODO: Perhaps force value > 0 on Nextion side?
   if nexPrimary.getValue(tmpNexObj, v) and (v > 0) then
   begin
+    logwrite('Got minP: ');
+    logwriteln(v);
     updated := uint32(v) <> storage.CylinderChangeoverSettings.MinCylinderPressure;
     storage.CylinderChangeoverSettings.MinCylinderPressure := v;
-  end;
+  end
+  else
+    logwriteln('ERROR reading MinP');
 
   tmpNexObj.cid := HysteresisId;
   // TODO: Perhaps force value > 0 on Nextion side?
@@ -518,15 +540,19 @@ end;
 // Only attach to primary display for updating edited values
 procedure pageExitHandler(pid: integer);
 begin
-  logwriteln('#');
   case pid of
     // Pressure set points (warning, Low)
-    1: savePressureSettings;
+    1: readPage1FromDisplay;
+
     // Phone numbers and notification settings
-    2: saveNotificationSettings;
+    2: readPage2FromDisplay;
+
     // Cylinder changeover settings
-    3: saveCylinderChangeoverSettings;
+    3: readPage3FromDisplay;
   end;
+
+  // Display page seems to show incorrect valve positions when switching back
+  flagUpdateValvePositions := true;
 end;
 
 procedure initDisplays;
@@ -568,17 +594,54 @@ end;
 procedure handleDisplayMessages;
 begin
   nexPrimary.processInputData;
-  nexSecondary.processInputData;
+  //nexSecondary.processInputData;
 end;
 
 function displayThread(parameter : pointer): ptrint; noreturn;
+var
+  loopcount: uint32;
 begin
   initDisplays;
+  loopcount := 0;
   repeat
     handleDisplayMessages;
-    updateDisplays;
+    // Update screen every ~ 2 sec, or if valve positions needs updating
+    if ((loopcount and 7) = 0) or flagUpdateValvePositions then
+    begin
+      updateDisplays;
+    end;
+    inc(loopcount);
     Sleep(250);
   until false;
+end;
+
+
+procedure displayTask(parameter : pointer);
+var
+  loopcount: uint32;
+begin
+  initDisplays;
+  loopcount := 0;
+  repeat
+    handleDisplayMessages;
+    // Update screen every ~ 2 sec, or if valve positions needs updating
+    if ((loopcount and 7) = 0) or flagUpdateValvePositions then
+    begin
+      updateDisplays;
+    end;
+    inc(loopcount);
+    Sleep(250);
+  until false;
+end;
+
+procedure startDisplayTask;
+begin
+  xTaskCreate(@displayTask,
+      	      'display',
+      	      8*1024,
+      	      nil,
+      	      0,
+      	      nil);
 end;
 
 procedure startDisplayThread;
@@ -588,14 +651,14 @@ begin
   BeginThread(@displayThread,  // thread to launch
              nil,              // pointer parameter to be passed to thread function
              threadID,         // new thread ID, not used further
-             4096);            // stacksize
+             8*1024);            // stacksize
 end;
 
 procedure updateValvePositions(valveAOpen, valveBOpen: boolean);
 begin
-  flagUpdateValvePositions := true;
   valveAIsOpen := valveAOpen;
   valveBIsOpen := valveBOpen;
+  flagUpdateValvePositions := true;
 end;
 
 end.

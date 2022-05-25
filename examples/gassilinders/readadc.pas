@@ -7,7 +7,7 @@ uses
 
 const
   ADC1InputChannels: array[0..5] of integer = (0, 3, 6, 7, 4, 5);
-  ADC2InputChannels: array[0..3] of integer = (8, 9, 7, 6);
+  ADC2InputChannels: array[0..3] of integer = (8, 9, 7, 0{, 6});  // FIXME: switch to channel0 to free up GPIO14 for JTAG
   totalADCChannels = length(ADC1InputChannels) + length(ADC2InputChannels);
 
 var
@@ -17,7 +17,11 @@ var
   // Pressures in barG
   Pressures: array[0..length(ADC1InputChannels)+length(ADC2InputChannels)-1] of integer;
 
-procedure startAdcThread;
+
+procedure initADC;
+procedure readAdcData;
+
+//procedure startAdcThread;
 
 implementation
 
@@ -50,9 +54,55 @@ begin
   esp_adc_cal_characterize(ADC_UNIT_2, MAX_ATTENUATION, SampleBitWidth, DEFAULT_VREF, @adc2_chars);
 end;
 
+procedure readAdcData;
+const
+  avgCount = 4;
+var
+  i, j, chan, val, tmp: integer;
+begin
+  for i := 0 to length(ADC1InputChannels)-1 do
+  begin
+    chan := ADC1InputChannels[i];
+    val := 0;
+    for j := 1 to avgCount do
+      val := val + adc1_get_raw(Tadc1_channel(chan));
+    val := val div avgCount;
+
+    tmp := esp_adc_cal_raw_to_voltage(val, @adc1_chars);
+    tmp := (inputs[i] + tmp) div 2;
+    inputs[i] := tmp;
+
+    if tmp < 200 then
+      tmp := 200;
+    tmp := (tmp - 200)*10; // P input: 0 - 220 bar, tmp : 0 - 23000
+    Pressures[i] := (tmp * 22 + 1150) div 2300;
+  end;
+
+  for i := 0 to length(ADC2InputChannels)-1 do
+  begin
+    chan := ADC2InputChannels[i];
+    val := 0;
+    for j := 1 to avgCount do
+    begin
+      adc2_get_raw(Tadc2_channel(chan), SampleBitWidth, @tmp);
+      val := val + tmp;
+    end;
+    val := val div avgCount;
+
+    tmp := esp_adc_cal_raw_to_voltage(val, @adc2_chars);
+    tmp := (inputs[i+ADC2InputOffset] + tmp) div 2;
+    inputs[i+ADC2InputOffset] := tmp;
+
+    if tmp < 200 then
+      tmp := 200;
+    tmp := (tmp - 200)*10; // P input: 0 - 220 bar, tmp : 0 - 23000
+    Pressures[i+ADC2InputOffset] := (tmp * 22 + 1150) div 2300;
+  end;
+end;
+
 function ADCThread(parameter : pointer) : ptrint; noreturn;
 const
-  avgCount = 16;
+  avgCount = 4;
 var
   i, j, chan, val, tmp: integer;
 begin
@@ -77,7 +127,7 @@ begin
       Pressures[i] := (tmp * 22 + 1150) div 2300;
 
       // Give other tasks some breathing room
-      vTaskDelay(1);
+      //Sleep(10);
     end;
 
     for i := 0 to length(ADC2InputChannels)-1 do
@@ -101,10 +151,10 @@ begin
       Pressures[i+ADC2InputOffset] := (tmp * 22 + 1150) div 2300;
 
       // Give other tasks some breathing room
-      vTaskDelay(1);
+      //Sleep(10);
     end;
 
-    Sleep(100);
+    Sleep(400);
   until false;
 end;
 
@@ -115,7 +165,7 @@ begin
   BeginThread(@ADCThread,      // thread to launch
              nil,              // pointer parameter to be passed to thread function
              threadID,         // new thread ID, not used further
-             1024);            // stacksize
+             4*1024);          // stacksize
 end;
 
 end.

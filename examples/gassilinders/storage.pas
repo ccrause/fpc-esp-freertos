@@ -86,7 +86,10 @@ begin
     logwriteln('nvs_open failed');
   end
   else
-    //writeln('Storage handle = ', storageHandle);
+  begin
+    logwrite('Storage handle = ');
+    logwriteln(storageHandle);
+  end;
 end;
 
 procedure initDefaultSettings;
@@ -95,8 +98,8 @@ var
 begin
   for i := 0 to numGasStations-1 do
   begin
-    PressureSettings.Warnings[i] := 22;
-    PressureSettings.LowPressures[i] := 55;
+    PressureSettings.Warnings[i] := 55;
+    PressureSettings.LowPressures[i] := 22;
   end;
 
   PhoneNumbers[0] := 0836282994;
@@ -123,6 +126,7 @@ function loadSettings: Tesp_err;
 var
   sz: Tsize;
 begin
+  logwriteln('loadSettings not implemented');
 {  Result := initNVS;
 
   if Result = ESP_OK then
@@ -189,7 +193,7 @@ end;
 
 function savePressureSettings: Tesp_err;
 begin
-  logwriteln('savePressureSettings');
+  logwriteln('savePressureSettings not implemented');
 {  Result := initNVS;
 
   if Result = ESP_OK then
@@ -216,7 +220,7 @@ end;
 
 function saveNotificationSettings: Tesp_err;
 begin
-  logwriteln('saveNotificationSettings');
+  logwriteln('saveNotificationSettings not implemented');
 {  Result := initNVS;
 
   if Result = ESP_OK then
@@ -246,7 +250,7 @@ end;
 
 function saveCylinderChangeoverSettings: Tesp_err;
 begin
-  logwriteln('saveCylinderChangeoverSettings');
+  logwriteln('saveCylinderChangeoverSettings not implemented');
 {  Result := initNVS;
 
   if Result = ESP_OK then

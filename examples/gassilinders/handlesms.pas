@@ -6,7 +6,7 @@ procedure startSMShandlerThread;
 
 procedure doNotifySMS;
 
-procedure initUart;
+//procedure initUart;
 procedure initModem;
 procedure processModemEvents;
 
@@ -47,14 +47,14 @@ begin
   uart_driver_install(UartPort, UART_FIFO_BUFFER_SIZE, UART_FIFO_BUFFER_SIZE, 0, nil, 0);
   uart_param_config(UartPort, @uart_cfg);
   uart_set_pin(UartPort, TX_PIN, RX_PIN, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
-  Sleep(100);
+  //Sleep(100);
   uart_flush_input(UartPort);
 end;
 
 procedure serialTransmitStr(s: shortstring);
 begin
-  logwrite('>> ');
-  logwriteln(s);
+  //logwrite('>> ');
+  //logwriteln(s);
   uart_write_bytes(UartPort, @s[1], length(s));
 end;
 
@@ -71,16 +71,39 @@ begin
     SetLength(Result, len);
     FillByte(Result[1], 0, len);
     len := uart_read_bytes(UartPort, @Result[1], len, 1);
-    logwrite('<< ');
-    logwriteln(Result);
+    //logwrite('<< ');
+    //logwriteln(Result);
   end
   else
   begin
     Result := '';
     // Give another task some space
-    Sleep(10);
+    //Sleep(10);
   end;
 end;
+
+//function numberIsRegistered(const phoneNumber: shortstring): boolean;
+//var
+//  i: integer;
+//  s: string[10];
+//  num: uint32;
+//begin
+//  Sleep(10);
+//  s := '          ';
+//  for i := 4 to length(phoneNumber) do
+//    s[i-3] := phoneNumber[i];
+//  Val(s, num);
+//  logwrite('Phone number: ');
+//  logwriteln(num);
+//
+//  i := 0;
+//  Result := false;
+//  while (i < length(storage.PhoneNumbers)) and not Result do
+//  begin
+//    Result := storage.PhoneNumbers[i] = num;
+//    inc(i);
+//  end;
+//end;
 
 procedure processCall(msg: shortstring);
 var
@@ -93,10 +116,16 @@ begin
     incomingPhoneNumber := copy(msg, 9, j - 9);
     // Check if this is kind of a proper phone number
     // Mainly to filter out network messages
-    if (incomingPhoneNumber[1] = '+') and (length(incomingPhoneNumber) > 8) then
+    if (incomingPhoneNumber[1] = '+') and (length(incomingPhoneNumber) > 8) {and
+      numberIsRegistered(incomingPhoneNumber)} then
     begin
       gotRequest := true;
       gotCall := true;
+    end
+    else
+    begin
+      logwrite('Rejecting number: ');
+      logwriteln(incomingPhoneNumber);
     end;
   end;
 end;
@@ -111,8 +140,14 @@ begin
     incomingPhoneNumber := copy(msg, 8, j - 8);
     // Check if this is kind of a proper phone number
     // Mainly to filter out network messages
-    if (incomingPhoneNumber[1] = '+') and (length(incomingPhoneNumber) > 8) then
-      gotRequest := true;
+    if (incomingPhoneNumber[1] = '+') and (length(incomingPhoneNumber) > 8) {and
+      numberIsRegistered(incomingPhoneNumber)} then
+      gotRequest := true
+    else
+    begin
+      logwrite('Rejecting number: ');
+      logwriteln(incomingPhoneNumber);
+    end;
   end;
 end;
 
@@ -134,6 +169,18 @@ begin
 end;
 
 function statusReport: shortstring;
+const
+  CylinderNames: array[0..9] of string[7] = (
+    'He (a)',
+    'He (b)',
+    'N2 (a)',
+    'N2 (b)',
+    'O2 (a)',
+    'O2 (b)',
+    'S/A(a)',
+    'S/A(b)',
+    'Ar (a)',
+    'Ar (b)');
 var
   s: string[4];
   i: integer;
@@ -141,12 +188,13 @@ begin
   Result := 'Cyl# Pres'#10;
   for i := 0 to high(Pressures) do
   begin
-    Str((i+1):4, s);
-    Result := Result + s + ' ';
+    //Str((i+1):4, s);
+    //Result := Result + s + ' ';
+    Result := Result + CylinderNames[i] + ' ';
     Str(Pressures[i]:3, s);
     Result := Result + s + #10;
   end;
-  Result := Result + 'Valve open: ' + getCurrentOpenValve;
+  Result := Result + 'Ar cylinder: ' + getCurrentOpenValve;
 end;
 
 procedure sendStatusReport(constref dest: shortstring);
@@ -160,7 +208,7 @@ end;
 procedure sendStatusReportToAll;
 var
   status: shortstring;
-  s: string[4];
+  s: string[12];
   i: integer;
 begin
   status := statusReport;
@@ -181,66 +229,101 @@ begin
   sendNotification := true;
 end;
 
+type
+  TModemState = (msDoStart, msCheckAT, msWaitForReady, msWaitSimReady, msWaitOperator, msReady);
+
+const
+  modemState: TModemState = msDoStart;
+
 procedure initModem;
 begin
-  waitForReady := false;
-
-  gsm.Init(@serialTransmitStr, @serialReadString);
-  gsm.msgCallback := @handleUnsolicitedMsg;
-
-  // Check if modem is active
-  logwriteln('Checking ready');
-  gsm.sendATCommand('AT', 3);
-  if not gsm.commandCompleted then
+  initUart;
+  if modemState = msDoStart then
   begin
-    writeln('Waiting for READY');
-    while not waitForReady do
+    waitForReady := false;
+    gsm.Init(@serialTransmitStr, @serialReadString);
+    gsm.msgCallback := @handleUnsolicitedMsg;
+    inc(modemState);
+  end;
+
+  if modemState = msCheckAT then
+  begin
+    // Check if modem is active
+    logwriteln('Checking AT');
+    gsm.sendATCommand('AT', 3);
+    if not gsm.commandCompleted then
     begin
-      gsm.process;
-      Sleep(100);
+      logwriteln('Waiting for READY');
+      inc(modemState);
+      exit;
+    end
+    else
+    begin
+      logwriteln('AT response OK');
+      modemState := msWaitSimReady;
     end;
+  end;
+
+  if (modemState = msWaitForReady) then
+  begin
+    gsm.process;
+    if not waitForReady then
+      exit
+    else
+      inc(modemState);
   end;
 
   // Check if in auto baud mode
   i := gsm.getBaudRate;
   if i = 0 then
+  begin
+    logwriteln('Auto baud detected.');
     gsm.setBaudRate(115200);
+  end
+  else
+  begin
+    logwrite('Baud detected: ');
+    logwriteln(i);
+  end;
 
   // Check SIM is OK
-  repeat
-    // Wait for sim to be ready:
+  if modemState = msWaitSimReady then
+  begin
     if gsm.getSimStatus <> ssReady then
     begin
-      logwriteln('SIM not ready, retry');
-      Sleep(2000);
+      logwriteln('SIM not ready');
+      exit;
     end
     else
     begin
       logwriteln('SIM ready.');
-      break;
+      inc(modemState);
     end;
-  until false;
+  end;
 
   // Check network connection is OK
-  repeat
+  if modemState =msWaitOperator then
+  begin
     // Query network operator:
     s := gsm.getNetworkOperator;
     if s <> '' then
     begin
       logwrite('Network operator: ');
       logwriteln(s);
+      inc(modemState);
     end
     else
     begin
       logwriteln('Network not ready, retry');
-      gsm.process;
-      Sleep(2000);
+      exit;
+      //gsm.process;
+      //Sleep(2000);
     end;
-  until s <> '';
+  end;
 
-  //logwrite('Signal strength: ');
-  //logwrite(gsm.getNetworkSignalQuality)
-  //logwriteln('%');
+  logwrite('Signal strength: ');
+  logwrite(gsm.getNetworkSignalQuality);
+  logwriteln('%');
 
   // Set new SMS delivered straight to terminal
   gsm.sendATCommand('AT+CNMI=2,2');
@@ -256,26 +339,31 @@ end;
 procedure processModemEvents;
 begin
   gsm.process;
-  if gotRequest then
+  if not (modemState = msReady) then
+    initModem
+  else
   begin
-    if gotCall then
+    if gotRequest then
     begin
-      // Cancel incoming call
-      gsm.sendATCommand('ATH');
-      gotCall := false;
+      if gotCall then
+      begin
+        // Cancel incoming call
+        gsm.sendATCommand('ATH');
+        gotCall := false;
+      end;
+      logwrite('Replying to ');
+      logwriteln(incomingPhoneNumber);
+      sendStatusReport(incomingPhoneNumber);
+      gotRequest := false;
+      incomingPhoneNumber := '';
     end;
-    logwrite('Replying to ');
-    logwriteln(incomingPhoneNumber);
-    sendStatusReport(incomingPhoneNumber);
-    gotRequest := false;
-    incomingPhoneNumber := '';
-  end;
 
-  if sendNotification then
-  begin
-    sendNotification := false;
-    sendStatusReport('+27836282994');
-    //sendStatusReportToAll;
+    if sendNotification then
+    begin
+      sendNotification := false;
+      //sendStatusReport('+27836282994');
+      sendStatusReportToAll;
+    end;
   end;
 end;
 
@@ -288,7 +376,7 @@ begin
   // Wait for event from modem
   repeat
     processModemEvents;
-    Sleep(250);
+    Sleep(500);
   until false;
 end;
 
@@ -299,7 +387,7 @@ begin
   BeginThread(@SMSthread,      // thread to launch
              nil,              // pointer parameter to be passed to thread function
              threadID,         // new thread ID, not used further
-             5000);            // stacksize
+             2*4096);            // stacksize
 end;
 
 end.

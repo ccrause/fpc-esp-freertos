@@ -7,6 +7,9 @@ procedure initLogUart;
 procedure logwrite(s: shortstring);
 procedure logwriteln(s: shortstring);
 
+procedure logwrite(v: int32);
+procedure logwriteln(v: int32);
+
 implementation
 
 uses
@@ -54,6 +57,35 @@ end;
 procedure logwriteln(s: shortstring);
 begin
 {$ifdef debugprint}
+  s := s + #13#10;
+  if xSemaphoreTake(lock, 200) = pdTRUE then
+  begin
+    uart_write_bytes(UartPort, @s[1], length(s));
+    xSemaphoreGive(lock);
+  end;
+{$endif}
+end;
+
+procedure logwrite(v: int32);
+var
+  s: string[16];
+begin
+{$ifdef debugprint}
+  Str(v, s);
+  if xSemaphoreTake(lock, 200) = pdTRUE then
+  begin
+    uart_write_bytes(UartPort, @s[1], length(s));
+    xSemaphoreGive(lock);
+  end;
+{$endif}
+end;
+
+procedure logwriteln(v: int32);
+var
+  s: string[16];
+begin
+{$ifdef debugprint}
+  Str(v, s);
   s := s + #13#10;
   if xSemaphoreTake(lock, 200) = pdTRUE then
   begin

@@ -24,7 +24,7 @@
           </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir);../../freertos-fpc;../../freertos-fpc/esp8266-idf"/>
-            <OtherUnitFiles Value="../../freertos-fpc;../../freertos-fpc/esp8266-idf;../common;GUI;test"/>
+            <OtherUnitFiles Value="../../freertos-fpc;../../freertos-fpc/esp8266-idf;../common;GUI;test;bin"/>
             <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
           </SearchPaths>
           <CodeGeneration>
@@ -54,7 +54,7 @@
           </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir);../../freertos-fpc;../../freertos-fpc/esp8266-idf"/>
-            <OtherUnitFiles Value="../../freertos-fpc;../../freertos-fpc/esp8266-idf;../common;GUI;test"/>
+            <OtherUnitFiles Value="../../freertos-fpc;../../freertos-fpc/esp8266-idf;../common;GUI;test;bin"/>
             <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
           </SearchPaths>
           <CodeGeneration>
@@ -89,7 +89,7 @@
           </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir);../../freertos-fpc;../../freertos-fpc/esp-idf"/>
-            <OtherUnitFiles Value="../../freertos-fpc;../../freertos-fpc/esp-idf;../common;GUI;test"/>
+            <OtherUnitFiles Value="../../freertos-fpc;../../freertos-fpc/esp-idf;../common;GUI;test;bin"/>
             <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
           </SearchPaths>
           <CodeGeneration>
@@ -121,7 +121,7 @@
     <RunParams>
       <FormatVersion Value="2"/>
     </RunParams>
-    <Units Count="11">
+    <Units Count="13">
       <Unit0>
         <Filename Value="gassilinders.pp"/>
         <IsPartOfProject Value="True"/>
@@ -131,11 +131,11 @@
         <IsPartOfProject Value="True"/>
       </Unit1>
       <Unit2>
-        <Filename Value="../sim800/GUI/gsmparser.pas"/>
+        <Filename Value="../common/gsmparser.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit2>
       <Unit3>
-        <Filename Value="../sim800/GUI/gsmtypes.pas"/>
+        <Filename Value="../common/gsmtypes.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit3>
       <Unit4>
@@ -166,6 +166,15 @@
         <Filename Value="pressureswitchover.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit10>
+      <Unit11>
+        <Filename Value="handlesms.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="handleSMS"/>
+      </Unit11>
+      <Unit12>
+        <Filename Value="logtouart.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit12>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -175,11 +184,13 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir);../../freertos-fpc;../../freertos-fpc/esp-idf"/>
-      <OtherUnitFiles Value="../../freertos-fpc;../../freertos-fpc/esp-idf;../common;../sim800/GUI;../nextiontest/test"/>
+      <OtherUnitFiles Value="../../freertos-fpc;../../freertos-fpc/esp-idf;../common;../sim800/GUI;../nextiontest/test;bin"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <CodeGeneration>
-      <HeapSize Value="4096"/>
+      <Checks>
+        <RangeChecks Value="True"/>
+      </Checks>
       <TargetProcessor Value="lx6"/>
       <TargetCPU Value="xtensa"/>
       <TargetOS Value="freertos"/>
@@ -194,6 +205,9 @@
       <ConfigFile>
         <ConfigFilePath Value="~/fpc/gitlab-cc/fpc.cfg"/>
       </ConfigFile>
+      <CustomOptions Value="-Xm
+-ddebugprint
+-al"/>
       <CompilerPath Value="/home/christo/fpc/installs/lib/fpc/3.3.1/ppcrossxtensa"/>
     </Other>
   </CompilerOptions>
