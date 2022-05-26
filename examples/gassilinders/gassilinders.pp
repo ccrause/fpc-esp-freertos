@@ -60,7 +60,7 @@ begin
     Sleep(10);
     handleDisplayMessages;
     //processModemEvents;
-    Sleep(480);
+    Sleep(230);
 
     if ((loopcount and 3) = 0) or flagUpdateValvePositions then
     begin

@@ -333,8 +333,8 @@ begin
   if len > 0 then
   begin
     SetLength(Result, len);
-    logwrite('>> ');
-    logwriteln(Result);
+    //logwrite('>> ');
+    //logwriteln(Result);
   end
   else
   begin
@@ -494,7 +494,7 @@ begin
   // TODO: Perhaps force value > 0 on Nextion side?
   if nexPrimary.getValue(tmpNexObj, v) and (v > 0) then
   begin
-    v := v * portTICK_PERIOD_MS;
+    v := v * configTICK_RATE_HZ;
     updated := updated or (uint32(v) <> storage.CylinderChangeoverSettings.CylinderChangeDelay);
     storage.CylinderChangeoverSettings.CylinderChangeDelay := v;
   end;
@@ -506,6 +506,11 @@ begin
     b := v <> 0;
     updated := updated or (b <> storage.CylinderChangeoverSettings.PreferredCylinderMode);
     storage.CylinderChangeoverSettings.PreferredCylinderMode := b;
+    logwrite('Got pref cyl: ');
+    if b then
+      logwriteln('TRUE')
+    else
+      logwrite('FALSE');
   end;
 
   tmpNexObj.cid := PreferredCylinderId;
@@ -514,6 +519,8 @@ begin
   begin
     updated := updated or (uint32(v) <> storage.CylinderChangeoverSettings.PreferredCylinderIndex);
     storage.CylinderChangeoverSettings.PreferredCylinderIndex := v;
+    logwrite('Got pref. cylinder ID: ');
+    logwriteln(v);
   end;
 
   tmpNexObj.cid := ManualModeId;
@@ -523,6 +530,11 @@ begin
     b := v <> 0;
     updated := updated or (b <> storage.CylinderChangeoverSettings.ManualMode);
     storage.CylinderChangeoverSettings.ManualMode := b;
+    logwrite('Got manual mode: ');
+    if b then
+      logwriteln('TRUE')
+    else
+      logwrite('FALSE');
   end;
 
   tmpNexObj.cid := CylinderSelectedId;
@@ -531,6 +543,8 @@ begin
   begin
     updated := updated or (uint32(v) <> storage.CylinderChangeoverSettings.ManualCylinderSelected);
     storage.CylinderChangeoverSettings.ManualCylinderSelected := v;
+    logwrite('Got selected cylinder ID: ');
+    logwriteln(v);
   end;
 
   if updated then

@@ -7,16 +7,12 @@ uses
 
 const
   ADC1InputChannels: array[0..5] of integer = (0, 3, 6, 7, 4, 5);
-  ADC2InputChannels: array[0..3] of integer = (8, 9, 7, 0{, 6});  // FIXME: switch to channel0 to free up GPIO14 for JTAG
+  ADC2InputChannels: array[0..3] of integer = (8, 9, 7, 0);
   totalADCChannels = length(ADC1InputChannels) + length(ADC2InputChannels);
 
 var
-  // ADC input values in mV
-  //inputs: array[0..length(ADC1InputChannels)+length(ADC2InputChannels)-1] of integer;
-
   // Pressures in barG
   Pressures: array[0..length(ADC1InputChannels)+length(ADC2InputChannels)-1] of integer;
-
 
 procedure initADC;
 procedure readAdcData;
@@ -118,7 +114,7 @@ begin
       val := val div avgCount;
 
       tmp := esp_adc_cal_raw_to_voltage(val, @adc1_chars);
-      tmp := (inputs[i] + tmp) div 2;
+      tmp := (inputs[i]*3 + tmp) div 4;
       inputs[i] := tmp;
 
       if tmp < 200 then
@@ -142,7 +138,7 @@ begin
       val := val div avgCount;
 
       tmp := esp_adc_cal_raw_to_voltage(val, @adc2_chars);
-      tmp := (inputs[i+ADC2InputOffset] + tmp) div 2;
+      tmp := (inputs[i+ADC2InputOffset]*3 + tmp) div 4;
       inputs[i+ADC2InputOffset] := tmp;
 
       if tmp < 200 then

@@ -5,7 +5,7 @@ interface
 uses
   storage, readadc;
 
-procedure startPressureMonitorThread;
+//procedure startPressureMonitorThread;
 
 // Return currently selected open valve (A or B)
 function getCurrentOpenValve: char;
@@ -100,7 +100,7 @@ begin
   skipSMSNotificationOnStartup := false;
 end;
 
-procedure checkPressures;
+procedure checkPressuresNormal;
 var
   p1, p2: uint32;
 begin
@@ -155,6 +155,79 @@ begin
       waitForChangeover := false;
     end;
   end;
+end;
+
+procedure checkPressuresPrefCyl;
+var
+  p1, p2: uint32;
+begin
+  p1 := Pressures[cylA];
+  p2 := Pressures[cylB];
+
+  if (storage.CylinderChangeoverSettings.PreferredCylinderIndex = 0) then
+  begin
+    if (p1 + storage.CylinderChangeoverSettings.Hysteresis < storage.CylinderChangeoverSettings.MinCylinderPressure) then
+    begin
+      if not waitForChangeover then
+      begin
+        logwriteln('Start switchover time');
+        waitForChangeover := true;
+        timeoutStart := xTaskGetTickCount;
+      end
+      else if (xTaskGetTickCount - timeoutStart) > storage.CylinderChangeoverSettings.CylinderChangeDelay then
+      begin
+        logwriteln('Switching over');
+        valveCurrentlyOpen := vsValveB;
+        setValves(valveCurrentlyOpen);
+        waitForChangeover := false;
+      end;
+    end
+    // Cancel change-over if pressure is above minimum again
+    else if (p1 > storage.CylinderChangeoverSettings.MinCylinderPressure) and
+            (waitForChangeover or (valveCurrentlyOpen = vsValveB)) then
+    begin
+      logwriteln('Cancel switchover');
+      valveCurrentlyOpen := vsValveA;
+      setValves(valveCurrentlyOpen);
+      waitForChangeover := false;
+    end;
+  end
+  else if (storage.CylinderChangeoverSettings.PreferredCylinderIndex = 1) then
+  begin
+    if (p2 + storage.CylinderChangeoverSettings.Hysteresis < storage.CylinderChangeoverSettings.MinCylinderPressure) then
+    begin
+      if not waitForChangeover then
+      begin
+        logwriteln('Start switchover time');
+        waitForChangeover := true;
+        timeoutStart := xTaskGetTickCount;
+      end
+      else if (xTaskGetTickCount - timeoutStart) > storage.CylinderChangeoverSettings.CylinderChangeDelay then
+      begin
+        logwriteln('Switching over');
+        valveCurrentlyOpen := vsValveA;
+        setValves(valveCurrentlyOpen);
+        waitForChangeover := false;
+      end;
+    end
+    // Cancel change-over if pressure is above minimum again
+    else if (p2 > storage.CylinderChangeoverSettings.MinCylinderPressure) and
+            (waitForChangeover or (valveCurrentlyOpen = vsValveA)) then
+    begin
+      logwriteln('Cancel switchover');
+      valveCurrentlyOpen := vsValveB;
+      setValves(valveCurrentlyOpen);
+      waitForChangeover := false;
+    end;
+  end;
+end;
+
+procedure checkPressures;
+begin
+  if storage.CylinderChangeoverSettings.PreferredCylinderMode then
+    checkPressuresPrefCyl
+  else
+    checkPressuresNormal;
 end;
 
 function monitorPressureThread(parameter : pointer) : ptrint; noreturn;
