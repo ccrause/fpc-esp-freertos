@@ -1,7 +1,7 @@
 program gassilinders;
 
 uses
-  fmem, {fthreads,} freertos, task, nextion, portmacro, esp_err,
+  fmem, fthreads, freertos, task, nextion, portmacro, esp_err,
   gpio_types, readadc, nextionscreenconfig, shared,
   storage, pressureswitchover, handleSMS, logtouart,
   esp_heap_caps;
@@ -32,39 +32,50 @@ var
 
 begin
   initLogUart;
-  //Sleep(1000);
+  //logwriteln(#13#10'initADC');
+  //initADC;
+  startAdcThread;
 
-  logwriteln(#13#10'initADC');
-  initADC;
+  // Preload initial pressure readings
+  //readAdcData;
+  //readAdcData;
+  //readAdcData;
+  //readAdcData;
+  Sleep(1000);
 
-  logwriteln(#13#10'startDisplayThread');
-  //startDisplayThread;
-  //startDisplayTask;
-  Sleep(100);
+  storage.initDefaultSettings;
 
+  initModem;
+  loopcount := 0;
   initDisplays;
 
   // While storage thread isn't running, at least load defaults
-  storage.initDefaultSettings;
-
   logwriteln(#13#10'initCheckPressures');
   initCheckPressures;  // nonthreaded version
 
-  //initModem;
+  //startSMShandlerThread;
 
-  loopcount := 0;
   repeat
-    readAdcData;
-    Sleep(10);
-    checkPressures;
-    Sleep(10);
+    logwrite('-');
+    //readAdcData;
+    //Sleep(10);
+
+    // Only check pressures when not in manual mode
+    if not storage.CylinderChangeoverSettings.ManualMode then
+    begin
+      checkPressures;
+      Sleep(10);
+    end;
+
     handleDisplayMessages;
-    //processModemEvents;
+    Sleep(10);
+    processModemEvents;
     Sleep(230);
 
-    if ((loopcount and 3) = 0) or flagUpdateValvePositions then
+    if ((loopcount and 7) = 0) or flagUpdateValvePositions then
     begin
       updateDisplays;
+      Sleep(10);
     end;
 
     //if (loopcount and 7) = 0 then

@@ -2,9 +2,16 @@ unit handleSMS;
 
 interface
 
+type
+  TCylinderEvent = (ceWarningPressure, ceLowPressure, ceCylChangeover);
+
 procedure startSMShandlerThread;
 
-procedure doNotifySMS;
+//procedure doReportSMS;
+
+// For warning/low pressure, cylID indicates the cylinder ID
+// For changeover, cylID=0 refers to cylinder A, cylID=1 refers to cylinder B
+procedure sendNotification(msg: shortstring);
 
 //procedure initUart;
 procedure initModem;
@@ -14,27 +21,35 @@ implementation
 
 uses
   gsmtypes, gsmparser, shared, uart, uart_types, readadc, pressureswitchover,
-  storage, logtouart;
+  storage, logtouart, esp_err;
+
+type
+  TModemState = (msDoStart, msCheckAT, msWaitForReady, msCheckSerialSpeed, msWaitSimReady, msWaitOperator, msReady);
 
 const
-  UART_FIFO_BUFFER_SIZE = 1024;
+  UART_FIFO_BUFFER_SIZE = 4*1024;
   UartPort = 2;
   TX_PIN = 17;
   RX_PIN = 16;
 
 var
   gsm: TGsmParser;
-  s: shortstring;
-  waitForReady: boolean;
+  gotModemReady: boolean;
   i: integer;
   // Incoming phone message/call ID
   incomingPhoneNumber: string[16];
-  gotRequest, gotCall: boolean;
-  sendNotification: boolean;
+  gotRequest: boolean;
+  gotCall: boolean;
+  // Reporting/notification flags
+  flagReport: boolean;
+  flagNotification: boolean;
+  notifyMsg: shortstring;
+  modemState: TModemState = msDoStart;
 
 procedure initUart;
 var
   uart_cfg: Tuart_config;
+  err: Tesp_err;
 begin
   uart_cfg.baud_rate  := 9600;
   uart_cfg.data_bits  := UART_DATA_8_BITS;
@@ -44,17 +59,22 @@ begin
   uart_cfg.rx_flow_ctrl_thresh := 0; // unclear why this is required
   uart_cfg.source_clk := UART_SCLK_APB;
 
-  uart_driver_install(UartPort, UART_FIFO_BUFFER_SIZE, UART_FIFO_BUFFER_SIZE, 0, nil, 0);
+  err := uart_driver_install(UartPort, UART_FIFO_BUFFER_SIZE, UART_FIFO_BUFFER_SIZE, 0, nil, 0);
+  if err <> ESP_OK then
+  begin
+    logwrite('Error calling uart_driver_install #');
+    logwriteln(UartPort);
+  end;
   uart_param_config(UartPort, @uart_cfg);
   uart_set_pin(UartPort, TX_PIN, RX_PIN, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
-  //Sleep(100);
+  Sleep(100);
   uart_flush_input(UartPort);
 end;
 
 procedure serialTransmitStr(s: shortstring);
 begin
-  //logwrite('>> ');
-  //logwriteln(s);
+  logwrite('modem> ');
+  logwriteln(s);
   uart_write_bytes(UartPort, @s[1], length(s));
 end;
 
@@ -71,8 +91,8 @@ begin
     SetLength(Result, len);
     FillByte(Result[1], 0, len);
     len := uart_read_bytes(UartPort, @Result[1], len, 1);
-    //logwrite('<< ');
-    //logwriteln(Result);
+    logwrite('modem< ');
+    logwriteln(Result);
   end
   else
   begin
@@ -82,28 +102,38 @@ begin
   end;
 end;
 
-//function numberIsRegistered(const phoneNumber: shortstring): boolean;
-//var
-//  i: integer;
-//  s: string[10];
-//  num: uint32;
-//begin
-//  Sleep(10);
-//  s := '          ';
-//  for i := 4 to length(phoneNumber) do
-//    s[i-3] := phoneNumber[i];
-//  Val(s, num);
-//  logwrite('Phone number: ');
-//  logwriteln(num);
-//
-//  i := 0;
-//  Result := false;
-//  while (i < length(storage.PhoneNumbers)) and not Result do
-//  begin
-//    Result := storage.PhoneNumbers[i] = num;
-//    inc(i);
-//  end;
-//end;
+function numberIsRegistered(const phoneNumber: shortstring): boolean;
+var
+  i: integer;
+  s: string[16];
+  num: uint32;
+begin
+  Result := false;
+  Sleep(10);
+  if length(phoneNumber) < 18 then
+    SetLength(s, length(phoneNumber)-3)
+  else
+    exit;
+
+  // Assume number starts with +27 prefix, only start reading 4th character to get local number
+  for i := 4 to length(phoneNumber) do
+    s[i-3] := phoneNumber[i];
+  Val(s, num);
+  logwrite('Phone number: ');
+  logwrite(s);
+  logwrite('(');
+  logwrite(num);
+  logwriteln(')');
+
+  i := 0;
+  if num = 0 then
+    exit;
+  while (i < length(storage.PhoneNumbers)) and not Result do
+  begin
+    Result := storage.PhoneNumbers[i] = num;
+    inc(i);
+  end;
+end;
 
 procedure processCall(msg: shortstring);
 var
@@ -114,18 +144,19 @@ begin
   if j > 9 then
   begin
     incomingPhoneNumber := copy(msg, 9, j - 9);
+    gotCall := true;
     // Check if this is kind of a proper phone number
     // Mainly to filter out network messages
-    if (incomingPhoneNumber[1] = '+') and (length(incomingPhoneNumber) > 8) {and
-      numberIsRegistered(incomingPhoneNumber)} then
+    if (incomingPhoneNumber[1] = '+') and (length(incomingPhoneNumber) > 8) and
+      numberIsRegistered(incomingPhoneNumber) then
     begin
       gotRequest := true;
-      gotCall := true;
     end
     else
     begin
       logwrite('Rejecting number: ');
       logwriteln(incomingPhoneNumber);
+      gotRequest := false;
     end;
   end;
 end;
@@ -140,13 +171,14 @@ begin
     incomingPhoneNumber := copy(msg, 8, j - 8);
     // Check if this is kind of a proper phone number
     // Mainly to filter out network messages
-    if (incomingPhoneNumber[1] = '+') and (length(incomingPhoneNumber) > 8) {and
-      numberIsRegistered(incomingPhoneNumber)} then
+    if (incomingPhoneNumber[1] = '+') and (length(incomingPhoneNumber) > 8) and
+      numberIsRegistered(incomingPhoneNumber) then
       gotRequest := true
     else
     begin
       logwrite('Rejecting number: ');
       logwriteln(incomingPhoneNumber);
+      gotRequest := false;
     end;
   end;
 end;
@@ -162,39 +194,31 @@ begin
     processSMS(s)
   // Modem message sent after startup
   else if pos('RDY', s) > 0 then
-    waitForReady := true
+    gotModemReady := true
   // Incoming call identification
   else if pos('+CLIP', s) = 1 then
     processCall(s);
 end;
 
 function statusReport: shortstring;
-const
-  CylinderNames: array[0..9] of string[7] = (
-    'He (a)',
-    'He (b)',
-    'N2 (a)',
-    'N2 (b)',
-    'O2 (a)',
-    'O2 (b)',
-    'S/A(a)',
-    'S/A(b)',
-    'Ar (a)',
-    'Ar (b)');
 var
   s: string[4];
   i: integer;
 begin
-  Result := 'Cyl# Pres'#10;
+  Result := 'Cyl.   Pres'#10;
   for i := 0 to high(Pressures) do
   begin
-    //Str((i+1):4, s);
-    //Result := Result + s + ' ';
     Result := Result + CylinderNames[i] + ' ';
     Str(Pressures[i]:3, s);
     Result := Result + s + #10;
   end;
   Result := Result + 'Ar cylinder: ' + getCurrentOpenValve;
+  Result := Result + #10#10'Modem'#10;
+  Result := Result + 'Network: ' + gsm.getNetworkOperator;
+
+  Result := Result + #10'Signal: ';
+  Str(gsm.getNetworkSignalQuality, s);
+  Result := Result + s + '%';
 end;
 
 procedure sendStatusReport(constref dest: shortstring);
@@ -205,42 +229,49 @@ begin
   gsm.sendSMS(dest, status);
 end;
 
-procedure sendStatusReportToAll;
+procedure sendMessagetoAll(const msg: shortstring);
 var
-  status: shortstring;
-  s: string[12];
   i: integer;
+  phoneNumber: string[16];
 begin
-  status := statusReport;
   for i := 0 to high(PhoneNumbers) do
   begin
     if PhoneNumbers[i] > 0 then
     begin
-      Str(PhoneNumbers[i], s);
-      s := '+27' + s;
-      gsm.sendSMS(s, status);
+      Str(PhoneNumbers[i], phoneNumber);
+      phoneNumber := '+27' + phoneNumber;
+      gsm.sendSMS(phoneNumber, msg);
       Sleep(10);
     end;
   end;
 end;
 
-procedure doNotifySMS;
+procedure doReportSMS;
 begin
-  sendNotification := true;
+  flagReport := true;
 end;
 
-type
-  TModemState = (msDoStart, msCheckAT, msWaitForReady, msWaitSimReady, msWaitOperator, msReady);
-
-const
-  modemState: TModemState = msDoStart;
+procedure sendNotification(msg: shortstring);
+begin
+  notifyMsg := msg;
+  flagNotification := true;
+end;
 
 procedure initModem;
+const
+  canceledSMS: boolean = false;
+var
+  s: string[24];
 begin
-  initUart;
+  logwrite('Modem state: ');
+  Str(modemState, s);
+  logwriteln(s);
+
   if modemState = msDoStart then
   begin
-    waitForReady := false;
+    logwriteln('Init modem UART');
+    initUart;
+    gotModemReady := false;
     gsm.Init(@serialTransmitStr, @serialReadString);
     gsm.msgCallback := @handleUnsolicitedMsg;
     inc(modemState);
@@ -250,11 +281,20 @@ begin
   begin
     // Check if modem is active
     logwriteln('Checking AT');
-    gsm.sendATCommand('AT', 3);
+    gsm.sendATCommand('AT', 1);
     if not gsm.commandCompleted then
     begin
-      logwriteln('Waiting for READY');
-      inc(modemState);
+      // Could possibly be waiting for SMS message input, if previous SMS process was interrupted
+      if not canceledSMS then
+      begin
+        // transmit cancel command
+        serialTransmitStr(#27);
+        gsm.process;
+        canceledSMS := true;
+        logwriteln('Waiting for READY');
+      end
+      else
+        inc(modemState);
       exit;
     end
     else
@@ -267,23 +307,27 @@ begin
   if (modemState = msWaitForReady) then
   begin
     gsm.process;
-    if not waitForReady then
-      exit
+    if gotModemReady then
+      inc(modemState)
     else
-      inc(modemState);
+      exit;
   end;
 
   // Check if in auto baud mode
-  i := gsm.getBaudRate;
-  if i = 0 then
+  if modemState = msCheckSerialSpeed then
   begin
-    logwriteln('Auto baud detected.');
-    gsm.setBaudRate(115200);
-  end
-  else
-  begin
-    logwrite('Baud detected: ');
-    logwriteln(i);
+    i := gsm.getBaudRate;
+    if i = 0 then
+    begin
+      logwriteln('Auto baud detected.');
+      gsm.setBaudRate(115200);
+    end
+    else
+    begin
+      logwrite('Baud detected: ');
+      logwriteln(i);
+    end;
+    inc(modemState);
   end;
 
   // Check SIM is OK
@@ -302,7 +346,7 @@ begin
   end;
 
   // Check network connection is OK
-  if modemState =msWaitOperator then
+  if modemState = msWaitOperator then
   begin
     // Query network operator:
     s := gsm.getNetworkOperator;
@@ -316,8 +360,6 @@ begin
     begin
       logwriteln('Network not ready, retry');
       exit;
-      //gsm.process;
-      //Sleep(2000);
     end;
   end;
 
@@ -334,35 +376,46 @@ begin
   // Enable CLIP
   logwriteln('Enable CLIP');
   gsm.sendATCommand('AT+CLIP=1');
+  logwriteln('Modem init OK');
 end;
 
 procedure processModemEvents;
 begin
-  gsm.process;
   if not (modemState = msReady) then
     initModem
   else
   begin
+    logwrite('m');
+    gsm.process;
+    if gotCall then
+    begin
+      gotCall := false;
+      gsm.sendATCommand('ATH');
+      Sleep(10);
+    end;
+
     if gotRequest then
     begin
-      if gotCall then
-      begin
-        // Cancel incoming call
-        gsm.sendATCommand('ATH');
-        gotCall := false;
-      end;
       logwrite('Replying to ');
       logwriteln(incomingPhoneNumber);
       sendStatusReport(incomingPhoneNumber);
       gotRequest := false;
       incomingPhoneNumber := '';
+      Sleep(10);
     end;
 
-    if sendNotification then
+    if flagReport then
     begin
-      sendNotification := false;
+      flagReport := false;
       //sendStatusReport('+27836282994');
-      sendStatusReportToAll;
+      sendMessagetoAll(statusReport);
+      Sleep(10);
+    end;
+
+    if flagNotification then
+    begin
+      flagNotification := false;
+      sendMessagetoAll(notifyMsg);
     end;
   end;
 end;
@@ -370,13 +423,12 @@ end;
 function SMSthread(parameter : pointer): ptrint; noreturn;
 begin
   logwriteln('SMS thread starting');
-  initUart;
   initModem;
-
+  Sleep(100);
   // Wait for event from modem
   repeat
     processModemEvents;
-    Sleep(500);
+    Sleep(100);
   until false;
 end;
 
@@ -387,7 +439,7 @@ begin
   BeginThread(@SMSthread,      // thread to launch
              nil,              // pointer parameter to be passed to thread function
              threadID,         // new thread ID, not used further
-             2*4096);            // stacksize
+             16*1024);            // stacksize
 end;
 
 end.

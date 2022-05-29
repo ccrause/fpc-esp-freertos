@@ -187,6 +187,11 @@
       <OtherUnitFiles Value="../../freertos-fpc;../../freertos-fpc/esp-idf;../common;../sim800/GUI;../nextiontest/test;bin"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
+    <Parsing>
+      <SyntaxOptions>
+        <UseAnsiStrings Value="False"/>
+      </SyntaxOptions>
+    </Parsing>
     <CodeGeneration>
       <Checks>
         <RangeChecks Value="True"/>

@@ -10,19 +10,31 @@ const
   ADC2InputChannels: array[0..3] of integer = (8, 9, 7, 0);
   totalADCChannels = length(ADC1InputChannels) + length(ADC2InputChannels);
 
+  CylinderNames: array[0..totalADCChannels-1] of string[7] = (
+    'He (a)',
+    'He (b)',
+    'N2 (a)',
+    'N2 (b)',
+    'O2 (a)',
+    'O2 (b)',
+    'S/A(a)',
+    'S/A(b)',
+    'Ar (a)',
+    'Ar (b)');
+
 var
   // Pressures in barG
-  Pressures: array[0..length(ADC1InputChannels)+length(ADC2InputChannels)-1] of integer;
+  Pressures: array[0..totalADCChannels-1] of integer;
 
 procedure initADC;
 procedure readAdcData;
 
-//procedure startAdcThread;
+procedure startAdcThread;
 
 implementation
 
 uses
-  portmacro, shared;
+  portmacro, shared, logtouart;
 
 const
   // Offset into inputs array where ADC2 channels start
@@ -102,6 +114,7 @@ const
 var
   i, j, chan, val, tmp: integer;
 begin
+  logwriteln('Starting ADC thread');
   initADC;
 
   repeat
@@ -150,7 +163,7 @@ begin
       //Sleep(10);
     end;
 
-    Sleep(400);
+    Sleep(250);
   until false;
 end;
 
@@ -161,7 +174,7 @@ begin
   BeginThread(@ADCThread,      // thread to launch
              nil,              // pointer parameter to be passed to thread function
              threadID,         // new thread ID, not used further
-             4*1024);          // stacksize
+             8*1024);          // stacksize
 end;
 
 end.

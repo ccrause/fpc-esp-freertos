@@ -23,7 +23,7 @@ implementation
 uses
   nextion, readadc, uart, uart_types,
   shared, gpio, gpio_types, storage, portmacro, logtouart,
-  esp_err, task;
+  esp_err, task, pressureswitchover;
 
 {$include freertosconfig.inc} // To access configTICK_RATE_HZ
 
@@ -226,19 +226,6 @@ begin
   begin
     flagUpdateValvePositions := false;
     updateValvePositionsOnDisplays;
-    //if valveAIsOpen then
-    //  i := 0
-    //else
-    //  i := 1;
-    //nexPrimary.setValue(nexValveA, i);
-    //nexSecondary.setValue(nexValveA, i);
-    //
-    //if valveBIsOpen then
-    //  i := 0
-    //else
-    //  i := 1;
-    //nexPrimary.setValue(nexValveB, i);
-    //nexSecondary.setValue(nexValveB, i);
   end;
 
   Sleep(10);
@@ -252,8 +239,9 @@ end;
 procedure initPrimaryNextionUart;
 var
   uart_cfg: Tuart_config;
+  err: Tesp_err;
 begin
-  uart_cfg.baud_rate  := 9600;
+  uart_cfg.baud_rate  := 115200;
   uart_cfg.data_bits  := UART_DATA_8_BITS;
   uart_cfg.parity     := UART_PARITY_DISABLE;
   uart_cfg.stop_bits  := UART_STOP_BITS_1;
@@ -261,7 +249,13 @@ begin
   uart_cfg.rx_flow_ctrl_thresh := 0; // unclear why this is required
   uart_cfg.source_clk := UART_SCLK_APB;
 
-  uart_driver_install(PrimaryUartPort, UART_FIFO_BUFFER_SIZE, UART_FIFO_BUFFER_SIZE, 0, nil, 0);
+  err := uart_driver_install(PrimaryUartPort, UART_FIFO_BUFFER_SIZE, UART_FIFO_BUFFER_SIZE, 0, nil, 0);
+  if err <> ESP_OK then
+  begin
+    logwrite('Error calling uart_driver_install #');
+    logwriteln(PrimaryUartPort);
+  end;
+
   uart_param_config(PrimaryUartPort, @uart_cfg);
   uart_set_pin(PrimaryUartPort, PrimaryTX_PIN, PrimaryRX_PIN, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
   Sleep(100);
@@ -272,6 +266,7 @@ procedure initSecondaryNextionUart;
 var
   uart_cfg: Tuart_config;
   cfg: Tgpio_config;  // To control RSE pin of MAX485 tranceiver
+  err: Tesp_err;
 begin
   uart_cfg.baud_rate  := 9600;
   uart_cfg.data_bits  := UART_DATA_8_BITS;
@@ -281,7 +276,13 @@ begin
   uart_cfg.rx_flow_ctrl_thresh := 0; // unclear why this is required
   uart_cfg.source_clk := UART_SCLK_APB;
 
-  uart_driver_install(SecondaryUartPort, UART_FIFO_BUFFER_SIZE, UART_FIFO_BUFFER_SIZE, 0, nil, 0);
+  err := uart_driver_install(SecondaryUartPort, UART_FIFO_BUFFER_SIZE, UART_FIFO_BUFFER_SIZE, 0, nil, 0);
+  if err <> ESP_OK then
+  begin
+    logwrite('Error calling uart_driver_install #');
+    logwriteln(SecondaryUartPort);
+  end;
+
   uart_param_config(SecondaryUartPort, @uart_cfg);
   uart_set_pin(SecondaryUartPort, SecondaryTX_PIN, SecondaryRX_PIN, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
 
@@ -339,10 +340,6 @@ begin
   else
   begin
     Result := '';
-    //logwrite(':');
-    //logwrite(len);
-    // Give another task some space
-    //Sleep(10);
   end;
 end;
 
@@ -362,9 +359,10 @@ var
   tmpNexObj: TNextionComponent;
   updated: boolean;
 begin
+  logwriteln('');
   tmpNexObj.pid := 1;
   updated := false;
-  logwriteln('Reading warnings');
+  logwriteln('Warning pressure settings:');
   for i := WarningPressureIdStart to WarningPressureIdEnd do
   begin
     tmpNexObj.cid:= i;
@@ -376,13 +374,13 @@ begin
         updated := true;
         storage.PressureSettings.Warnings[i - WarningPressureIdStart] := v;
       end;
+      logwrite('  ');
+      logwriteln(v);
     end;
   end;
-  logwriteln('Done reading warnings');
 
   Sleep(10);
-
-  logwriteln('Reading lows');
+  logwriteln('Low pressure settings:');
   for i := LowPressureIdStart to LowPressureIdEnd do
   begin
     tmpNexObj.cid:= i;
@@ -394,10 +392,12 @@ begin
         updated := true;
         storage.PressureSettings.LowPressures[i - LowPressureIdStart] := v;
       end;
+      logwrite('  ');
+      logwriteln(v);
     end;
   end;
-  logwriteln('Done reading page1');
 
+  logwriteln('');
   if updated then
   begin
     storage.savePressureSettings;
@@ -411,6 +411,7 @@ var
   updated: boolean;
   tmpSMSNotificationsSet: TSMSNotificationsSet;
 begin
+  logwriteln('');
   tmpNexObj.pid := 2;
   updated := false;
   for i := PhoneNumberIdStart to PhoneNumberIdEnd do
@@ -424,26 +425,64 @@ begin
         updated := true;
         storage.PhoneNumbers[i - PhoneNumberIdStart] := v;
       end;
+      logwrite('Reading phone number: ');
+      logwriteln(v);
+    end
+    else
+    begin
+      logwrite('ERROR reading PhoneNumber: ');
+      logwriteln(v);
     end;
   end;
 
   tmpSMSNotificationsSet := [];
-
   tmpNexObj.cid := WarningPressureId;
   if nexPrimary.getValue(tmpNexObj, v) and (v > 0) then
+  begin
     include(tmpSMSNotificationsSet, snWarnPressure);
+    logwriteln('WarnPressure is set');
+  end
+  else
+  begin
+    exclude(tmpSMSNotificationsSet, snWarnPressure);
+    logwriteln('WarnPressure is clear');
+  end;
 
   tmpNexObj.cid := LowPressureId;
   if nexPrimary.getValue(tmpNexObj, v) and (v > 0) then
+  begin
     include(tmpSMSNotificationsSet, snLowPressure);
+    logwriteln('LowPressure is set');
+  end
+  else
+  begin
+    exclude(tmpSMSNotificationsSet, snLowPressure);
+    logwriteln('LowPressure is clear');
+  end;
 
   tmpNexObj.cid := AutoCylinderChangeoverId;
   if nexPrimary.getValue(tmpNexObj, v) and (v > 0) then
+  begin
     include(tmpSMSNotificationsSet, snAutoCylinderChangeOver);
+    logwriteln('AutoCylinderChangeOver is set');
+  end
+  else
+  begin
+    exclude(tmpSMSNotificationsSet, snAutoCylinderChangeOver);
+    logwriteln('AutoCylinderChangeOver is clear');
+  end;
 
   tmpNexObj.cid := RepeatNotificationId;
   if nexPrimary.getValue(tmpNexObj, v) and (v > 0) then
+  begin
     include(tmpSMSNotificationsSet, snRepeatNotifications);
+    logwriteln('RepeatNotifications is set');
+  end
+  else
+  begin
+    exclude(tmpSMSNotificationsSet, snRepeatNotifications);
+    logwriteln('RepeatNotifications is clear');
+  end;
 
   updated := not(storage.SMSNotificationSettings.Notifications = tmpSMSNotificationsSet);
   if updated then
@@ -456,7 +495,10 @@ begin
     updated := updated or (uint32(v) <> storage.SMSNotificationSettings.RepeatInterval);
     storage.SMSNotificationSettings.RepeatInterval := v;
   end;
+  logwrite('RepeatInterval is: ');
+  logwriteln(v);
 
+  logwriteln('');
   if updated then
     storage.saveNotificationSettings;
 end;
@@ -467,6 +509,7 @@ var
   tmpNexObj: TNextionComponent;
   updated, b: boolean;
 begin
+  logwriteln('');
   tmpNexObj.pid := 3;
   updated := false;
 
@@ -474,10 +517,10 @@ begin
   // TODO: Perhaps force value > 0 on Nextion side?
   if nexPrimary.getValue(tmpNexObj, v) and (v > 0) then
   begin
-    logwrite('Got minP: ');
-    logwriteln(v);
     updated := uint32(v) <> storage.CylinderChangeoverSettings.MinCylinderPressure;
     storage.CylinderChangeoverSettings.MinCylinderPressure := v;
+    logwrite('MinCylinderPressure: ');
+    logwriteln(v);
   end
   else
     logwriteln('ERROR reading MinP');
@@ -488,7 +531,11 @@ begin
   begin
     updated := updated or (uint32(v) <> storage.CylinderChangeoverSettings.Hysteresis);
     storage.CylinderChangeoverSettings.Hysteresis := v;
-  end;
+    logwrite('Hysteresis: ');
+    logwriteln(v);
+  end
+  else
+    logwriteln('ERROR reading Hysteresis');
 
   tmpNexObj.cid := CylinderChangeDelayId;
   // TODO: Perhaps force value > 0 on Nextion side?
@@ -497,7 +544,11 @@ begin
     v := v * configTICK_RATE_HZ;
     updated := updated or (uint32(v) <> storage.CylinderChangeoverSettings.CylinderChangeDelay);
     storage.CylinderChangeoverSettings.CylinderChangeDelay := v;
-  end;
+    logwrite('CylinderChangeDelay: ');
+    logwriteln(v);
+  end
+  else
+    logwriteln('ERROR reading CylinderChangeDelay');
 
   tmpNexObj.cid := PreferredCylinderModeId;
   // Switch, so mode is limited to 0 or 1
@@ -510,8 +561,10 @@ begin
     if b then
       logwriteln('TRUE')
     else
-      logwrite('FALSE');
-  end;
+      logwriteln('FALSE');
+  end
+  else
+    logwriteln('ERROR reading PreferredCylinderMode');
 
   tmpNexObj.cid := PreferredCylinderId;
   // Switch, so ID is limited to 0 or 1
@@ -519,9 +572,11 @@ begin
   begin
     updated := updated or (uint32(v) <> storage.CylinderChangeoverSettings.PreferredCylinderIndex);
     storage.CylinderChangeoverSettings.PreferredCylinderIndex := v;
-    logwrite('Got pref. cylinder ID: ');
+    logwrite('PreferredCylinderIndex: ');
     logwriteln(v);
-  end;
+  end
+  else
+    logwriteln('ERROR reading PreferredCylinderIndex');
 
   tmpNexObj.cid := ManualModeId;
   // Switch, so mode is limited to 0 or 1
@@ -530,12 +585,14 @@ begin
     b := v <> 0;
     updated := updated or (b <> storage.CylinderChangeoverSettings.ManualMode);
     storage.CylinderChangeoverSettings.ManualMode := b;
-    logwrite('Got manual mode: ');
+    logwrite('ManualMode: ');
     if b then
       logwriteln('TRUE')
     else
-      logwrite('FALSE');
-  end;
+      logwriteln('FALSE');
+  end
+  else
+    logwriteln('ERROR reading ManualMode');
 
   tmpNexObj.cid := CylinderSelectedId;
   // Switch, so ID is limited to 0 or 1
@@ -543,10 +600,13 @@ begin
   begin
     updated := updated or (uint32(v) <> storage.CylinderChangeoverSettings.ManualCylinderSelected);
     storage.CylinderChangeoverSettings.ManualCylinderSelected := v;
-    logwrite('Got selected cylinder ID: ');
+    logwrite('ManualCylinderSelected: ');
     logwriteln(v);
-  end;
+  end
+  else
+    logwriteln('ERROR reading ManualCylinderSelected');
 
+  logwriteln('');
   if updated then
     storage.saveCylinderChangeoverSettings;
 end;
@@ -569,38 +629,93 @@ begin
   flagUpdateValvePositions := true;
 end;
 
+procedure handleTouchEvent(pid, cid: integer; pressed: boolean);
+const
+  CylChangePage = 3;
+  ManualModeID = 9;
+  ManualCylinderSelectedID = 10;
+var
+  v: integer;
+  tmpNexObj: TNextionComponent;
+  updated, b: boolean;
+begin
+  //
+  if (pid = CylChangePage) then
+  begin
+    tmpNexObj.pid := 3;
+    if (cid = ManualModeID) and not pressed then
+    begin
+      tmpNexObj.cid := ManualModeId;
+      // Switch, so mode is limited to 0 or 1
+      if nexPrimary.getValue(tmpNexObj, v) then
+      begin
+        b := v <> 0;
+        storage.CylinderChangeoverSettings.ManualMode := b;
+        logwrite('Got manual mode: ');
+        if b then
+          logwriteln('TRUE')
+        else
+          logwriteln('FALSE');
+      end;
+    end;
+
+    if (cid in [ManualModeID, ManualCylinderSelectedID]) and not pressed then
+    begin
+      tmpNexObj.cid := CylinderSelectedId;
+      // Switch, so ID is limited to 0 or 1
+      if nexPrimary.getValue(tmpNexObj, v) then
+      begin
+        storage.CylinderChangeoverSettings.ManualCylinderSelected := v;
+        logwrite('Got selected cylinder ID: ');
+        logwriteln(v);
+      end;
+
+      // Now switch to selected valve
+      if storage.CylinderChangeoverSettings.ManualMode then
+      begin
+        if storage.CylinderChangeoverSettings.ManualCylinderSelected = 0 then
+          setValves(vsValveA)
+        else
+          setValves(vsValveB);
+      end;
+    end;
+  end;
+end;
+
+
 procedure initDisplays;
 begin
   flagUpdateValvePositions := false;
-{$ifndef debugprint}
+  // Use SecondaryUartPort for debug printing
+  {$ifndef debugprint}
   initSecondaryNextionUart;
   nexSecondary.writeHandler := @sendStringSecondary;
-{$endif}
   nexSecondary.init;
   // Try to discard possible junk in Nextion input buffer
   nexSecondary.sendCommand('');
   nexSecondary.sendCommand('rest');
-
-  initPrimaryNextionUart;
-  nexPrimary.readHandler := @readStringPrimary;
-  nexPrimary.writeHandler := @sendStringPrimary;
-  nexPrimary.pageExitHandler := @pageExitHandler;
-  nexPrimary.init;
-  // Try to discard possible junk in Nextion input buffer
-  nexPrimary.sendCommand('');
-  nexPrimary.sendCommand('rest');
-
-  // Wait for displays to restart before issuing commands
-  Sleep(100);
+  Sleep(250);
+  uart_flush_input(SecondaryUartPort);
   // Disable result codes on Nextion
   nexSecondary.sendCommand('bkcmd=0');
   // Disable touch events on Nextion
   nexSecondary.sendCommand('tsw 255,0');
   // Ensure displaying page 0
   nexSecondary.setCurrentPage(0);
+{$endif}
 
+  initPrimaryNextionUart;
+  nexPrimary.readHandler := @readStringPrimary;
+  nexPrimary.writeHandler := @sendStringPrimary;
+  nexPrimary.pageExitHandler := @pageExitHandler;
+  nexPrimary.touchHandler := @handleTouchEvent;
+  nexPrimary.init;
+  // Try to discard possible junk in Nextion input buffer
+  nexPrimary.sendCommand('');
+  nexPrimary.sendCommand('rest');
   // Wait for displays to restart before issuing commands
-  Sleep(100);
+  Sleep(250);
+  uart_flush_input(PrimaryUartPort);
   // Disable result codes on Nextion
   nexPrimary.sendCommand('bkcmd=0');
 end;
