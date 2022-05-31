@@ -69,7 +69,8 @@ type
                nsProcessReply,  // Got a reply header
                nsProcessEvent,  // Got an event header
                nsReplyWaitEnd,  // Wait for message ending, $FF $FF $FF
-               nsEventWaitEnd); // Wait for message ending, $FF $FF $FF. Also dispatches events
+               nsEventWaitEnd,  // Wait for message ending, $FF $FF $FF. Also dispatches events
+               nsWaitEnd);      // After unvalid characters, wait for message ending, $FF $FF $FF
 
   TNexAttribute = (naTxt, naVal);
 
@@ -115,13 +116,13 @@ type
     function setCurrentPage(pageID: integer): boolean;
     function getCurrentPage(out pageID: integer): boolean;
 
-    procedure sendCommand(cmd: shortstring);
+    procedure sendCommand(cmd: shortstring; timeout_ms: integer = 200);
   end;
 
 implementation
 
 uses
-  task, portmacro;
+  task, portmacro, logtouart;
 
 procedure sleep(Milliseconds: cardinal);  // Should be in SysUtils but including it causes an error in ESP32
 begin
@@ -149,7 +150,7 @@ begin
   if Assigned(readHandler) then
     data := readHandler()
   else
-    data := '';
+    exit;
 
   for c in data do
   begin
@@ -188,7 +189,8 @@ begin
           end;
 
         otherwise
-          //writeln('Unexpected start of message: $', HexStr(ord(c), 2));
+          //logwriteln('processInputData: unexpected start of message');
+          messageState := nsWaitEnd;
         end;
       end;
 
@@ -214,14 +216,15 @@ begin
                   messageState := nsEventWaitEnd;
                  end;
             otherwise
-              //writeln('Invalid dataCount in NexEventTouch: ', dataCount);
+              logwrite('Invalid dataCount in NexEventTouch: ');
+              logwriteln(dataCount);
             end;
             inc(dataCount);
           end;
 
           NexEventTouchCoord, NexEventTouchCoordSleep:
           begin
-            // Coordinates transmitter in big endian format
+            // Coordinates transmitted in big endian format
             case datacount of
               0: fX := ord(c)*256;
               1: fX := fX + ord(c);
@@ -233,12 +236,13 @@ begin
                    messageState := nsEventWaitEnd;
                  end;
             otherwise
-              //writeln('Invalid dataCount in NexEventTouch: ', dataCount);
+              logwrite('Invalid dataCount in NexEventTouch: ');
+              logwriteln(dataCount);
             end;
               inc(dataCount);
           end;
         otherwise
-          //writeln('Unexpected message in nsProcessEvent: $', HexStr(messageHeader, 2));
+          logwriteln('Unexpected message in nsProcessEvent');
         end;
       end;
 
@@ -262,7 +266,7 @@ begin
                 inc(dataCount);
               end
               else
-                //writeln('Text received exceeds 255 bytes');
+                logwriteln('Text received exceeds 255 bytes');
             end
             else  // $FF means end of text
             begin
@@ -289,11 +293,12 @@ begin
             inc(dataCount);
           end;
         otherwise
-          //writeln('Unexpected message in nsProcessReply: $', HexStr(messageHeader, 2));
+          logwrite('Unexpected message in nsProcessReply: $');
+          logwriteln(HexStr(messageHeader, 2));
         end;
       end;
 
-      nsEventWaitEnd, nsReplyWaitEnd:
+      nsEventWaitEnd, nsReplyWaitEnd, nsWaitEnd:
       begin
         if (ord(c) = $FF) then
         begin
@@ -316,7 +321,9 @@ begin
                                          NexEventTransparentDataDone..NexEventStartup]) and
                       Assigned(generalEventHandler) then
                 generalEventHandler(messageHeader);
-            end;
+            end
+            else if messageState = nsWaitEnd then
+              logwriteln('Resynced with end of message');
 
             messageState := nsNone;
           end;
@@ -332,8 +339,18 @@ begin
           else
             inc(startupZeroes);
         end
+        // Not an end of message sequence, mark this message as error, \
+        // reset FF count and wait for FF FF FF to resync
         else
-          //writeln('Unexpected character: "', HexStr(ord(c), 2), '" while waiting for terminating sequence FF FF FF');
+        begin
+          if not (messageState = nsWaitEnd) then
+          begin
+            logwrite('Unexpected character while waiting for terminating sequence: $');
+            logwriteln(HexStr(ord(c), 2));
+          end;
+          messageState := nsWaitEnd;
+          endMarkerCount := 0;
+        end;
       end;
     end;
   end;
@@ -353,7 +370,7 @@ end;
 function TNextionHandler.getText(const ID: TNextionComponent; out
   text: shortstring): boolean;
 var
-  buf: shortstring;
+  buf: string[32];
   timeoutCount: integer;
   p, c: string[3];
 begin
@@ -363,14 +380,16 @@ begin
   sendCommand(buf);
   commandCompleted := false;
   timeoutCount := 10; // 0.1 sec
+  processInputData;
   while not commandCompleted and (timeoutCount > 0) do
   begin
-    processInputData;
-    dec(timeoutCount);
     Sleep(10);
+    dec(timeoutCount);
+    processInputData;
   end;
   Result := commandCompleted and (messageHeader = NexStringData);
-
+  if timeoutcount = 0 then
+    logwriteln('Timeout waiting for getText reply');
   if Result then
     text := fText
   else
@@ -379,9 +398,9 @@ end;
 
 function TNextionHandler.setValue(const ID: TNextionComponent; value: integer): boolean;
 var
-  buf: shortstring;
+  buf: string[32];
   p, c: string[3];
-  v: string[8];
+  v: string[10];
 begin
   Str(ID.pid, p);
   Str(ID.cid, c);
@@ -394,7 +413,7 @@ end;
 function TNextionHandler.getValue(const ID: TNextionComponent; out val: integer
   ): boolean;
 var
-  buf: shortstring;
+  buf: string[32];
   timeoutCount: integer;
   p, c: string[3];
 begin
@@ -404,14 +423,17 @@ begin
   sendCommand(buf);
 
   commandCompleted := false;
-  timeoutCount := 10; // 0.1 sec
+  timeoutCount := 20;
+  processInputData;
   while not commandCompleted and (timeoutCount > 0) do
   begin
-    processInputData;
-    dec(timeoutCount);
     Sleep(10);
+    dec(timeoutCount);
+    processInputData;
   end;
   Result := commandCompleted and (messageHeader = NexNumericData);
+  if timeoutcount = 0 then
+    logwriteln('Timeout waiting for getValue reply');
 
   if Result then
     val := fNumber
@@ -421,7 +443,7 @@ end;
 
 function TNextionHandler.setCurrentPage(pageID: integer): boolean;
 var
-  cmd: shortstring;
+  cmd: string[16];
   p: string[3];
 begin
   Str(pageID, p);
@@ -431,30 +453,54 @@ begin
 end;
 
 function TNextionHandler.getCurrentPage(out pageID: integer): boolean;
+var
+  timeoutCount: integer;
 begin
   sendCommand('sendme');
   commandCompleted := false;
-  while not commandCompleted do
+  timeoutCount := 10;
+  processInputData;
+  while not commandCompleted and (timeoutcount > 0) do
+  begin
+    Sleep(10);
+    dec(timeoutCount);
     processInputData;
+  end;
+
+  if timeoutcount = 0 then
+    logwriteln('Timeout waiting for getCurrentPage reply');
 
   Result := messageHeader = NexCurrentPageNo;
   pageID := fPid;
 end;
 
-procedure TNextionHandler.sendCommand(cmd: shortstring);
+procedure TNextionHandler.sendCommand(cmd: shortstring; timeout_ms: integer);
+var
+  timeoutCount: integer;
 begin
   // Complete processing of current data
-  while messageState <> nsNone do
+  timeoutCount := 20;
+  processInputData;
+  while not commandCompleted and (messageState <> nsNone) and (timeoutcount > 0) do
   begin
-    processInputData;
     Sleep(10);
+    dec(timeoutCount);
+    processInputData;
+  end;
+
+  // If still in transient state, reset state for this message
+  // Risk of discarding asynchronous event data,
+  // perhaps check if input buffer is empty?
+  if (timeoutcount = 0) {and (messageState = nsWaitEnd)} then
+  begin
+    messageState := nsNone;
+    // TODO: Flush input buffer, in case there is some stale data floating around.
   end;
 
   // Check if write handler is assigned, just in case...
   if Assigned(WriteHandler) then
   begin
     writeHandler(cmd);
-
     SetLength(cmd, 3);
     cmd[1] := #$FF;
     cmd[2] := #$FF;
