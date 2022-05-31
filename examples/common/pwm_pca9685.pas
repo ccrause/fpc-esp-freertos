@@ -3,7 +3,7 @@ unit pwm_pca9685;
 interface
 
 uses
-  i2c_obj;
+  i2c_obj, esp_err;
 
 type
   TPinDrive = (pdTotemPole, pdOpenDrain);
@@ -18,34 +18,34 @@ type
     fPWMFreq: uint32;
   public
     // I2C address should be 7-bit address
-    procedure Initialize(Ai2c: TI2cMaster; I2Caddress: byte = $40);
+    function Initialize(Ai2c: TI2cMaster; I2Caddress: byte = $40): Tesp_err;
     // Reset to power up state
-    procedure reset;
+    function reset: Tesp_err;
     // Enters sleep mode, disable PWM clock (and output) and preserves PWM settings
     // Hardware alternative: pull #OE pin to Vcc
-    procedure enterSleep;
+    function enterSleep: Tesp_err;
     // Restarts after sleep mode was entered - previous PWM settings are preserved
-    procedure exitSleep;
+    function exitSleep: Tesp_err;
     // If an improved frequency estimate for the chip is available
     // else a default value of 25 MHz is used for calculations
     procedure setOscillatorFrequency(AOscFreq: uint32);
     // Startup default is 200 Hz
-    procedure setPWMFreq(freq: uint32);
+    function setPWMFreq(freq: uint32): Tesp_err;
     function getPrescaleValue: byte;
     // Startup default is totem pole
-    procedure setPinDriveMode(mode: TPinDrive);
+    function setPinDriveMode(mode: TPinDrive): Tesp_err;
     // Set PWM ON and OFF start counts.  A PWM cycle is divided into 4096 counts.
     // For simple PWM, set onStartTime=0, then (offStartTime-1)/4096 will be the ON duty cycle
-    procedure setPWM(channel: byte; onStartTime, offStartTime: uint16);
+    function setPWM(channel: byte; onStartTime, offStartTime: uint16): Tesp_err;
 
     // Helper for typical Servo motors, specify ON time
-    procedure setOnMicroseconds(channel: uint32; us: int16);
+    function setOnMicroseconds(channel: uint32; us: int16): Tesp_err;
   end;
 
 implementation
 
 uses
-  esp_err, task;
+  task;
 
 const
   MODE1         = $00;    // Mode Register 1
@@ -92,7 +92,7 @@ const
 
 { TPwmPca9685 }
 
-procedure TPwmPca9685.Initialize(Ai2c: TI2cMaster; I2Caddress: byte);
+function TPwmPca9685.Initialize(Ai2c: TI2cMaster; I2Caddress: byte): Tesp_err;
 var
   tmp: byte;
 begin
@@ -105,45 +105,54 @@ begin
   vTaskDelay(1);
 
   // Enable auto increment for sequential register writes
-  EspErrorCheck(fi2c.ReadByteFromReg(fI2CAddress, byte(MODE1), tmp));
+  Result := fi2c.ReadByteFromReg(fI2CAddress, byte(MODE1), tmp);
+  if Result <> ESP_OK then exit;
+
   tmp := tmp or AI;
-  EspErrorCheck(fi2c.WriteByteToReg(fI2CAddress, byte(MODE1), tmp));
+  Result := fi2c.WriteByteToReg(fI2CAddress, byte(MODE1), tmp);
+  if Result <> ESP_OK then exit;
 
   // Configure MODE2 register for totem pole drive (OUTDRV=1) and outputs change on I2C ACK (OCH=1)
   tmp := OUTDRV or OCH;
-  EspErrorCheck(fi2c.WriteByteToReg(fI2CAddress, byte(MODE2), tmp));
+  Result := fi2c.WriteByteToReg(fI2CAddress, byte(MODE2), tmp);
 end;
 
-procedure TPwmPca9685.reset;
+function TPwmPca9685.reset: Tesp_err;
 var
   SWRST: byte = 6;
 begin
-  EspErrorCheck(fi2c.WriteBytes(0, @SWRST, 1));
+  Result := fi2c.WriteBytes(0, @SWRST, 1);
 end;
 
-procedure TPwmPca9685.enterSleep;
+function TPwmPca9685.enterSleep: Tesp_err;
 var
   mode: byte;
 begin
-  EspErrorCheck(fi2c.ReadBytefromReg(fI2CAddress, byte(MODE1), mode));
+  Result := fi2c.ReadBytefromReg(fI2CAddress, byte(MODE1), mode);
+  if Result <> ESP_OK then exit;
+
   mode := mode or SLEEP;
-  EspErrorCheck(fi2c.WriteByteToReg(fI2CAddress, byte(MODE1), mode));
+  Result := fi2c.WriteByteToReg(fI2CAddress, byte(MODE1), mode);
 end;
 
-procedure TPwmPca9685.exitSleep;
+function TPwmPca9685.exitSleep: Tesp_err;
 var
   oldmode1, newmode1: byte;
 begin
-  EspErrorCheck(fi2c.ReadBytefromReg(fI2CAddress, byte(MODE1), oldmode1));
+  Result := fi2c.ReadBytefromReg(fI2CAddress, byte(MODE1), oldmode1);
+  if Result <> ESP_OK then exit;
+
   // Clear sleep bit if RESTART is set
   if (oldmode1 and RESTART) > 0 then
   begin
     newmode1 := oldmode1 and not(SLEEP);
-    EspErrorCheck(fi2c.WriteByteToReg(fI2CAddress, byte(MODE1), newmode1));
+    Result := fi2c.WriteByteToReg(fI2CAddress, byte(MODE1), newmode1);
+    if Result <> ESP_OK then exit;
+
     // Delay for a minimum of 500 us
     vTaskDelay(1);
     newmode1 := oldmode1 or RESTART;
-    EspErrorCheck(fi2c.WriteByteToReg(fI2CAddress, byte(MODE1), newmode1));
+    Result := fi2c.WriteByteToReg(fI2CAddress, byte(MODE1), newmode1);
   end
   else
     writeln('exitSleep called but RESTART bit not set');
@@ -154,7 +163,7 @@ begin
   fOscFreq := AOscFreq;
 end;
 
-procedure TPwmPca9685.setPWMFreq(freq: uint32);
+function TPwmPca9685.setPWMFreq(freq: uint32): Tesp_err;
 var
   prescaler: uint32;
   oldmode1, newmode1: byte;
@@ -169,14 +178,18 @@ begin
     prescaler := 255;
 
   // Sleep mode must be enabled to update PRE_SCALE
-  EspErrorCheck(fi2c.ReadBytefromReg(fI2CAddress, byte(MODE1), oldmode1));
-  newmode1 := oldmode1 and not(RESTART) or SLEEP;
-  EspErrorCheck(fi2c.WriteByteToReg(fI2CAddress, byte(MODE1), newmode1));
+  Result := fi2c.ReadBytefromReg(fI2CAddress, byte(MODE1), oldmode1);
+  if Result <> ESP_OK then exit;
 
-  EspErrorCheck(fi2c.WriteByteToReg(fI2CAddress, byte(PRE_SCALE), byte(prescaler)));
+  newmode1 := oldmode1 and not(RESTART) or SLEEP;
+  Result := fi2c.WriteByteToReg(fI2CAddress, byte(MODE1), newmode1);
+  if Result <> ESP_OK then exit;
+
+  Result := fi2c.WriteByteToReg(fI2CAddress, byte(PRE_SCALE), byte(prescaler));
+  if Result <> ESP_OK then exit;
 
   // Restore previous mode
-  EspErrorCheck(fi2c.WriteByteToReg(fI2CAddress, byte(MODE1), oldmode1));
+  Result := fi2c.WriteByteToReg(fI2CAddress, byte(MODE1), oldmode1);
 end;
 
 function TPwmPca9685.getPrescaleValue: byte;
@@ -184,45 +197,51 @@ begin
   EspErrorCheck(fi2c.ReadBytefromReg(fI2CAddress, byte(PRE_SCALE), Result));
 end;
 
-procedure TPwmPca9685.setPinDriveMode(mode: TPinDrive);
+function TPwmPca9685.setPinDriveMode(mode: TPinDrive): Tesp_err;
 var
   mode2: byte;
 begin
-  EspErrorCheck(fi2c.ReadBytefromReg(fI2CAddress, byte(MODE2), mode2));
+  Result := fi2c.ReadBytefromReg(fI2CAddress, byte(MODE2), mode2);
+  if Result <> ESP_OK then exit;
+
   if mode = pdTotemPole then
     mode2 := mode2 or OUTDRV
   else
     mode2 := mode2 and not(OUTDRV);
-  EspErrorCheck(fi2c.WriteByteToReg(fI2CAddress, byte(MODE2), mode2));
+  Result := fi2c.WriteByteToReg(fI2CAddress, byte(MODE2), mode2);
 end;
 
-procedure TPwmPca9685.setPWM(channel: byte; onStartTime, offStartTime: uint16);
+function TPwmPca9685.setPWM(channel: byte; onStartTime, offStartTime: uint16): Tesp_err;
 var
   tmp: array[0..3] of byte;
+  err: Tesp_err;
 begin
   tmp[0] := byte(onStartTime);
   tmp[1] := onStartTime shr 8;
   tmp[2] := byte(offStartTime);
   tmp[3] := offStartTime shr 8;
 
-  EspErrorCheck(fi2c.WriteBytesToReg(fI2CAddress, byte(LED0_ON_L + 4*channel), @tmp[0], 4));
+  Result := fi2c.WriteBytesToReg(fI2CAddress, byte(LED0_ON_L + 4*channel), @tmp[0], 4);
+  if Result <> ESP_OK then exit;
 
   // Wait for settings to update, then check if SLEEP is cleared
   vTaskDelay(1);
-  EspErrorCheck(fi2c.ReadBytesFromReg(fI2CAddress, byte(MODE1), @tmp[0], 1));
+  Result := fi2c.ReadBytesFromReg(fI2CAddress, byte(MODE1), @tmp[0], 1);
+  if Result <> ESP_OK then exit;
+
   if tmp[0] and SLEEP > 0 then
   begin
     tmp[0] := tmp[0] and not(SLEEP);
-    EspErrorCheck(fi2c.WriteBytesToReg(fI2CAddress, byte(MODE1), @tmp[0], 1));
+    Result := fi2c.WriteBytesToReg(fI2CAddress, byte(MODE1), @tmp[0], 1);
   end;
 end;
 
-procedure TPwmPca9685.setOnMicroseconds(channel: uint32; us: int16);
+function TPwmPca9685.setOnMicroseconds(channel: uint32; us: int16): Tesp_err;
 var
   offStart: uint16;
 begin
   offStart := (((uint32(us) * 4096 * fPWMFreq + 500000)) div 1000000) - 1;
-  setPWM(channel, 0, offStart);
+  Result := setPWM(channel, 0, offStart);
 end;
 
 end.
