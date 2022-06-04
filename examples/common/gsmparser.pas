@@ -408,9 +408,6 @@ begin
   if Assigned(sendString) then
     sendString(cmd);
 
-  //timeout := timeoutSeconds / 24 / 3600;
-  //startTime := now();
-
   startTime := xTaskGetTickCount;
   delta := 0;
   // Read and parse response
@@ -424,11 +421,11 @@ begin
   if not commandCompleted then
   begin
     logwriteln('Parser timeout');
-    logwrite('Parser tmp: ');
-    logwriteln(tmp);
+    //logwrite('Parser tmp: ');
+    //logwriteln(tmp);
     //serial.Flush;
 
-    //resetParser;
+    resetParser;
   end;
 end;
 
@@ -519,7 +516,7 @@ var
   s: shortstring;
 begin
   Result := ssError;
-  sendATCommand('AT+CPIN?', 2);
+  sendATCommand('AT+CPIN?', 5);
   if commandSuccess and (commandResponse <> '') then
   begin
     s := commandResponse;
@@ -553,7 +550,7 @@ var
   s: shortstring;
 begin
   Result := '';
-  sendATCommand('AT+COPS?');
+  sendATCommand('AT+COPS?', 5);
   if commandSuccess and (commandResponse <> '') then
   begin
     s := commandResponse;
@@ -606,7 +603,7 @@ var
   i, err: integer;
   s: shortstring;
 begin
-  sendATCommand('AT+CSQ');
+  sendATCommand('AT+CSQ', 5);
   Result := 0; // not known or not detectable
   if commandSuccess and (commandResponse <> '') then
   begin
@@ -636,7 +633,7 @@ var
   i, err: integer;
   s, tmpStr: shortstring;
 begin
-  sendATCommand('AT+CBC');
+  sendATCommand('AT+CBC', 5);
   if commandSuccess and (commandResponse <> '') then
   begin
     s := commandResponse;
@@ -681,7 +678,7 @@ function TGsmParser.getBaudRate: integer;
 var
   i: integer;
 begin
-  sendATCommand('AT+IPR?');
+  sendATCommand('AT+IPR?', 5);
   Result := -1;
   // Response = +IPR: 115200
   if commandSuccess and (commandResponse <> '') then
