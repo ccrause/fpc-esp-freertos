@@ -7,13 +7,10 @@ type
 
 procedure startSMShandlerThread;
 
-//procedure doReportSMS;
-
 // For warning/low pressure, cylID indicates the cylinder ID
 // For changeover, cylID=0 refers to cylinder A, cylID=1 refers to cylinder B
 procedure sendNotification(msg: shortstring);
 
-//procedure initUart;
 procedure initModem;
 procedure processModemEvents;
 
@@ -41,7 +38,6 @@ var
   gotRequest: boolean;
   gotCall: boolean;
   // Reporting/notification flags
-  flagReport: boolean;
   flagNotification: boolean;
   notifyMsg: shortstring;
   modemState: TModemState = msDoStart;
@@ -246,11 +242,6 @@ begin
   end;
 end;
 
-procedure doReportSMS;
-begin
-  flagReport := true;
-end;
-
 procedure sendNotification(msg: shortstring);
 begin
   notifyMsg := msg;
@@ -403,14 +394,6 @@ begin
       Sleep(10);
     end;
 
-    if flagReport then
-    begin
-      flagReport := false;
-      //sendStatusReport('+27836282994');
-      sendMessagetoAll(statusReport);
-      Sleep(10);
-    end;
-
     if flagNotification then
     begin
       flagNotification := false;
@@ -422,9 +405,8 @@ end;
 function SMSthread(parameter : pointer): ptrint; noreturn;
 begin
   logwriteln('SMS thread starting');
-  initModem;
-  Sleep(250);
-  // Wait for event from modem
+  // Flag to initialize from scratch, starting with UART
+  modemState := msDoStart;
   repeat
     processModemEvents;
     Sleep(500);
