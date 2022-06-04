@@ -263,10 +263,6 @@ const
 var
   s: string[24];
 begin
-  logwrite('Modem state: ');
-  Str(modemState, s);
-  logwriteln(s);
-
   if modemState = msDoStart then
   begin
     logwriteln('Init modem UART');
@@ -281,7 +277,7 @@ begin
   begin
     // Check if modem is active
     logwriteln('Checking AT');
-    gsm.sendATCommand('AT', 1);
+    gsm.sendATCommand('AT', 5);
     if not gsm.commandCompleted then
     begin
       // Could possibly be waiting for SMS message input, if previous SMS process was interrupted
@@ -382,7 +378,10 @@ end;
 procedure processModemEvents;
 begin
   if not (modemState = msReady) then
-    initModem
+  begin
+    logwrite('i');
+    initModem;
+  end
   else
   begin
     logwrite('m');
@@ -424,11 +423,11 @@ function SMSthread(parameter : pointer): ptrint; noreturn;
 begin
   logwriteln('SMS thread starting');
   initModem;
-  Sleep(100);
+  Sleep(250);
   // Wait for event from modem
   repeat
     processModemEvents;
-    Sleep(100);
+    Sleep(500);
   until false;
 end;
 
