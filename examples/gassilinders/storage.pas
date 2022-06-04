@@ -66,7 +66,6 @@ var
 
 function initNVS: Tesp_err;
 begin
-  logwriteln('nvs_flash_init');
   Result := nvs_flash_init();
   if (Result = ESP_ERR_NVS_NO_FREE_PAGES) {$ifdef CPULX6} or (Result = ESP_ERR_NVS_NEW_VERSION_FOUND){$endif} then
   begin
@@ -76,7 +75,6 @@ begin
   end;
   EspErrorCheck(Result);
 
-  logwriteln('nvs_open');
   if Result = ESP_OK then
     Result := nvs_open('storage', NVS_READWRITE, @storageHandle);
 
@@ -84,11 +82,6 @@ begin
   begin
     storageHandle := 0;
     logwriteln('nvs_open failed');
-  end
-  else
-  begin
-    logwrite('Storage handle = ');
-    logwriteln(storageHandle);
   end;
 end;
 
@@ -125,147 +118,132 @@ end;
 function loadSettings: Tesp_err;
 var
   sz: Tsize;
+  err: Tesp_err;
 begin
-  logwriteln('loadSettings not implemented');
-{  Result := initNVS;
+  Result := ESP_OK;
+  err := initNVS;
 
-  if Result = ESP_OK then
+  if err = ESP_OK then
   begin
-    sz := 0;
-    writeln('Requesting nvs_get_blob with @PressureSettings = ', HexStr(@PressureSettings), ', @sz = ', HexStr(@sz));
-    Result := nvs_get_blob(storageHandle, 'PresSettings', @PressureSettings, @sz);
-    writeln('Result reading pressure settings: ', esp_err_to_name(Result));
-    writeln('Size read: ', sz);
-
-    if {(Result <> ESP_OK) or} (sz <> SizeOf(PressureSettings)) then
+    sz := SizeOf(PressureSettings);
+    err := nvs_get_blob(storageHandle, 'PresSettings', @PressureSettings, @sz);
+    if (err <> ESP_OK) or (sz <> SizeOf(PressureSettings)) then
     begin
-      writeln('Error reading pressure settings: ', esp_err_to_name(Result));
-      writeln('Size read: ', sz);
-      //Result := ESP_FAIL;
-    end
-    else
-      writeln('Read ', sz, ' bytes from PresSettings');
-  end;
-
-  if Result = ESP_OK then
-  begin
-    Result := nvs_get_blob(storageHandle, 'PhoneNumbers', @PhoneNumbers, @sz);
-    if sz <> SizeOf(PhoneNumbers) then
-    begin
-      //Result := ESP_FAIL;
-      writeln('Error reading phone numbers: ', esp_err_to_name(Result));
+      logwrite('Error reading pressure settings: ');
+      logwriteln(esp_err_to_name(Result));
+      Result := ESP_FAIL;
     end;
-  end;
 
-  if Result = ESP_OK then
-  begin
-    Result := nvs_get_blob(storageHandle, 'SMSNotif', @SMSNotificationSettings, @sz);
-    if (Result <> ESP_OK) or (sz <> SizeOf(SMSNotificationSettings)) then
+    sz := SizeOf(PhoneNumbers);
+    err := nvs_get_blob(storageHandle, 'PhoneNumbers', @PhoneNumbers, @sz);
+    if (err <> ESP_OK) or (sz <> SizeOf(PhoneNumbers)) then
     begin
       Result := ESP_FAIL;
-      writeln('Error reading SMS notification settings: ', esp_err_to_name(Result));
-      //initDefaultSettingsSMSNotifications;
+      logwrite('Error reading phone numbers: ');
+      logwriteln(esp_err_to_name(Result));
     end;
-  end;
 
-  if Result = ESP_OK then
-  begin
-    Result := nvs_get_blob(storageHandle, 'CylChangeover', @CylinderChangeoverSettings, @sz);
-    if (Result <> ESP_OK) or (sz <> SizeOf(SMSNotificationSettings)) then
+    sz := SizeOf(SMSNotificationSettings);
+    err := nvs_get_blob(storageHandle, 'SMSNotif', @SMSNotificationSettings, @sz);
+    if (err <> ESP_OK) or (sz <> SizeOf(SMSNotificationSettings)) then
     begin
       Result := ESP_FAIL;
-      writeln('Error reading cylinder changeover settings: ', esp_err_to_name(Result));
-      //initDefaultSettingsCylinderChangeover;
+      logwrite('Error reading SMS notification settings: ');
+      logwriteln(esp_err_to_name(Result));
     end;
-  end;
 
-  if Result <> ESP_OK then
-  begin
-    writeln('Loading default settings.');
-    initDefaultSettings;
-  end;
+    sz := SizeOf(CylinderChangeoverSettings);
+    err := nvs_get_blob(storageHandle, 'CylChangeover', @CylinderChangeoverSettings, @sz);
+    if (err <> ESP_OK) or (sz <> SizeOf(CylinderChangeoverSettings)) then
+    begin
+      Result := ESP_FAIL;
+      logwrite('Error reading cylinder changeover settings: ');
+      logwriteln(esp_err_to_name(Result));
+    end;
 
-  if storageHandle <> 0 then
     nvs_close(storageHandle)
-  else
-    writeln('loadSettings: storageHandle = 0'); }
+  end;
 end;
 
 function savePressureSettings: Tesp_err;
 begin
-  logwriteln('savePressureSettings not implemented');
-{  Result := initNVS;
+  Result := initNVS;
 
   if Result = ESP_OK then
   begin
-    writeln('Saving pressure settings with size = ', SizeOf(PressureSettings));
     Result := nvs_set_blob(storageHandle, 'PresSettings', @PressureSettings,
                           SizeOf(PressureSettings));
+    if Result <> ESP_OK then
+    begin
+      logwrite('Error saving PressureSettings: ');
+      logwriteln(esp_err_to_name(Result));
+    end;
+
+    if Result = ESP_OK then
+    begin
+      Result := nvs_commit(storageHandle);
+      if Result = ESP_OK then
+        nvs_close(storageHandle);
+    end;
   end;
-
-  if Result <> ESP_OK then
-    writeln('Error saving pressure settings: ', esp_err_to_name(Result))
-  else
-    writeln('Pressure settings saved');
-
-
-  if storageHandle <> 0 then
-  begin
-    Result := nvs_commit(storageHandle);
-    nvs_close(storageHandle);
-  end
-  else
-    writeln('Error - storageHandle = 0');  }
 end;
 
 function saveNotificationSettings: Tesp_err;
+var
+  err: Tesp_err;
 begin
-  logwriteln('saveNotificationSettings not implemented');
-{  Result := initNVS;
+  Result := initNVS;
 
   if Result = ESP_OK then
-    Result := nvs_set_blob(storageHandle, 'PhoneNumbers', @PhoneNumbers,
-                          SizeOf(PhoneNumbers));
-
-  if Result = ESP_OK then
-    writeln('Saved PhoneNumbers, size = ', SizeOf(PhoneNumbers));
-
-  if Result = ESP_OK then
-    Result := nvs_set_blob(storageHandle, 'SMSNotif', @SMSNotificationSettings,
-                           SizeOf(SMSNotificationSettings));
-
-  if Result = ESP_OK then
-    writeln('Saved SMSNotifications, size = ', SizeOf(SMSNotificationSettings))
-  else
-    writeln('Error saving notification settings: ', esp_err_to_name(Result));
-
-  if storageHandle <> 0 then
   begin
-    Result := nvs_commit(storageHandle);
-    nvs_close(storageHandle);
-  end
-  else
-    writeln('Error - storageHandle = 0'); }
+    err := nvs_set_blob(storageHandle, 'PhoneNumbers', @PhoneNumbers,
+                          SizeOf(PhoneNumbers));
+    if err <> ESP_OK then
+    begin
+      Result := err;
+      logwrite('Error saving PhoneNumbers: ');
+      logwriteln(esp_err_to_name(err));
+    end;
+
+    err := nvs_set_blob(storageHandle, 'SMSNotif', @SMSNotificationSettings,
+                             SizeOf(SMSNotificationSettings));
+    if err <> ESP_OK then
+    begin
+      Result := err;
+      logwrite('Error saving SMSNotificationSettings: ');
+      logwriteln(esp_err_to_name(err));
+    end;
+
+    if Result = ESP_OK then
+    begin
+      Result := nvs_commit(storageHandle);
+      if Result = ESP_OK then
+        nvs_close(storageHandle);
+    end;
+  end;
 end;
 
 function saveCylinderChangeoverSettings: Tesp_err;
 begin
-  logwriteln('saveCylinderChangeoverSettings not implemented');
-
-{  Result := initNVS;
+  Result := initNVS;
 
   if Result = ESP_OK then
+  begin
     Result := nvs_set_blob(storageHandle, 'CylChangeover', @CylinderChangeoverSettings,
                            SizeOf(CylinderChangeoverSettings));
+    if Result <> ESP_OK then
+    begin
+      logwrite('Error saving CylinderChangeoverSettings: ');
+      logwriteln(esp_err_to_name(Result));
+    end;
 
-  if Result <> ESP_OK then
-    writeln('Error saving cylinder changeover settings: ', esp_err_to_name(Result));
-
-  if storageHandle <> 0 then
-  begin
-    Result := nvs_commit(storageHandle);
-    nvs_close(storageHandle);
-  end; }
+    if Result = ESP_OK then
+    begin
+      Result := nvs_commit(storageHandle);
+      if Result = ESP_OK then
+        nvs_close(storageHandle);
+    end;
+  end;
 end;
 
 end.
