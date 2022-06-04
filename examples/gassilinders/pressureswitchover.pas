@@ -139,39 +139,49 @@ begin
   end;
   pwm.setOscillatorFrequency(26050000);
   pwm.setPWMFreq(50);
-  pwm.setOnMicroseconds(0, ServoClosedPos);
-  pwm.setOnMicroseconds(1, ServoClosedPos);
+  //pwm.setOnMicroseconds(0, ServoClosedPos);
+  //pwm.setOnMicroseconds(1, ServoClosedPos);
 
   waitForChangeover := false;
   // Allow ADC to collect some readings
-  Sleep(500);
+  //Sleep(500);
   p1 := Pressures[cylA];
   p2 := Pressures[cylB];
-  logwrite('P1 = '); logwriteln(p1);
-  logwrite('P2 = '); logwriteln(p2);
-  // Pick lower pressure cylinder to empty first
-  if storage.CylinderChangeoverSettings.PreferredCylinderMode then
+
+  // Set valves according to manual position
+  if storage.CylinderChangeoverSettings.ManualMode then
   begin
-    if (storage.CylinderChangeoverSettings.PreferredCylinderIndex = 0) then
-    begin
-      if (p1 > storage.CylinderChangeoverSettings.MinCylinderPressure) or (p1 > p2) then
-        setValves(vsValveA)
-      else
-        setValves(vsValveB);
-    end
+    if storage.CylinderChangeoverSettings.ManualCylinderSelected = 0 then
+      setValves(vsValveA)
     else
-    begin
-      if (p2 > storage.CylinderChangeoverSettings.MinCylinderPressure) or (p2 > p1) then
-        setValves(vsValveB)
-      else
-        setValves(vsValveA);
-    end;
+      setValves(vsValveB);
   end
-  else if ((p1 <= p2) and (p1 >= storage.CylinderChangeoverSettings.MinCylinderPressure)) or
-          ((p1 >= p2) and (p2 < storage.CylinderChangeoverSettings.MinCylinderPressure)) then
-    setValves(vsValveA)
   else
-    setValves(vsValveB);
+  begin
+    // Pick lower pressure cylinder to empty first
+    if storage.CylinderChangeoverSettings.PreferredCylinderMode then
+    begin
+      if (storage.CylinderChangeoverSettings.PreferredCylinderIndex = 0) then
+      begin
+        if (p1 > storage.CylinderChangeoverSettings.MinCylinderPressure) or (p1 > p2) then
+          setValves(vsValveA)
+        else
+          setValves(vsValveB);
+      end
+      else
+      begin
+        if (p2 > storage.CylinderChangeoverSettings.MinCylinderPressure) or (p2 > p1) then
+          setValves(vsValveB)
+        else
+          setValves(vsValveA);
+      end;
+    end
+    else if ((p1 <= p2) and (p1 >= storage.CylinderChangeoverSettings.MinCylinderPressure)) or
+            ((p1 >= p2) and (p2 < storage.CylinderChangeoverSettings.MinCylinderPressure)) then
+      setValves(vsValveA)
+    else
+      setValves(vsValveB);
+  end;
 
   skipSMSNotificationOnStartup := false;
   resetPressureWatches;
