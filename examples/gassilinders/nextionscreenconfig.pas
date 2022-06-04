@@ -95,6 +95,14 @@ var
 
   fUploadSettingsToDisplay: boolean;
 
+  // Since the manual mode switches can be operated on page 3,
+  // the very first state of each switch needs to be recorded
+  // to compare against the state when exiting the page again.
+  manualSwitchPressed: boolean = false;
+  manualSwitchEnterState: boolean;
+  manualCylinderSwitchPressed: boolean = false;
+  manualCylinderEnterState: uint32;
+
 // Ensure number of ADC channels and Nextion display elements are the same
 // These constants are used for a compile time check only
 const
@@ -400,6 +408,7 @@ begin
   logwriteln('');
   if updated then
   begin
+    logwriteln('savePressureSettings');
     storage.savePressureSettings;
   end;
 end;
@@ -484,7 +493,7 @@ begin
     logwriteln('RepeatNotifications is clear');
   end;
 
-  updated := not(storage.SMSNotificationSettings.Notifications = tmpSMSNotificationsSet);
+  updated := updated or (storage.SMSNotificationSettings.Notifications <> tmpSMSNotificationsSet);
   if updated then
     storage.SMSNotificationSettings.Notifications := tmpSMSNotificationsSet;
 
@@ -500,7 +509,10 @@ begin
 
   logwriteln('');
   if updated then
+  begin
+    logwriteln('saveNotificationSettings');
     storage.saveNotificationSettings;
+  end;
 end;
 
 procedure readPage3FromDisplay;
@@ -519,8 +531,6 @@ begin
   begin
     updated := uint32(v) <> storage.CylinderChangeoverSettings.MinCylinderPressure;
     storage.CylinderChangeoverSettings.MinCylinderPressure := v;
-    logwrite('MinCylinderPressure: ');
-    logwriteln(v);
   end
   else
     logwriteln('ERROR reading MinP');
@@ -578,37 +588,24 @@ begin
   else
     logwriteln('ERROR reading PreferredCylinderIndex');
 
-  tmpNexObj.cid := ManualModeId;
-  // Switch, so mode is limited to 0 or 1
-  if nexPrimary.getValue(tmpNexObj, v) then
+  // Switch state changes tracked via events
+  if manualSwitchPressed then
   begin
-    b := v <> 0;
-    updated := updated or (b <> storage.CylinderChangeoverSettings.ManualMode);
-    storage.CylinderChangeoverSettings.ManualMode := b;
-    logwrite('ManualMode: ');
-    if b then
-      logwriteln('TRUE')
-    else
-      logwriteln('FALSE');
-  end
-  else
-    logwriteln('ERROR reading ManualMode');
-
-  tmpNexObj.cid := CylinderSelectedId;
-  // Switch, so ID is limited to 0 or 1
-  if nexPrimary.getValue(tmpNexObj, v) then
+    manualSwitchPressed := false;
+    updated := updated or (manualSwitchEnterState <> storage.CylinderChangeoverSettings.ManualMode);
+  end;
+  if manualCylinderSwitchPressed then
   begin
-    updated := updated or (uint32(v) <> storage.CylinderChangeoverSettings.ManualCylinderSelected);
-    storage.CylinderChangeoverSettings.ManualCylinderSelected := v;
-    logwrite('ManualCylinderSelected: ');
-    logwriteln(v);
-  end
-  else
-    logwriteln('ERROR reading ManualCylinderSelected');
+    manualCylinderSwitchPressed := false;
+    updated := updated or (manualCylinderEnterState <> storage.CylinderChangeoverSettings.ManualCylinderSelected);
+  end;
 
   logwriteln('');
   if updated then
+  begin
+    logwriteln('saveCylinderChangeoverSettings');
     storage.saveCylinderChangeoverSettings;
+  end;
 end;
 
 // Only attach to primary display for updating edited values
@@ -637,14 +634,19 @@ const
 var
   v: integer;
   tmpNexObj: TNextionComponent;
-  updated, b: boolean;
+  b: boolean;
 begin
-  //
   if (pid = CylChangePage) then
   begin
     tmpNexObj.pid := 3;
     if (cid = ManualModeID) and not pressed then
     begin
+      // Save initial state
+      if not manualSwitchPressed then
+      begin
+        manualSwitchPressed := true;
+        manualSwitchEnterState := storage.CylinderChangeoverSettings.ManualMode;
+      end;
       tmpNexObj.cid := ManualModeId;
       // Switch, so mode is limited to 0 or 1
       if nexPrimary.getValue(tmpNexObj, v) then
@@ -661,6 +663,12 @@ begin
 
     if (cid in [ManualModeID, ManualCylinderSelectedID]) and not pressed then
     begin
+      // Save initial state
+      if not manualCylinderSwitchPressed then
+      begin
+        manualCylinderSwitchPressed := true;
+        manualCylinderEnterState := storage.CylinderChangeoverSettings.ManualCylinderSelected;
+      end;
       tmpNexObj.cid := CylinderSelectedId;
       // Switch, so ID is limited to 0 or 1
       if nexPrimary.getValue(tmpNexObj, v) then
@@ -718,6 +726,8 @@ begin
   uart_flush_input(PrimaryUartPort);
   // Disable result codes on Nextion
   nexPrimary.sendCommand('bkcmd=0');
+  Sleep(100);
+  UploadSettingsToDisplay;
 end;
 
 procedure handleDisplayMessages;
