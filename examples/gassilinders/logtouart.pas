@@ -40,6 +40,8 @@ begin
   uart_driver_install(UartPort, 4*1024, 4*1024, 0, nil, 0);
   uart_param_config(UartPort, @uart_cfg);
   uart_set_pin(UartPort, TX_PIN, RX_PIN, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+{$elseif defined(logtostdout)}
+  // no special init
 {$endif}
 end;
 
@@ -51,6 +53,8 @@ begin
     uart_write_bytes(UartPort, @s[1], length(s));
     xSemaphoreGive(lock);
   end;
+{$elseif defined(logtostdout)}
+  write(s);
 {$endif}
 end;
 
@@ -63,6 +67,8 @@ begin
     uart_write_bytes(UartPort, @s[1], length(s));
     xSemaphoreGive(lock);
   end;
+{$elseif defined(logtostdout)}
+  writeln(s);
 {$endif}
 end;
 
@@ -77,6 +83,8 @@ begin
     uart_write_bytes(UartPort, @s[1], length(s));
     xSemaphoreGive(lock);
   end;
+{$elseif defined(logtostdout)}
+  write(s);
 {$endif}
 end;
 
@@ -92,6 +100,8 @@ begin
     uart_write_bytes(UartPort, @s[1], length(s));
     xSemaphoreGive(lock);
   end;
+{$elseif defined(logtostdout)}
+  writeln(v);
 {$endif}
 end;
 
