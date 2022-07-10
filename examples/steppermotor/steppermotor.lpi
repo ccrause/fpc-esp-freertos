@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectOptions>
+    <Version Value="12"/>
+    <General>
+      <Flags>
+        <MainUnitHasCreateFormStatements Value="False"/>
+        <MainUnitHasTitleStatement Value="False"/>
+        <MainUnitHasScaledStatement Value="False"/>
+        <CompatibilityMode Value="True"/>
+      </Flags>
+      <SessionStorage Value="InProjectDir"/>
+      <Title Value="steppermotor"/>
+      <UseAppBundle Value="False"/>
+      <ResourceType Value="res"/>
+    </General>
+    <BuildModes Count="4">
+      <Item1 Name="ESP32" Default="True"/>
+      <Item2 Name="ESP8266">
+        <CompilerOptions>
+          <Version Value="11"/>
+          <Target>
+            <Filename Value="bin/steppermotor"/>
+          </Target>
+          <SearchPaths>
+            <IncludeFiles Value="$(ProjOutDir);../../freertos-fpc;../../freertos-fpc/esp8266-idf"/>
+            <OtherUnitFiles Value="../../freertos-fpc;../../freertos-fpc/esp8266-idf;../common;GUI;test;bin"/>
+            <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
+          </SearchPaths>
+          <CodeGeneration>
+            <TargetProcessor Value="lx106"/>
+            <TargetCPU Value="xtensa"/>
+            <TargetOS Value="freertos"/>
+          </CodeGeneration>
+          <Linking>
+            <Debugging>
+              <DebugInfoType Value="dsDwarf3"/>
+              <UseLineInfoUnit Value="False"/>
+            </Debugging>
+          </Linking>
+          <Other>
+            <ConfigFile>
+              <ConfigFilePath Value="~/fpc/gitlab-cc/fpc.cfg"/>
+            </ConfigFile>
+            <CompilerPath Value="/home/christo/fpc/installs/lib/fpc/3.3.1/ppcrossxtensa"/>
+          </Other>
+        </CompilerOptions>
+      </Item2>
+      <Item3 Name="ESP8266-fpup">
+        <CompilerOptions>
+          <Version Value="11"/>
+          <Target>
+            <Filename Value="bin/steppermotor"/>
+          </Target>
+          <SearchPaths>
+            <IncludeFiles Value="$(ProjOutDir);../../freertos-fpc;../../freertos-fpc/esp8266-idf"/>
+            <OtherUnitFiles Value="../../freertos-fpc;../../freertos-fpc/esp8266-idf;../common;GUI;test;bin"/>
+            <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
+          </SearchPaths>
+          <CodeGeneration>
+            <TargetProcessor Value="lx106"/>
+            <TargetCPU Value="xtensa"/>
+            <TargetOS Value="freertos"/>
+          </CodeGeneration>
+          <Linking>
+            <Debugging>
+              <DebugInfoType Value="dsDwarf3"/>
+              <UseLineInfoUnit Value="False"/>
+            </Debugging>
+          </Linking>
+          <Other>
+            <Verbosity>
+              <ShowAll Value="True"/>
+            </Verbosity>
+            <ConfigFile>
+              <DontUseConfigFile Value="True"/>
+              <CustomConfigFile Value="True"/>
+              <ConfigFilePath Value="/home/christo/fpcupdeluxe/working/fpc/bin/x86_64-linux/fpc.cfg"/>
+            </ConfigFile>
+            <CompilerPath Value="/home/christo/fpcupdeluxe/working/fpc/bin/x86_64-linux/fpc"/>
+          </Other>
+        </CompilerOptions>
+      </Item3>
+      <Item4 Name="ESP32-fpcup">
+        <CompilerOptions>
+          <Version Value="11"/>
+          <Target>
+            <Filename Value="bin/steppermotor"/>
+          </Target>
+          <SearchPaths>
+            <IncludeFiles Value="$(ProjOutDir);../../freertos-fpc;../../freertos-fpc/esp-idf"/>
+            <OtherUnitFiles Value="../../freertos-fpc;../../freertos-fpc/esp-idf;../common;GUI;test;bin"/>
+            <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
+          </SearchPaths>
+          <CodeGeneration>
+            <TargetProcessor Value="lx6"/>
+            <TargetCPU Value="xtensa"/>
+            <TargetOS Value="freertos"/>
+          </CodeGeneration>
+          <Linking>
+            <Debugging>
+              <DebugInfoType Value="dsDwarf3"/>
+              <UseLineInfoUnit Value="False"/>
+            </Debugging>
+          </Linking>
+          <Other>
+            <ConfigFile>
+              <DontUseConfigFile Value="True"/>
+              <CustomConfigFile Value="True"/>
+              <ConfigFilePath Value="/home/christo/fpcupdeluxe/working/fpc/bin/x86_64-linux/fpc.cfg"/>
+            </ConfigFile>
+            <CompilerPath Value="/home/christo/fpcupdeluxe/working/fpc/bin/x86_64-linux/fpc"/>
+          </Other>
+        </CompilerOptions>
+      </Item4>
+    </BuildModes>
+    <PublishOptions>
+      <Version Value="2"/>
+      <UseFileFilters Value="True"/>
+    </PublishOptions>
+    <RunParams>
+      <FormatVersion Value="2"/>
+    </RunParams>
+    <Units Count="3">
+      <Unit0>
+        <Filename Value="steppermotor.pp"/>
+        <IsPartOfProject Value="True"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="../common/nextion.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="../common/pwm_mcpwm.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit2>
+    </Units>
+  </ProjectOptions>
+  <CompilerOptions>
+    <Version Value="11"/>
+    <Target>
+      <Filename Value="bin/steppermotor"/>
+    </Target>
+    <SearchPaths>
+      <IncludeFiles Value="$(ProjOutDir);../../freertos-fpc;../../freertos-fpc/esp-idf"/>
+      <OtherUnitFiles Value="../../freertos-fpc;../../freertos-fpc/esp-idf;../common;../feeder/bin"/>
+      <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
+    </SearchPaths>
+    <Parsing>
+      <SyntaxOptions>
+        <UseAnsiStrings Value="False"/>
+      </SyntaxOptions>
+    </Parsing>
+    <CodeGeneration>
+      <Checks>
+        <RangeChecks Value="True"/>
+      </Checks>
+      <TargetProcessor Value="lx6"/>
+      <TargetCPU Value="xtensa"/>
+      <TargetOS Value="freertos"/>
+    </CodeGeneration>
+    <Linking>
+      <Debugging>
+        <DebugInfoType Value="dsDwarf3"/>
+        <UseLineInfoUnit Value="False"/>
+      </Debugging>
+    </Linking>
+    <Other>
+      <ConfigFile>
+        <ConfigFilePath Value="~/fpc/gitlab-cc/fpc.cfg"/>
+      </ConfigFile>
+      <CustomOptions Value="-Xm
+-al"/>
+      <CompilerPath Value="/home/christo/fpc/installs/lib/fpc/3.3.1/ppcrossxtensa"/>
+    </Other>
+  </CompilerOptions>
+  <Debugging>
+    <Exceptions Count="3">
+      <Item1>
+        <Name Value="EAbort"/>
+      </Item1>
+      <Item2>
+        <Name Value="ECodetoolError"/>
+      </Item2>
+      <Item3>
+        <Name Value="EFOpenError"/>
+      </Item3>
+    </Exceptions>
+  </Debugging>
+</CONFIG>
