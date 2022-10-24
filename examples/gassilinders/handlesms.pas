@@ -14,6 +14,10 @@ procedure sendNotification(msg: shortstring);
 procedure initModem;
 procedure processModemEvents;
 
+// Requests a network reconnect of the modem
+procedure resetModemNetwork;
+function resetModemFlagCleared: boolean;
+
 implementation
 
 uses
@@ -40,6 +44,7 @@ var
   flagNotification: boolean;
   notifyMsg: shortstring;
   modemState: TModemState = msDoStart;
+  flagResetNetwork: boolean = false;
 
 procedure initUart;
 var
@@ -252,6 +257,16 @@ begin
   flagNotification := true;
 end;
 
+procedure resetModemNetwork;
+begin
+  flagResetNetwork := true;
+end;
+
+function resetModemFlagCleared: boolean;
+begin
+  result := not flagResetNetwork;
+end;
+
 procedure initModem;
 const
   canceledSMS: boolean = false;
@@ -405,6 +420,13 @@ begin
   repeat
     processModemEvents;
     Sleep(500);
+
+    if flagResetNetwork then
+    begin
+      gsm.sendATCommand('AT+CFUN=0');
+      gsm.sendATCommand('AT+CFUN=1,1');
+      flagResetNetwork := false;
+    end;
   until false;
 end;
 

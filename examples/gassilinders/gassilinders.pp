@@ -3,10 +3,17 @@ program gassilinders;
 uses
   fmem, fthreads, freertos, task, nextion, portmacro, esp_err,
   gpio_types, readadc, nextionscreenconfig, shared,
-  storage, pressureswitchover, handleSMS, logtouart;
+  storage, pressureswitchover, handleSMS, logtouart,
+  esp_system;
+
+{$include freertosconfig.inc}
+
+const
+  restartInterval = 8*3600*configTICK_RATE_HZ;  // reset every 8 hours
 
 var
   loopcount: uint32;
+  resetTimeout: TTickType;
 
 begin
   initLogUart;
@@ -28,6 +35,7 @@ begin
   initDisplays;
   initCheckPressures;
 
+  resetTimeout := xTaskGetTickCount + restartInterval;
   repeat
     logwrite('-');
     // Only check pressures when not in manual mode
@@ -46,6 +54,20 @@ begin
       Sleep(10);
     end;
     inc(loopcount);
+
+    if xTaskGetTickCount > resetTimeout then
+    begin
+      // Reset network connection
+      handleSMS.resetModemNetwork;
+      // Wait until network reset is finished
+      // or until maximum time of 20 seconds has passed.
+      loopcount := 20;
+      repeat
+        Sleep(1000);
+        dec(loopcount);
+      until handleSMS.resetModemFlagCleared or (loopcount = 0);
+      esp_restart;
+    end;
   until false;
 end.
 
