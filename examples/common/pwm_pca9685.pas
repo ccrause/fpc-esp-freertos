@@ -124,6 +124,7 @@ begin
   Result := fi2c.WriteBytes(0, @SWRST, 1);
 end;
 
+// If any PWM channel is active when calling enterSleep, the RESTART bit will be set in MODE1
 function TPwmPca9685.enterSleep: Tesp_err;
 var
   mode: byte;
@@ -135,27 +136,25 @@ begin
   Result := fi2c.WriteByteToReg(fI2CAddress, byte(MODE1), mode);
 end;
 
+// If RESTART bit is set, previously configured PWM channels should continue
 function TPwmPca9685.exitSleep: Tesp_err;
 var
-  oldmode1, newmode1: byte;
+  mode: byte;
 begin
-  Result := fi2c.ReadBytefromReg(fI2CAddress, byte(MODE1), oldmode1);
+  Result := fi2c.ReadBytefromReg(fI2CAddress, byte(MODE1), mode);
   if Result <> ESP_OK then exit;
 
-  // Clear sleep bit if RESTART is set
-  if (oldmode1 and RESTART) > 0 then
-  begin
-    newmode1 := oldmode1 and not(SLEEP);
-    Result := fi2c.WriteByteToReg(fI2CAddress, byte(MODE1), newmode1);
-    if Result <> ESP_OK then exit;
+  mode := mode and not(SLEEP);
+  Result := fi2c.WriteByteToReg(fI2CAddress, byte(MODE1), mode);
+  if Result <> ESP_OK then exit;
 
+  // If RESTART bit was set, restart PWM by writing a 1 to RESTART bit (Datasheet section 7.3.1.1)
+  if (mode and RESTART) > 0 then
+  begin
     // Delay for a minimum of 500 us
     vTaskDelay(1);
-    newmode1 := oldmode1 or RESTART;
-    Result := fi2c.WriteByteToReg(fI2CAddress, byte(MODE1), newmode1);
-  end
-  else
-    writeln('exitSleep called but RESTART bit not set');
+    Result := fi2c.WriteByteToReg(fI2CAddress, byte(MODE1), mode);
+  end;
 end;
 
 procedure TPwmPca9685.setOscillatorFrequency(AOscFreq: uint32);
