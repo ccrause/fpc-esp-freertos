@@ -375,28 +375,19 @@ var
   timeout, startTime, delta: integer;
 begin
   // Block until current state clears
-  // For multithreaded case...
-  //while not((modemstate = msNone) or (SMSstate = sssGotPrompt)) do
-  //  Sleep(100);
   timeout := timeoutSeconds * configTICK_RATE_HZ;
   startTime := xTaskGetTickCount;
   delta := 0;
-  // Single thread - need to keep checking incoming data
   while not((modemstate = msNone) or (SMSstate = sssGotPrompt)) and (delta < timeout) do
   begin
     delta := xTaskGetTickCount - startTime;
     process;
   end;
 
-  // Timeout waiting for previous state to clear.
-  // Could be corrupted input, or missing data, or real timeout.
-  // Need to clear state so that next command can proceed.
-  if (delta >= timeout) then
-    resetParser;
-
-  // If SMSstate = sssGotPrompt then resume with current state,
-  // else reset modem state
-  if SMSstate < sssGotPrompt then
+  // Reset parser state if:
+  // * SMSstate <> sssGotPrompt
+  // * Timeout waiting for previous state to clear (even if waiting for SMS prompt).
+  if (SMSstate < sssGotPrompt) or (delta >= timeout) then
     resetParser;
   previousCmd := cmd;
 
@@ -413,6 +404,7 @@ begin
   // Read and parse response
   while not commandCompleted and (delta < timeout) do
   begin
+    Sleep(10);
     delta := xTaskGetTickCount - startTime;
     process;
   end;
@@ -421,10 +413,6 @@ begin
   if not commandCompleted then
   begin
     logwriteln('Parser timeout');
-    //logwrite('Parser tmp: ');
-    //logwriteln(tmp);
-    //serial.Flush;
-
     resetParser;
   end;
 end;
@@ -569,8 +557,6 @@ begin
 end;
 
 function TGsmParser.sendSMS(const dest: shortstring; msg: shortstring): boolean;
-var
-  b: byte;
 begin
   Result := false;
   SMSstate := sssWaitPrompt;
@@ -593,9 +579,7 @@ begin
     if Assigned(sendString) then
       sendString(#27);
   end;
-  //resetParser;
   SMSstate := sssNone;
-  //commandResponse := '';
 end;
 
 function TGsmParser.getNetworkSignalQuality: integer;

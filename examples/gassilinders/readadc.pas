@@ -7,7 +7,7 @@ uses
 
 const
   ADC1InputChannels: array[0..5] of integer = (0, 3, 6, 7, 4, 5);
-  ADC2InputChannels: array[0..3] of integer = (8, 9, 7, 0);
+  ADC2InputChannels: array[0..3] of integer = (8, 9, 7, 6);
   totalADCChannels = length(ADC1InputChannels) + length(ADC2InputChannels);
 
   CylinderNames: array[0..totalADCChannels-1] of string[7] = (

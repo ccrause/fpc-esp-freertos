@@ -3,82 +3,15 @@ program gassilinders;
 uses
   fmem, fthreads, freertos, task, nextion, portmacro, esp_err,
   gpio_types, readadc, nextionscreenconfig, shared,
-  storage, pressureswitchover, handleSMS, logtouart,
-  esp_heap_caps;
-
-procedure testNVS;
-var
-  i: integer;
-begin
-  writeln('initDefaultSettings');
-  initDefaultSettings;
-
-  writeln('savePressureSettings');
-  savePressureSettings;
-  writeln('saveNotificationSettings');
-  saveNotificationSettings;
-  writeln('saveCylinderChangeoverSettings');
-  saveCylinderChangeoverSettings;
-
-  FillByte(storage.PressureSettings.Warnings[0], length(storage.PressureSettings.Warnings)*SizeOf(integer), $FF);
-  FillByte(storage.PressureSettings.LowPressures[0], length(storage.PressureSettings.LowPressures)*SizeOf(integer), $FF);
-  FillByte(storage.PhoneNumbers[0], length(storage.PhoneNumbers)*SizeOf(integer), $FF);
-  SMSNotificationSettings.Notifications := [];
-  SMSNotificationSettings.RepeatInterval := 0;
-  with CylinderChangeoverSettings do
-  begin
-    MinCylinderPressure := $FFFF;
-    Hysteresis := $FFFF;
-    CylinderChangeDelay := $FFFF;
-    PreferredCylinderMode := true;
-    PreferredCylinderIndex := $FFFF;
-    ManualMode := false;
-    ManualCylinderSelected := $FFFF;
-  end;
-
-  Sleep(1000);
-  writeln;
-  writeln('Loading settings');
-  loadSettings;
-
-  writeln('Warning settings:');
-  for i := 0 to high(storage.PressureSettings.Warnings) do
-    writeln(storage.PressureSettings.Warnings[i]);
-  writeln('LowPressures settings:');
-  for i := 0 to high(storage.PressureSettings.Warnings) do
-    writeln(storage.PressureSettings.LowPressures[i]);
-  writeln;
-
-  writeln('PhoneNumbers');
-  for i := 0 to high(storage.PhoneNumbers) do
-    writeln(storage.PhoneNumbers[i]);
-
-  writeln;
-  writeln('CylinderChangeoverSettings');
-  with CylinderChangeoverSettings do
-  begin
-    writeln('MinCylinderPressure: ', MinCylinderPressure);
-    writeln('Hysteresis: ', Hysteresis);
-    writeln('CylinderChangeDelay: ', CylinderChangeDelay);
-    writeln('PreferredCylinderMode: ', PreferredCylinderMode);
-    writeln('PreferredCylinderIndex: ', PreferredCylinderIndex);
-    writeln('ManualMode: ', ManualMode);
-    writeln('ManualCylinderSelected: ', ManualCylinderSelected);
-  end;
-end;
+  storage, pressureswitchover, handleSMS, logtouart;
 
 var
   loopcount: uint32;
 
 begin
-  //testNVS;
-  //exit;
-
   initLogUart;
-  //logwriteln(#13#10'initADC');
-  //initADC;
   startAdcThread;
-
+  // Load saved settings from NVS
   if storage.loadSettings <> ESP_OK then
   begin
     logwriteln('');
@@ -89,19 +22,14 @@ begin
   loopcount := 0;
   startSMShandlerThread;
 
-  // Wait for Nextion to boot
+  // Wait for Nextion to boot,
+  // and readADC to collect enough readings before calling initCheckPressures
   Sleep(1000);
   initDisplays;
-  //initModem;
-
-  // Wait for ADC thread to collect enough data for initial settings
-  initCheckPressures;  // nonthreaded version
+  initCheckPressures;
 
   repeat
     logwrite('-');
-    //readAdcData;
-    //Sleep(10);
-
     // Only check pressures when not in manual mode
     if not storage.CylinderChangeoverSettings.ManualMode then
     begin
@@ -110,10 +38,8 @@ begin
     end;
 
     handleDisplayMessages;
-    //Sleep(10);
-    //processModemEvents;
     Sleep(230);
-
+    // Only update displays every 8th iteration
     if ((loopcount and 7) = 0) or flagUpdateValvePositions then
     begin
       updateDisplays;
@@ -129,6 +55,9 @@ OpenOCD command:
 
 Flash command:
 ~/fpc/xtensa/esp-idf-4.3.2/components/esptool_py/esptool/esptool.py --chip esp32 --port /dev/ttyUSB1 --baud 921600 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0x10000 gassilinders.bin
+
+Flash bootloader
+~/fpc/xtensa/esp-idf-4.3.2/components/esptool_py/esptool/esptool.py --chip esp32 --port /dev/ttyUSB1 --baud 921600 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0x1000 /home/christo/fpc/xtensa/esp-idf-4.3.2/libs/bootloader.bin 0x8000 /home/christo/fpc/xtensa/esp-idf-4.3.2/libs/partitions_singleapp.bin
 
 Objdump command:
 ~/.espressif/tools/xtensa-esp32-elf/esp-2021r2-8.4.0/xtensa-esp32-elf/bin/xtensa-esp32-elf-objdump -d gassilinders.elf > gassilinders.lss

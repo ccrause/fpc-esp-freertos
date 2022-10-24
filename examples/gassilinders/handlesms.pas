@@ -36,7 +36,6 @@ var
   // Incoming phone message/call ID
   incomingPhoneNumber: string[16];
   gotRequest: boolean;
-  gotCall: boolean;
   // Reporting/notification flags
   flagNotification: boolean;
   notifyMsg: shortstring;
@@ -135,12 +134,17 @@ procedure processCall(msg: shortstring);
 var
   j: integer;
 begin
+  // Hang up
+  gsm.sendATCommand('ATH', 2);
+  // In case of error, retry
+  if not gsm.commandSuccess then
+    gsm.sendATCommand('ATH', 2);
+
   // +CLIP: "+27xxxxxxxxx",145,"",0,"",0
   j := pos('",', msg);
   if j > 9 then
   begin
     incomingPhoneNumber := copy(msg, 9, j - 9);
-    gotCall := true;
     // Check if this is kind of a proper phone number
     // Mainly to filter out network messages
     if (incomingPhoneNumber[1] = '+') and (length(incomingPhoneNumber) > 8) and
@@ -268,7 +272,7 @@ begin
   begin
     // Check if modem is active
     logwriteln('Checking AT');
-    gsm.sendATCommand('AT', 5);
+    gsm.sendATCommand('AT', 2);
     if not gsm.commandCompleted then
     begin
       // Could possibly be waiting for SMS message input, if previous SMS process was interrupted
@@ -307,7 +311,7 @@ begin
     if i = 0 then
     begin
       logwriteln('Auto baud detected.');
-      gsm.setBaudRate(115200);
+      gsm.setBaudRate(9600);
     end
     else
     begin
@@ -377,13 +381,6 @@ begin
   begin
     logwrite('m');
     gsm.process;
-    if gotCall then
-    begin
-      gotCall := false;
-      gsm.sendATCommand('ATH');
-      Sleep(10);
-    end;
-
     if gotRequest then
     begin
       logwrite('Replying to ');
@@ -391,10 +388,8 @@ begin
       sendStatusReport(incomingPhoneNumber);
       gotRequest := false;
       incomingPhoneNumber := '';
-      Sleep(10);
-    end;
-
-    if flagNotification then
+    end
+    else if flagNotification then
     begin
       flagNotification := false;
       sendMessagetoAll(notifyMsg);

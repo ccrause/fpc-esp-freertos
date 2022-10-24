@@ -34,13 +34,14 @@ type
     event: TPressureEvent;
     eventTriggerTime: uint32;
     triggered: boolean;
+    previousEvent: TPressureEvent;
   end;
 
 const
   cylA = 8;
   cylB = 9;
   ServoClosedPos = 500;
-  ServoOpenPos = 1200;
+  ServoOpenPos = 1250; //1200;
   EventWaitTicks = 6*configTICK_RATE_HZ;
 
 var
@@ -307,9 +308,11 @@ var
   staticStr: string[250];
 
 procedure checkPressures;
+const
+  clearHysteresis = 20;
 var
   i: uint32;
-  s: string[24];
+  s, s3: string[24];
 begin
   // Check cylinder switchover
   if storage.CylinderChangeoverSettings.PreferredCylinderMode then
@@ -335,19 +338,25 @@ begin
         begin
           if length(staticStr) < 230 then
           begin
-            s := CylinderNames[i] + ': L'#10;
+            if Pressures[i] < 1000 then
+              Str(Pressures[i], s3)
+            else
+              s3 := '999';
+            s := CylinderNames[i] + ': Low! P=' + s3 + #10;
             insert(s, staticStr, length(staticStr)+1);
             pressureWatches[i].triggered := true;
+            pressureWatches[i].previousEvent := pressureWatches[i].event;
           end;
         end
       end
-      else if (pressureWatches[i].event <> peLow) then
+      else if (pressureWatches[i].event < peLow) then
       begin
         pressureWatches[i].event := peLow;
         pressureWatches[i].eventTriggerTime := xTaskGetTickCount + EventWaitTicks;
         pressureWatches[i].triggered := false;
       end;
     end
+
     else if Pressures[i] <= storage.PressureSettings.Warnings[i shr 1] then
     begin
       if (pressureWatches[i].event = peWarning) and not pressureWatches[i].triggered and
@@ -358,26 +367,50 @@ begin
           // Warning alert!
           if length(staticStr) < 230 then
           begin
-            s := CylinderNames[i] + ': W'#10;
+            if Pressures[i] < 1000 then
+              Str(Pressures[i], s3)
+            else
+              s3 := '999';
+            s := CylinderNames[i] + ': Warn P=' + s3 + #10;
             insert(s, staticStr, length(staticStr)+1);
             pressureWatches[i].triggered := true;
+            pressureWatches[i].previousEvent := pressureWatches[i].event;
           end;
         end;
       end
-      else if (pressureWatches[i].event <> peWarning) then
+      else if (pressureWatches[i].event < peWarning) then
       begin
         pressureWatches[i].event := peWarning;
         pressureWatches[i].eventTriggerTime := xTaskGetTickCount + EventWaitTicks;
         pressureWatches[i].triggered := false;
+      end
+      // Clear LOW alarm state
+      else if (pressureWatches[i].event > peWarning) and not pressureWatches[i].triggered then
+      begin
+        pressureWatches[i].event := pressureWatches[i].previousEvent;
+        pressureWatches[i].triggered := pressureWatches[i].previousEvent <> peNone;
       end;
     end
-    else // Pressure above warning, reset for this cylinder
+
+    // Reset trigger if pressure is above set point + hysteresis
+    else if pressureWatches[i].triggered then
+    begin
+      if ((pressureWatches[i].event <> peNone) and (Pressures[i] > storage.PressureSettings.Warnings[i shr 1] + clearHysteresis)) then
+      begin
+        pressureWatches[i].event := peNone;
+        pressureWatches[i].eventTriggerTime := $FFFFFFFF;
+        pressureWatches[i].triggered := false;
+        pressureWatches[i].previousEvent := peNone;
+      end
+    end
+    else if pressureWatches[i].event > peNone then
     begin
       pressureWatches[i].event := peNone;
       pressureWatches[i].eventTriggerTime := $FFFFFFFF;
       pressureWatches[i].triggered := false;
     end;
   end;
+
   if (length(staticStr) > 1) then
   begin
     logwrite('Pressure notification length = ');
