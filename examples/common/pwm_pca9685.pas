@@ -40,6 +40,10 @@ type
 
     // Helper for typical Servo motors, specify ON time
     function setOnMicroseconds(channel: uint32; us: int16): Tesp_err;
+    // Switch output to either high or low
+    function setChannelFixedOutput(channel: uint32; outputHigh: boolean): Tesp_err;
+    // Remove fixed full on/of bits of the specified channel
+    function clearChannelFixedOutput(channel: uint32): Tesp_err;
   end;
 
 implementation
@@ -112,8 +116,8 @@ begin
   Result := fi2c.WriteByteToReg(fI2CAddress, byte(MODE1), tmp);
   if Result <> ESP_OK then exit;
 
-  // Configure MODE2 register for totem pole drive (OUTDRV=1) and outputs change on I2C ACK (OCH=1)
-  tmp := OUTDRV or OCH;
+  // Configure MODE2 register for totem pole drive (OUTDRV=1) and outputs change on I2C STOP (OCH=0)
+  tmp := OUTDRV;
   Result := fi2c.WriteByteToReg(fI2CAddress, byte(MODE2), tmp);
 end;
 
@@ -244,6 +248,41 @@ begin
   else
     offStart := (((uint32(us) * 4096 * fPWMFreq + 500000)) div 1000000) - 1;
   Result := setPWM(channel, 0, offStart);
+end;
+
+function TPwmPca9685.setChannelFixedOutput(channel: uint32; outputHigh: boolean): Tesp_err;
+var
+  tmp: byte;
+begin
+  if outputHigh then
+  begin
+    Result := fi2c.ReadByteFromReg(fI2CAddress, byte((LED0_ON_L+1) + 4*channel), tmp);
+    if Result <> ESP_OK then exit;
+    tmp := tmp or (1 shl 4);
+    Result := fi2c.WriteBytesToReg(fI2CAddress, byte((LED0_ON_L+1) + 4*channel), @tmp, 1);
+  end
+  else
+  begin
+    Result := fi2c.ReadByteFromReg(fI2CAddress, byte((LED0_ON_L+3) + 4*channel), tmp);
+    if Result <> ESP_OK then exit;
+    tmp := tmp or (1 shl 4);
+    Result := fi2c.WriteBytesToReg(fI2CAddress, byte((LED0_ON_L+3) + 4*channel), @tmp, 1);
+  end;
+end;
+
+function TPwmPca9685.clearChannelFixedOutput(channel: uint32): Tesp_err;
+var
+  tmp: byte;
+begin
+  Result := fi2c.ReadByteFromReg(fI2CAddress, byte((LED0_ON_L+1) + 4*channel), tmp);
+  if Result <> ESP_OK then exit;
+  tmp := tmp and $EF;  // Clear bit 4
+  Result := fi2c.WriteBytesToReg(fI2CAddress, byte((LED0_ON_L+1) + 4*channel), @tmp, 1);
+
+  Result := fi2c.ReadByteFromReg(fI2CAddress, byte((LED0_ON_L+3) + 4*channel), tmp);
+  if Result <> ESP_OK then exit;
+  tmp := tmp and $EF;  // Clear bit 4
+  Result := fi2c.WriteBytesToReg(fI2CAddress, byte((LED0_ON_L+3) + 4*channel), @tmp, 1);
 end;
 
 end.
