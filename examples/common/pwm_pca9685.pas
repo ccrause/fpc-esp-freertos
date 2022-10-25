@@ -239,7 +239,10 @@ function TPwmPca9685.setOnMicroseconds(channel: uint32; us: int16): Tesp_err;
 var
   offStart: uint16;
 begin
-  offStart := (((uint32(us) * 4096 * fPWMFreq + 500000)) div 1000000) - 1;
+  if us = 0 then
+    offStart := 0
+  else
+    offStart := (((uint32(us) * 4096 * fPWMFreq + 500000)) div 1000000) - 1;
   Result := setPWM(channel, 0, offStart);
 end;
 
