@@ -211,7 +211,6 @@
         <ConfigFilePath Value="~/fpc/gitlab-cc/fpc.cfg"/>
       </ConfigFile>
       <CustomOptions Value="-Xm
--ddebugprint
 -al"/>
       <CompilerPath Value="/home/christo/fpc/installs/lib/fpc/3.3.1/ppcrossxtensa"/>
     </Other>
