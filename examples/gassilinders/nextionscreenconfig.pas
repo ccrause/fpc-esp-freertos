@@ -340,15 +340,9 @@ begin
   FillByte(Result[1], 0, len);
   len := uart_read_bytes(uartnum, @Result[1], len, 1);
   if len > 0 then
-  begin
-    SetLength(Result, len);
-    //logwrite('>> ');
-    //logwriteln(Result);
-  end
+    SetLength(Result, len)
   else
-  begin
     Result := '';
-  end;
 end;
 
 function readStringPrimary: shortstring;
