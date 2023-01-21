@@ -124,8 +124,6 @@ begin
 end;
 
 procedure TGsmParser.ParseChar(c: char);
-var
-  s: string[24];
 begin
   case modemstate of
     msNone:

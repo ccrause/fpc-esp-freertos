@@ -217,7 +217,6 @@ end;
 function TPwmPca9685.setPWM(channel: byte; onStartTime, offStartTime: uint16): Tesp_err;
 var
   tmp: array[0..3] of byte;
-  err: Tesp_err;
 begin
   tmp[0] := byte(onStartTime);
   tmp[1] := onStartTime shr 8;
