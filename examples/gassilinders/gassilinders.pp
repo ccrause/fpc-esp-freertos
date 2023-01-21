@@ -68,6 +68,7 @@ begin
       until handleSMS.resetModemFlagCleared or (loopcount = 0);
       esp_restart;
     end;
+    Sleep(200);
   until false;
 end.
 
