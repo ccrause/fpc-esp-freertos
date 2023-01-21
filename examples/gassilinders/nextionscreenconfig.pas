@@ -276,7 +276,7 @@ var
   cfg: Tgpio_config;  // To control RSE pin of MAX485 tranceiver
   err: Tesp_err;
 begin
-  uart_cfg.baud_rate  := 9600;
+  uart_cfg.baud_rate  := 4800;
   uart_cfg.data_bits  := UART_DATA_8_BITS;
   uart_cfg.parity     := UART_PARITY_DISABLE;
   uart_cfg.stop_bits  := UART_STOP_BITS_1;
