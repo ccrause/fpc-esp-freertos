@@ -439,13 +439,26 @@ begin
   end;
 end;
 
+var
+  skipCount: integer = 0;
+
 function monitorPressureThread(parameter : pointer) : ptrint; noreturn;
 begin
+  skipCount := 0;
+  skipSMSNotificationOnStartup := true;
   initCheckPressures;
   repeat
     checkPressures;
     Sleep(250);
-    skipSMSNotificationOnStartup := false;
+
+    if skipSMSNotificationOnStartup then
+    begin
+      inc(skipCount);
+
+      if skipCount > 10 then
+        skipSMSNotificationOnStartup := false;
+    end;
+
   until false;
 end;
 
