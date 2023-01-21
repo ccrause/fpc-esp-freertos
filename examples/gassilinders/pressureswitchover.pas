@@ -82,11 +82,12 @@ begin
   if err <> ESP_OK then
   begin
     Sleep(10);
-    logwrite('Retry setting valve position: ');
-    logwriteln(int32(err));
     err := pwm.setOnMicroseconds(channel, us);
-    logwrite('Error setting valve position: ');
-    logwriteln(int32(err));
+    if err <> ESP_OK then
+    begin
+      logwrite('Error setting valve position: ');
+      logwriteln(int32(err));
+    end;
   end;
 end;
 
