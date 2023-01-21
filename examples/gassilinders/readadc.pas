@@ -113,9 +113,11 @@ const
   avgCount = 4;
 var
   i, j, chan, val, tmp: integer;
+  initValuesDone: boolean;
 begin
   logwriteln('Starting ADC thread');
   initADC;
+  initValuesDone := false;
 
   repeat
     for i := 0 to length(ADC1InputChannels)-1 do
@@ -127,16 +129,14 @@ begin
       val := val div avgCount;
 
       tmp := esp_adc_cal_raw_to_voltage(val, @adc1_chars);
-      tmp := (inputs[i]*3 + tmp) div 4;
+      if initValuesDone then
+        tmp := (inputs[i]*3 + tmp) div 4;
       inputs[i] := tmp;
 
       if tmp < 200 then
         tmp := 200;
       tmp := (tmp - 200)*10; // P input: 0 - 220 bar, tmp : 0 - 23000
       Pressures[i] := (tmp * 22 + 1150) div 2300;
-
-      // Give other tasks some breathing room
-      //Sleep(10);
     end;
 
     for i := 0 to length(ADC2InputChannels)-1 do
@@ -151,18 +151,17 @@ begin
       val := val div avgCount;
 
       tmp := esp_adc_cal_raw_to_voltage(val, @adc2_chars);
-      tmp := (inputs[i+ADC2InputOffset]*3 + tmp) div 4;
+      if initValuesDone then
+        tmp := (inputs[i+ADC2InputOffset]*3 + tmp) div 4;
       inputs[i+ADC2InputOffset] := tmp;
 
       if tmp < 200 then
         tmp := 200;
       tmp := (tmp - 200)*10; // P input: 0 - 220 bar, tmp : 0 - 23000
       Pressures[i+ADC2InputOffset] := (tmp * 22 + 1150) div 2300;
-
-      // Give other tasks some breathing room
-      //Sleep(10);
     end;
 
+    initValuesDone := true;
     Sleep(250);
   until false;
 end;
