@@ -43,15 +43,14 @@ const
   ServoClosedPos = 500;
   ServoOpenPos = 1250; //1200;
   EventWaitTicks = 6*configTICK_RATE_HZ;
-  servoPWMSwitchoffTicks = 10*configTICK_RATE_HZ; // 10 second timeout
 
 var
   fi2c: TI2cMaster;
   pwm: TPwmPca9685;
   valveCurrentlyOpen: TValveOpen;
   waitForChangeover: boolean;
-  timeoutStart, servoSwitchoffTimeout: TTickType;
-  skipSMSNotificationOnStartup, checkservoSwitchoffTicks: boolean;
+  timeoutStart: TTickType;
+  skipSMSNotificationOnStartup: boolean;
   pressureWatches: array[0..totalADCChannels-1] of TPressureWatch;
 
 procedure resetPressureWatches;
@@ -95,16 +94,7 @@ procedure setValves(valveToOpen: TValveOpen);
 var
   A, B: boolean;
   s: string[24];
-  err: Tesp_err;
 begin
-  // Wake up servo PWM controller
-  err := pwm.exitSleep;
-  if err <> ESP_OK then
-  begin
-    logwrite('pwm.exitSleep error: ');
-    logwriteln(int32(err));
-  end;
-
   valveCurrentlyOpen := valveToOpen;
   logwrite('Open valve ');
   if valveToOpen = vsValveA then
@@ -132,10 +122,6 @@ begin
     s := 'Switched to ' + CylinderNames[8 + ord(valveToOpen)];
     sendNotification(s);
   end;
-
-  // Disable servo PWM output after
-  servoSwitchoffTimeout := xTaskGetTickCount + servoPWMSwitchoffTicks;
-  checkservoSwitchoffTicks := true;
 end;
 
 procedure initCheckPressures;
@@ -423,12 +409,6 @@ begin
       pressureWatches[i].eventTriggerTime := $FFFFFFFF;
       pressureWatches[i].triggered := false;
     end;
-  end;
-
-  if checkservoSwitchoffTicks and (xTaskGetTickCount > servoSwitchoffTimeout) then
-  begin
-    checkservoSwitchoffTicks := false;
-    pwm.enterSleep;
   end;
 
   if (length(staticStr) > 1) and not skipSMSNotificationOnStartup then
