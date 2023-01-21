@@ -12,6 +12,7 @@ procedure logwriteln(v: int32);
 
 implementation
 
+{$ifdef debugprint}
 uses
   uart_types, uart, semphr, projdefs;
 
@@ -22,10 +23,13 @@ const
 
 var
   lock: TSemaphoreHandle;
+{$endif}
 
 procedure initLogUart;
+{$ifdef debugprint}
 var
   uart_cfg: Tuart_config;
+{$endif}
 begin
 {$ifdef debugprint}
   lock := xSemaphoreCreateMutex;
@@ -73,8 +77,10 @@ begin
 end;
 
 procedure logwrite(v: int32);
+{$if defined(debugprint) or defined(logtostdout)}
 var
   s: string[16];
+{$endif}
 begin
 {$ifdef debugprint}
   Str(v, s);
@@ -89,8 +95,10 @@ begin
 end;
 
 procedure logwriteln(v: int32);
+{$if defined(debugprint) or defined(logtostdout)}
 var
   s: string[16];
+{$endif}
 begin
 {$ifdef debugprint}
   Str(v, s);
