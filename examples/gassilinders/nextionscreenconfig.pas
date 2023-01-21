@@ -22,7 +22,7 @@ implementation
 
 uses
   nextion, readadc, uart, uart_types,
-  shared, gpio, gpio_types, storage, portmacro, logtouart,
+  shared, gpio, gpio_types, storage, logtouart,
   esp_err, task, pressureswitchover;
 
 {$include freertosconfig.inc} // To access configTICK_RATE_HZ

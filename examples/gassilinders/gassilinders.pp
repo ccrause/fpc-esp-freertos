@@ -1,8 +1,8 @@
 program gassilinders;
 
 uses
-  fmem, fthreads, freertos, task, nextion, portmacro, esp_err,
-  gpio_types, readadc, nextionscreenconfig, shared,
+  fmem, fthreads, task, portmacro, esp_err,
+  readadc, nextionscreenconfig, shared,
   storage, pressureswitchover, handleSMS, logtouart,
   esp_system;
 

@@ -3,7 +3,7 @@ unit readadc;
 interface
 
 uses
-  adc, adc_types, esp_adc_cal, task;
+  adc, adc_types, esp_adc_cal;
 
 const
   ADC1InputChannels: array[0..5] of integer = (0, 3, 6, 7, 4, 5);
@@ -34,7 +34,7 @@ procedure startAdcThread;
 implementation
 
 uses
-  portmacro, shared, logtouart;
+  shared, logtouart;
 
 const
   // Offset into inputs array where ADC2 channels start
