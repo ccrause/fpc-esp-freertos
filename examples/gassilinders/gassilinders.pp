@@ -76,10 +76,10 @@ OpenOCD command:
 ~/.espressif/tools/openocd-esp32/v0.11.0-esp32-20211220/openocd-esp32/bin/openocd -f ~/.espressif/tools/openocd-esp32/v0.11.0-esp32-20211220/openocd-esp32/share/openocd/scripts/interface/ftdi/ft232h-jtag.cfg -f ~/.espressif/tools/openocd-esp32/v0.11.0-esp32-20211220/openocd-esp32/share/openocd/scripts/board/esp-wroom-32.cfg
 
 Flash command:
-~/fpc/xtensa/esp-idf-4.3.2/components/esptool_py/esptool/esptool.py --chip esp32 --port /dev/ttyUSB1 --baud 921600 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0x10000 gassilinders.bin
+~/fpc/xtensa/esp-idf-4.3.2/components/esptool_py/esptool/esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 921600 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0x10000 gassilinders.bin
 
 Flash bootloader
-~/fpc/xtensa/esp-idf-4.3.2/components/esptool_py/esptool/esptool.py --chip esp32 --port /dev/ttyUSB1 --baud 921600 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0x1000 /home/christo/fpc/xtensa/esp-idf-4.3.2/libs/bootloader.bin 0x8000 /home/christo/fpc/xtensa/esp-idf-4.3.2/libs/partitions_singleapp.bin
+~/fpc/xtensa/esp-idf-4.3.2/components/esptool_py/esptool/esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 921600 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0x1000 /home/christo/fpc/xtensa/esp-idf-4.3.2/libs/bootloader.bin 0x8000 /home/christo/fpc/xtensa/esp-idf-4.3.2/libs/partitions_singleapp.bin
 
 Objdump command:
 ~/.espressif/tools/xtensa-esp32-elf/esp-2021r2-8.4.0/xtensa-esp32-elf/bin/xtensa-esp32-elf-objdump -d gassilinders.elf > gassilinders.lss
