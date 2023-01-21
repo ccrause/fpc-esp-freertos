@@ -24,7 +24,7 @@ const
 
 var
   // Pressures in barG
-  Pressures: array[0..totalADCChannels-1] of integer;
+  Pressures: array[0..totalADCChannels-1] of uint32;
 
 procedure initADC;
 procedure readAdcData;
