@@ -5,7 +5,7 @@ unit list;
 interface
 
 uses
-  projdefs, portmacro, portable;
+  portmacro;
 
 type
   PList = ^TList;
