@@ -17,6 +17,9 @@ unit esp_wifi;
 {$linklib mbedtls, static}
 {$linklib mesh, static}
 {$linklib tcpip_adapter, static}
+// esp-idf 4.4.1
+{$linklib mbedcrypto, static}
+{$linklib esp_phy, static}
 
 interface
 
