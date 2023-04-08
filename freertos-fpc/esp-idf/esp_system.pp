@@ -5,7 +5,7 @@ unit esp_system;
 interface
 
 uses
-  esp_err, esp_bit_defs;
+  esp_err, esp_bit_defs, portmacro;
 
 const
   TWO_UNIVERSAL_MAC_ADDR = 2;

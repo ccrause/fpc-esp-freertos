@@ -3,7 +3,7 @@ unit esp_netif_lwip_internal;
 interface
 
 uses
-  esp_err, esp_netif_ppp;
+  esp_err, esp_netif_ppp, portmacro;
 
 // Copied from lwip/netif.h
 const

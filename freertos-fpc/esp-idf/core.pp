@@ -7,7 +7,6 @@ interface
 uses
   hal, core_isa, tie;
 
-
 const
 {$if defined(XCHAL_HAVE_BE)}
   XCHAL_HAVE_LE = 0;

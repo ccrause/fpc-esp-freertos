@@ -6,7 +6,8 @@ unit esp_netif;
 interface
 
 uses
-  esp_err, esp_netif_types, esp_event_base, esp_netif_ppp, esp_netif_ip_addr;
+  esp_err, esp_netif_types, esp_event_base, esp_netif_ppp, esp_netif_ip_addr,
+  portmacro;
 
 type
   Pesp_netif = ^Tesp_netif;

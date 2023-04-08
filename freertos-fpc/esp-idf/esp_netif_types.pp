@@ -3,7 +3,8 @@ unit esp_netif_types;
 interface
 
 uses
-  esp_err, esp_netif_ip_addr, esp_netif_lwip_internal, esp_event_base;
+  esp_err, esp_netif_ip_addr, esp_netif_lwip_internal, esp_event_base,
+  portmacro;
 
 const
   ESP_ERR_ESP_NETIF_BASE = $5000;
