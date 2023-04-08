@@ -18,7 +18,9 @@ begin
   begin
     PPtrUInt(fGetMem)^ := size;
     inc(fGetMem, sizeof(ptruint));
-  end;
+  end
+  else
+    runerror(203);  // Heap overflow error
 end;
 
 function fFreeMem(P: pointer): ptruint;
