@@ -6,7 +6,7 @@ unit esp_ota_ops;
 interface
 
 uses
-  esp_err, esp_partition;
+  esp_err, esp_partition, esp_app_format, portmacro;
 
 const
   OTA_SIZE_UNKNOWN = $ffffffff;
@@ -25,12 +25,14 @@ function get_ota_partition_count: byte; external;
 function esp_ota_write(handle: Tesp_ota_handle; Data: pointer;
   size: Tsize): Tesp_err; external;
 function esp_ota_end(handle: Tesp_ota_handle): Tesp_err; external;
-function esp_ota_set_boot_partition(partition: Pesp_partition): Tesp_err;
-  external;
+function esp_ota_set_boot_partition(partition: Pesp_partition): Tesp_err; external;
 function esp_ota_get_boot_partition: Pesp_partition; external;
 function esp_ota_get_running_partition: Pesp_partition; external;
-function esp_ota_get_next_update_partition(start_from: Pesp_partition): Pesp_partition;
-  external;
+function esp_ota_get_next_update_partition(start_from: Pesp_partition): Pesp_partition; external;
+
+function esp_ota_get_app_description: Pesp_app_desc; external;
+function esp_ota_get_partition_description(partition: Pesp_partition; app_desc: Pesp_app_desc): Tesp_err; external;
+
 
 implementation
 

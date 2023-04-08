@@ -8,7 +8,7 @@ interface
 
 uses
   esp_wifi_types, ip_addr, ip4_addr,
-  dhcpserver, esp_err, esp_interface;
+  dhcpserver, esp_err, esp_interface, esp_event_base;
 
 {$define CONFIG_TCPIP_LWIP := 1}
 {$define CONFIG_DHCP_STA_LIST := 1}
@@ -27,7 +27,7 @@ type
     netmask: Tip4_addr;
     gw: Tip4_addr;
   end;
-{$if TCPIP_ADAPTER_IPV6}
+{$if defined(TCPIP_ADAPTER_IPV6) and (TCPIP_ADAPTER_IPV6 > 0)}
   Ptcpip_adapter_ip6_info = ^Ttcpip_adapter_ip6_info;
   Ttcpip_adapter_ip6_info = record
     ip: Tip6_addr;
@@ -44,7 +44,7 @@ type
   Ptcpip_adapter_dhcps_lease = ^Ttcpip_adapter_dhcps_lease;
   Ttcpip_adapter_dhcps_lease = Tdhcps_lease;
 
-{$if CONFIG_DHCP_STA_LIST}
+{$if defined(CONFIG_DHCP_STA_LIST) and (CONFIG_DHCP_STA_LIST > 0)}
 type
   Ptcpip_adapter_sta_info = ^Ttcpip_adapter_sta_info;
   Ttcpip_adapter_sta_info = record
@@ -94,21 +94,31 @@ type
     TCPIP_ADAPTER_OP_GET, TCPIP_ADAPTER_OP_MAX);
 
   Ptcpip_adapter_option_id = ^Ttcpip_adapter_option_id;
-  Ttcpip_adapter_option_id = (TCPIP_ADAPTER_DOMAIN_NAME_SERVER = 6,
+  Ttcpip_adapter_option_id = (
+    TCPIP_ADAPTER_SUBNET_MASK = 1,
+    TCPIP_ADAPTER_DOMAIN_NAME_SERVER = 6,
     TCPIP_ADAPTER_ROUTER_SOLICITATION_ADDRESS = 32,
     TCPIP_ADAPTER_REQUESTED_IP_ADDRESS = 50,
     TCPIP_ADAPTER_IP_ADDRESS_LEASE_TIME = 51,
     TCPIP_ADAPTER_IP_REQUEST_RETRY_TIME = 52);
 
-  Ptcpip_adapter_api_msg_s = ^Ttcpip_adapter_api_msg_s;
-  //Ttcpip_adapter_api_msg_s = record
-  //  {undefined structure}
-  //end;
+var
+  IP_EVENT: Tesp_event_base; cvar; external;
 
-  Ttcpip_adapter_api_fn = function(msg: Ptcpip_adapter_api_msg_s): longint;
+type
+  Tip_event = (
+    IP_EVENT_STA_GOT_IP,
+    IP_EVENT_STA_LOST_IP,
+    IP_EVENT_AP_STAIPASSIGNED,
+    IP_EVENT_GOT_IP6);
 
-  //Ptcpip_adapter_api_msg_s = ^Ttcpip_adapter_api_msg_s;
-  Ttcpip_adapter_api_msg_s = record
+  Tip_event_ap_staipassigned = record
+    ip: Tip4_addr;
+  end;
+
+  Ptcpip_adapter_api_msg = ^Ttcpip_adapter_api_msg;
+  Ttcpip_adapter_api_fn = function(msg: Ptcpip_adapter_api_msg): longint;
+  Ttcpip_adapter_api_msg = record
     _type: longint;
     ret: longint;
     api_fn: Ttcpip_adapter_api_fn;
@@ -117,8 +127,6 @@ type
     mac: pbyte;
     Data: pointer;
   end;
-  Ttcpip_adapter_api_msg = Ttcpip_adapter_api_msg_s;
-  Ptcpip_adapter_api_msg = ^Ttcpip_adapter_api_msg;
 
   Ptcpip_adapter_dns_param_s = ^Ttcpip_adapter_dns_param_s;
   Ttcpip_adapter_dns_param_s = record
@@ -134,12 +142,23 @@ const
   TCPIP_ADAPTER_IPC_REMOTE = 1;
 
 type
-  Ptcpip_adatper_ip_lost_timer_s = ^Ttcpip_adatper_ip_lost_timer_s;
-  Ttcpip_adatper_ip_lost_timer_s = record
+  Ttcpip_adapter_ip_lost_timer = record
     timer_running: longbool;
   end;
-  Ttcpip_adapter_ip_lost_timer = Ttcpip_adatper_ip_lost_timer_s;
   Ptcpip_adapter_ip_lost_timer = ^Ttcpip_adapter_ip_lost_timer;
+
+  Tip_event_got_ip = record
+    if_index: Ttcpip_adapter_if;
+    ip_info: Ttcpip_adapter_ip_info;
+    ip_changed: boolean;
+  end;
+  Pip_event_got_ip = ^Tip_event_got_ip;
+
+  Tip_event_got_ip6 = record
+    if_index: Ttcpip_adapter_if;
+    ip6_info: Ttcpip_adapter_ip6_info;
+  end;
+  Pip_event_got_ip6 = ^Tip_event_got_ip6;
 
 procedure tcpip_adapter_init; external;
 function tcpip_adapter_start(tcpip_if: Ttcpip_adapter_if; mac: pbyte;
@@ -166,6 +185,8 @@ function tcpip_adapter_create_ip6_linklocal(tcpip_if: Ttcpip_adapter_if): Tesp_e
 
 {$if TCPIP_ADAPTER_IPV6}
 function tcpip_adapter_get_ip6_linklocal(tcpip_if: Ttcpip_adapter_if;
+  if_ip6: Pip6_addr_t): Tesp_err; external;
+function tcpip_adapter_get_ip6_global(tcpip_if: Ttcpip_adapter_if;
   if_ip6: Pip6_addr_t): Tesp_err; external;
 {$endif}
 
@@ -214,6 +235,10 @@ function tcpip_adapter_get_hostname(tcpip_if: Ttcpip_adapter_if;
 function tcpip_adapter_get_netif(tcpip_if: Ttcpip_adapter_if;
   netif: Ppointer): Tesp_err; external;
 function tcpip_adapter_is_netif_up(tcpip_if: Ttcpip_adapter_if): longbool; external;
+function tcpip_adapter_set_default_wifi_handlers: Tesp_err; external;
+function tcpip_adapter_clear_default_wifi_handlers: Tesp_err; external;
+function tcpip_adapter_get_netif_index(tcpip_if: Ttcpip_adapter_if): integer; external;
+
 
 implementation
 

@@ -68,8 +68,8 @@ type
     path: PChar;
     query: PChar;
     cert_pem: PChar;
-    //client_cert_pem: PChar;
-    //client_key_pem: PChar;
+    client_cert_pem: PChar;
+    client_key_pem: PChar;
     method: Tesp_http_client_method;
     timeout_ms: longint;
     disable_auto_redirect: longbool;
@@ -77,11 +77,11 @@ type
     event_handler: Thttp_event_handle_cb;
     transport_type: Tesp_http_client_transport;
     buffer_size: longint;
-    //buffer_size_tx: longint;
+    buffer_size_tx: longint;
     user_data: pointer;
     is_async: longbool;
-    //use_global_ca_store: longbool;
-    //skip_cert_common_name_check: longbool;
+    use_global_ca_store: longbool;
+    skip_cert_common_name_check: longbool;
   end;
 
   PHttpStatus_Code = ^THttpStatus_Code;
@@ -170,7 +170,7 @@ function esp_http_client_cleanup(client: Tesp_http_client_handle): Tesp_err;
 function esp_http_client_get_transport_type(client: Tesp_http_client_handle):
   Tesp_http_client_transport; external;
 
-{function esp_http_client_set_redirection(client: Tesp_http_client_handle): Tesp_err;
+function esp_http_client_set_redirection(client: Tesp_http_client_handle): Tesp_err;
   external;
 
 procedure esp_http_client_add_auth(client: Tesp_http_client_handle); external;
@@ -178,7 +178,11 @@ procedure esp_http_client_add_auth(client: Tesp_http_client_handle); external;
 function esp_http_client_is_complete_data_received(
   client: Tesp_http_client_handle): longbool;
   external;
-}
+
+function esp_http_client_read_response(client: Tesp_http_client_handle; buffer: pchar; len: integer): integer; external;
+
+function esp_http_client_get_url(client: Tesp_http_client_handle; url: pchar; const len: integer): Tesp_err; external;
+
 implementation
 
 end.

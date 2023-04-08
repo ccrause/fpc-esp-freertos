@@ -6,6 +6,7 @@ uses
   portmacro;
 
 const
+  MALLOC_CAP_EXEC = 1;
   MALLOC_CAP_32BIT = 1 shl 1;
   MALLOC_CAP_8BIT = 1 shl 2;
   MALLOC_CAP_DMA = 1 shl 3;
@@ -13,9 +14,6 @@ const
   MALLOC_CAP_SPIRAM = 1 shl 10;
 
 function HEAP_ALIGN(ptr: longint): longint;
-
-function MEM_HEAD_SIZE: Tsize;
-function MEM2_HEAD_SIZE: Tsize;
 
 type
   Pmem_blk = ^Tmem_blk;
@@ -47,6 +45,10 @@ type
     min_free_bytes: Tsize;
   end;
 
+const
+  MEM_HEAD_SIZE = sizeof(Tmem_blk);
+  MEM2_HEAD_SIZE = sizeof(Tmem2_blk);
+
 function heap_caps_get_free_size(caps: uint32): Tsize; external;
 function heap_caps_get_minimum_free_size(caps: uint32): Tsize; external;
 procedure esp_heap_caps_init_region(region: Pheap_region; max_num: Tsize);
@@ -70,16 +72,6 @@ uses
 function HEAP_ALIGN(ptr: longint): longint;
 begin
   HEAP_ALIGN := ((Tsize(ptr)) + (HEAP_ALIGN_SIZE - 1)) and (not (HEAP_ALIGN_SIZE - 1));
-end;
-
-function MEM_HEAD_SIZE: Tsize;
-begin
-  MEM_HEAD_SIZE := sizeof(Tmem_blk);
-end;
-
-function MEM2_HEAD_SIZE: Tsize; { return type might be wrong }
-begin
-  MEM2_HEAD_SIZE := sizeof(Tmem2_blk);
 end;
 
 end.

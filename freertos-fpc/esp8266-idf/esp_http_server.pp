@@ -6,7 +6,8 @@ unit esp_http_server;
 interface
 
 uses
-  http_parser, esp_err, task;
+  http_parser, esp_err, task,
+  portmacro;
 
 const
   ESP_ERR_HTTPD_BASE = $8000;
@@ -43,8 +44,7 @@ type
 
   Thttpd_free_ctx_fn = procedure(ctx: pointer);
 
-  Thttpd_open_func = function(hd: Thttpd_handle;
-    sockfd: longint): Tesp_err;
+  Thttpd_open_func = function(hd: Thttpd_handle; sockfd: longint): Tesp_err;
 
   Thttpd_close_func = procedure(hd: Thttpd_handle; sockfd: longint);
 

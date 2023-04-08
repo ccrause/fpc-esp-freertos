@@ -11,7 +11,7 @@ interface
 
 uses
   portmacro
-{$if configUSE_NEWLIB_REENTRANT = 1}
+{$if defined(configUSE_NEWLIB_REENTRANT) and (configUSE_NEWLIB_REENTRANT = 1)}
   , reent
 {$endif}
   ;

@@ -71,8 +71,8 @@ procedure PortEnableInt_NoNest(); external;
 procedure portDISABLE_INTERRUPTS; inline;
 procedure portENABLE_INTERRUPTS; inline;
 
-procedure portENTER_CRITICAL; external name 'vPortEnterCritical';//inline;
-procedure portEXIT_CRITICAL; external name 'vPortExitCritical'; //inline;
+procedure portENTER_CRITICAL; external name 'vPortEnterCritical';
+procedure portEXIT_CRITICAL; external name 'vPortExitCritical';
 function xPortGetCoreID(): uint32; inline;
 
 procedure _xt_user_exit; external;
@@ -94,9 +94,6 @@ type
 procedure show_critical_info; external;
 
 procedure esp_mem_trace(ptr: pointer; trace: PChar; no: int32); external;
-
-//{$define esp_mem_mark_file(ptr) esp_mem_trace((ptr), __ESP_FILE__, LINE__)
-
 function interrupt_is_disable(): longbool; external;
 function xPortGetTickRateHz: uint32; external;
 procedure _xt_enter_first_task; external;
@@ -131,8 +128,8 @@ end;
 
 procedure portEND_SWITCHING_ISR(xSwitchRequired: boolean);
 begin
-	if xSwitchRequired then
-		vTaskSwitchContext();
+  if xSwitchRequired then
+    vTaskSwitchContext();
 end;
 
 // TODO: Check if port(DIS/EN)ABLE_INTERRUPTS can be simplified

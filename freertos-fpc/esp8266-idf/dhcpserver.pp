@@ -71,31 +71,29 @@ type
 
   TClientIP = array[0..3] of byte;
   Tdhcps_cb = procedure (client_ip: TClientIP);
-{
-(* error
-static inline bool dhcps_router_enabled (dhcps_offer_t offer)
- in declarator_list *)
 
-(* error
-static inline bool dhcps_dns_enabled (dhcps_offer_t offer)
- in declarator_list *)
+function dhcps_router_enabled (const offer: Tdhcps_offer): boolean; inline;
+function dhcps_dns_enabled (const offer: Tdhcps_offer): boolean; inline;
 
-(* error
-void dhcps_start(struct netif *netif, ip4_addr_t ip);
-(* error
-void dhcps_start(struct netif *netif, ip4_addr_t ip);
- in declarator_list *)
-}
+procedure dhcps_start(netif: Pnetif; ip: Tip4_addr); external;
 procedure dhcps_stop(netif: Pnetif); external;
 function dhcps_option_info(op_id: byte; opt_len: uint32): pointer; external;
-procedure dhcps_set_option_info(op_id: byte; opt_info: pointer;
-  opt_len: uint32); external;
+procedure dhcps_set_option_info(op_id: byte; opt_info: pointer; opt_len: uint32); external;
 function dhcp_search_ip_on_mac(mac: byte; ip: Pip4_addr): longbool; external;
 procedure dhcps_dns_setserver(dnsserver: Pip_addr); external;
 function dhcps_dns_getserver: Tip4_addr; external;
 procedure dhcps_set_new_lease_cb(cb: Tdhcps_cb); external;
-procedure dhcps_coarse_tmr; external;
 
 implementation
+
+function dhcps_router_enabled (const offer: Tdhcps_offer): boolean;
+begin
+  Result := (ord(offer) and ord(OFFER_ROUTER)) > 0;
+end;
+
+function dhcps_dns_enabled (const offer: Tdhcps_offer): boolean;
+begin
+  Result := (ord(offer) and ord(OFFER_DNS)) > 0;
+end;
 
 end.

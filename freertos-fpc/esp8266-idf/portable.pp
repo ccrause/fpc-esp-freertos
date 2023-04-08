@@ -3,13 +3,15 @@ unit portable;
 interface
 
 uses
-  portmacro, projdefs;
+  portmacro, projdefs, esp_heap_caps;
 
 const
   portBYTE_ALIGNMENT_MASK = portBYTE_ALIGNMENT - 1;
 {$ifndef portNUM_CONFIGURABLE_REGIONS}
   portNUM_CONFIGURABLE_REGIONS = 1;
 {$endif}
+  pvMALLOC_DRAM = MALLOC_CAP_8BIT or MALLOC_CAP_32BIT or MALLOC_CAP_DMA;
+  pvMALLOC_IRAM = MALLOC_CAP_32BIT;
 
 type
   PStackType = ^TStackType;
@@ -25,12 +27,11 @@ function pxPortInitialiseStack(pxTopOfStack: PStackType; pxCode: TTaskFunction;
     pvParameters: pointer): PStackType; external;
 {$endif}
 
-// Malloc/free provided by Newlib
-function pvPortMalloc(size: uint32): pointer; external name 'malloc';
-procedure vPortFree(APointer: pointer); external name 'free';
-function pvPortZalloc(s: longint): pointer; external name 'zalloc';
-function pvPortCalloc(count, sz: Tsize): pointer; external name 'calloc';
-function pvPortRealloc(memptr: pointer; sz: Tsize): pointer; external name 'realloc';
+function pvPortMalloc(size: uint32): pointer; inline;
+procedure vPortFree(APointer: pointer); inline;
+function pvPortZalloc(size: longint): pointer; inline;
+function pvPortCalloc(count, size: Tsize): pointer; inline;
+function pvPortRealloc(memptr: pointer; size: Tsize): pointer; inline;
 
 function xPortStartScheduler: TBaseType; external;
 procedure vPortEndScheduler; external;
@@ -45,7 +46,33 @@ procedure vPortStoreTaskMPUSettings(xMPUSettings: PxMPU_SETTINGS;
 {$endif}
 
 function xPortInIsrContext: longint; external;
+procedure vPortInitContextFromOldStack(newStackTop: PStackType; oldStackTop: PStackType; stackSize: TUBaseType); external;
 
 implementation
+
+function pvPortMalloc(size: uint32): pointer;
+begin
+  Result := heap_caps_malloc(size, pvMALLOC_DRAM);
+end;
+
+procedure vPortFree(APointer: pointer);
+begin
+  heap_caps_free(APointer);
+end;
+
+function pvPortZalloc(size: longint): pointer;
+begin
+  Result := heap_caps_zalloc(size, pvMALLOC_IRAM);
+end;
+
+function pvPortCalloc(count, size: Tsize): pointer;
+begin
+  Result := heap_caps_calloc(count, size, pvMALLOC_IRAM);
+end;
+
+function pvPortRealloc(memptr: pointer; size: Tsize): pointer;
+begin
+  Result := heap_caps_realloc(memptr, size, pvMALLOC_IRAM);
+end;
 
 end.

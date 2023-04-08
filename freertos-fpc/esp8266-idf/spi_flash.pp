@@ -24,11 +24,9 @@ type
   Tspi_flash_mmap_handle = uint32;
 {$endif}
 
-
 function spi_flash_get_chip_size: Tsize; external;
 function spi_flash_erase_sector(sector: Tsize): Tesp_err; external;
-function spi_flash_erase_range(start_address: Tsize; size: Tsize): Tesp_err;
-  external;
+function spi_flash_erase_range(start_address: Tsize; size: Tsize): Tesp_err; external;
 function spi_flash_write(dest_addr: Tsize; src: pointer;
   size: Tsize): Tesp_err; external;
 function spi_flash_read(src_addr: Tsize; dest: pointer;
@@ -47,6 +45,9 @@ function esp_patition_table_init_data(partition_info: pointer): longint; externa
 {$endif}
 {$ifdef CONFIG_ESP8266_BOOT_COPY_APP}
 function esp_patition_copy_ota1_to_ota0(partition_info: pointer): longint; external;
+{$endif}
+{$ifdef CONFIG_ENABLE_TH25Q16HB_PATCH_0}
+function th25q16hb_apply_patch_0(): integer;
 {$endif}
 
 implementation

@@ -7,7 +7,7 @@ unit esp_wifi;
 interface
 
 uses
-  esp_err, esp_wifi_types, esp_event;
+  esp_err, esp_wifi_types, esp_event, esp_event_legacy;
 
 type
   TMac = array[0..5] of byte;
@@ -60,6 +60,11 @@ const
   {$else}
     WIFI_NVS_ENABLED = 0;
   {$endif}
+  {$if defined(CONFIG_ESP8266_WIFI_ENABLE_WPA3_SAE)}
+    WIFI_WPA3_ENABLED = 1;
+  {$else}
+  WIFI_WPA3_ENABLED = 0;
+  {$endif}
   WIFI_INIT_CONFIG_MAGIC = $1F2F3F4F;
 
 type
@@ -81,6 +86,7 @@ type
     tx_buf_num: byte;
     nvs_enable: byte;
     nano_enable: byte;
+    wpa3_sae_enable: byte;
     magic: uint32;
   end;
 
@@ -161,6 +167,10 @@ function esp_wifi_get_event_mask(mask: Puint32): Tesp_err; external;
 function esp_wifi_80211_tx(ifx: Twifi_interface; buffer: pointer;
   len: longint; en_sys_seq: longbool): Tesp_err; external;
 function esp_wifi_get_state: Twifi_state; external;
+function esp_wifi_set_rssi_threshold(rssi: int32): Tesp_err; external;
+function esp_wifi_get_tsf_time(AInterface: Twifi_interface): int64; external;
+function esp_wifi_set_inactive_time(ifx: Twifi_interface; sec: uint16): Tesp_err; external;
+function esp_wifi_get_inactive_time(ifx: Twifi_interface; var sec: uint16): Tesp_err; external;
 
 implementation
 
@@ -184,6 +194,7 @@ begin
     tx_buf_num := CONFIG_ESP8266_WIFI_TX_PKT_NUM;
     nvs_enable := WIFI_NVS_ENABLED;
     nano_enable := 0;
+    wpa3_sae_enable := WIFI_WPA3_ENABLED;
     magic := WIFI_INIT_CONFIG_MAGIC;
   end;
 end;

@@ -6,7 +6,7 @@ unit esp_wifi_types;
 interface
 
 uses
-  esp_interface, eagle_soc;
+  esp_interface, eagle_soc, esp_event_base;
 
 type
   Pwifi_ps_type = ^Twifi_ps_type;
@@ -42,6 +42,13 @@ const
   ESP_WIFI_MAX_CONN_NUM = 10;
   WIFI_VENDOR_IE_ELEMENT_ID = $DD;
 
+  MAX_SSID_LEN       = 32;
+  MAX_PASSPHRASE_LEN = 64;
+  MAX_WPS_AP_CRED    = 3;
+
+var
+  WIFI_EVENT: Tesp_event_base; cvar; external;
+
 type
   Pwifi_interface = ^Twifi_interface;
   Twifi_interface = Tesp_interface;
@@ -65,7 +72,8 @@ type
   Pwifi_auth_mode = ^Twifi_auth_mode;
   Twifi_auth_mode = (WIFI_AUTH_OPEN = 0, WIFI_AUTH_WEP, WIFI_AUTH_WPA_PSK,
     WIFI_AUTH_WPA2_PSK, WIFI_AUTH_WPA_WPA2_PSK,
-    WIFI_AUTH_WPA2_ENTERPRISE, WIFI_AUTH_MAX);
+    WIFI_AUTH_WPA2_ENTERPRISE, WIFI_AUTH_WPA3_PSK,
+    WIFI_AUTH_WPA2_WPA3_PSK, WIFI_AUTH_MAX);
 
   Pwifi_err_reason = ^Twifi_err_reason;
   Twifi_err_reason = (WIFI_REASON_UNSPECIFIED = 1, WIFI_REASON_AUTH_EXPIRE = 2,
@@ -82,9 +90,11 @@ type
     WIFI_REASON_AKMP_INVALID = 20, WIFI_REASON_UNSUPP_RSN_IE_VERSION = 21,
     WIFI_REASON_INVALID_RSN_IE_CAP = 22, WIFI_REASON_802_1X_AUTH_FAILED = 23,
     WIFI_REASON_CIPHER_SUITE_REJECTED = 24,
+    WIFI_REASON_INVALID_PMKID = 53,
     WIFI_REASON_BEACON_TIMEOUT = 200, WIFI_REASON_NO_AP_FOUND = 201,
     WIFI_REASON_AUTH_FAIL = 202, WIFI_REASON_ASSOC_FAIL = 203,
-    WIFI_REASON_HANDSHAKE_TIMEOUT = 204, WIFI_REASON_BASIC_RATE_NOT_SUPPORT = 205);
+    WIFI_REASON_HANDSHAKE_TIMEOUT = 204, WIFI_REASON_CONNECTION_FAIL = 205,
+    WIFI_REASON_AP_TSF_RESET = 206, WIFI_REASON_BASIC_RATE_NOT_SUPPORT = 207);
 
   Pwifi_second_chan = ^Twifi_second_chan;
   Twifi_second_chan = (WIFI_SECOND_CHAN_NONE = 0, WIFI_SECOND_CHAN_ABOVE,
@@ -120,7 +130,7 @@ type
   Twifi_cipher_type = (WIFI_CIPHER_TYPE_NONE = 0, WIFI_CIPHER_TYPE_WEP40,
     WIFI_CIPHER_TYPE_WEP104, WIFI_CIPHER_TYPE_TKIP,
     WIFI_CIPHER_TYPE_CCMP, WIFI_CIPHER_TYPE_TKIP_CCMP,
-    WIFI_CIPHER_TYPE_UNKNOWN);
+    WIFI_CIPHER_TYPE_AES_CMAC128, WIFI_CIPHER_TYPE_UNKNOWN);
 
   Pwifi_ant = ^Twifi_ant;
   Twifi_ant = (WIFI_ANT_ANT0, WIFI_ANT_ANT1, WIFI_ANT_MAX);
@@ -184,6 +194,16 @@ type
   Twifi_state = (WIFI_STATE_DEINIT = 0, WIFI_STATE_INIT,
     WIFI_STATE_START);
 
+  Tesp_pm_config = record
+    max_bcn_early_ms: byte;
+    max_bcn_timeout_ms: byte;
+    wait_time: byte;
+    wait_tx_cnt: byte;
+    wait_rx_bdata_cnt: byte;
+    wait_rx_udata_cnt: byte;
+    recv_bdata: boolean;
+  end;
+
   Pesp_pm_config_esp8266 = ^Tesp_pm_config_esp8266;
   Tesp_pm_config_esp8266 = record
     max_freq_mhz: longint;
@@ -193,6 +213,11 @@ type
 
   Pwifi_bandwidth = ^Twifi_bandwidth;
   Twifi_bandwidth = (WIFI_BW_HT20 = 1, WIFI_BW_HT40);
+
+  Twifi_pmf_config = record
+    capable: boolean;
+    required: boolean;
+  end;
 
   Pwifi_ap_config = ^Twifi_ap_config;
   Twifi_ap_config = record
@@ -208,6 +233,12 @@ type
 
   Pwifi_sta_config = ^Twifi_sta_config;
   Twifi_sta_config = record
+  private
+    function getrm_enabled: TBitRange1; inline;
+    function getbtm_enabled: TBitRange1; inline;
+    procedure setrm_enabled(const avalue: TBitRange1); inline;
+    procedure setbtm_enabled(const avalue: TBitRange1); inline;
+  public
     ssid: array[0..31] of byte;
     password: array[0..63] of byte;
     scan_method: Twifi_scan_method;
@@ -217,6 +248,10 @@ type
     listen_interval: uint16;
     sort_method: Twifi_sort_method;
     threshold: Twifi_fast_scan_threshold;
+    pmf_cfg: Twifi_pmf_config;
+    reserved_measurements: uint32;
+    property rm_enabled: TBitRange1 read getrm_enabled write setrm_enabled;
+    property btm_enabled: TBitRange1 read getbtm_enabled write setbtm_enabled;
   end;
 
   Pwifi_config = ^Twifi_config;
@@ -337,7 +372,102 @@ type
     unused: 0..$F;           // 4
   end;
 
+  Twifi_event = (
+      WIFI_EVENT_WIFI_READY = 0,
+      WIFI_EVENT_SCAN_DONE,
+      WIFI_EVENT_STA_START,
+      WIFI_EVENT_STA_STOP,
+      WIFI_EVENT_STA_CONNECTED,
+      WIFI_EVENT_STA_DISCONNECTED,
+      WIFI_EVENT_STA_AUTHMODE_CHANGE,
+      WIFI_EVENT_STA_BSS_RSSI_LOW,
+      WIFI_EVENT_STA_WPS_ER_SUCCESS,
+      WIFI_EVENT_STA_WPS_ER_FAILED,
+      WIFI_EVENT_STA_WPS_ER_TIMEOUT,
+      WIFI_EVENT_STA_WPS_ER_PIN,
+      WIFI_EVENT_AP_START,
+      WIFI_EVENT_AP_STOP,
+      WIFI_EVENT_AP_STACONNECTED,
+      WIFI_EVENT_AP_STADISCONNECTED,
+      WIFI_EVENT_AP_PROBEREQRECVED
+  );
+
+  Twifi_event_sta_wps_fail_reason = (
+    WPS_FAIL_REASON_NORMAL = 0,
+    WPS_FAIL_REASON_RECV_M2D,
+    WPS_FAIL_REASON_MAX
+  );
+
+  Twifi_event_sta_scan_done = record
+    status: uint32;
+    number: byte;
+    scan_id: byte;
+  end;
+
+  Twifi_event_sta_connected = record
+    ssid: array[0..31] of byte;
+    ssid_len: byte;
+    bssid: array [0..5] of byte;
+    channel: byte;
+    authmode: Twifi_auth_mode;
+  end;
+
+  Twifi_event_sta_authmode_change = record
+    old_mode: Twifi_auth_mode;
+    new_mode: Twifi_auth_mode;
+  end;
+
+  Twifi_event_sta_wps_er_pin = record
+    pin_code: array [0..7] of byte;
+  end;
+
+  Twifi_event_ap_staconnected = record
+    mac: array[0..5] of byte;
+    aid: byte;
+  end;
+
+  Twifi_event_ap_stadisconnected = record
+    mac: array[0..5] of byte;
+    aid: byte;
+  end;
+
+  Twifi_event_ap_probe_req_rx = record
+    rssi: integer;
+    mac: array[0..5] of byte;
+  end;
+
+  Twifi_event_sta_disconnected = record
+    ssid: array[0..31] of byte;
+    ssid_len: byte;
+    bssid: array[0..5] of byte;
+    reason: byte;
+  end;
+
+  Twifi_event_bss_rssi_low = record
+    rssi: int32;
+  end;
+
 implementation
+
+function Twifi_sta_config.getrm_enabled: TBitRange1;
+begin
+  Result := reserved_measurements and 1;
+end;
+
+function Twifi_sta_config.getbtm_enabled: TBitRange1;
+begin
+  Result := (reserved_measurements and 2) shl 1;
+end;
+
+procedure Twifi_sta_config.setrm_enabled(const avalue: TBitRange1);
+begin
+  reserved_measurements := (reserved_measurements and $FFFFFFFE) or avalue;
+end;
+
+procedure Twifi_sta_config.setbtm_enabled(const avalue: TBitRange1);
+begin
+  reserved_measurements := (reserved_measurements and $FFFFFFFD) or (avalue shl 1);
+end;
 
 { Twifi_ap_record }
 
