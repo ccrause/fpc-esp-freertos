@@ -117,6 +117,10 @@ type
     aes_decrypt: Tesp_aes_decrypt;
     aes_decrypt_init: Tesp_aes_decrypt_init;
     aes_decrypt_deinit: Tesp_aes_decrypt_deinit;
+    {$if IDF_VERSION >= 40300}
+    aes_128_encrypt: Tesp_aes_128_encrypt;
+    aes_128_decrypt: Tesp_aes_128_decrypt;
+    {$endif}
     omac1_aes_128: Tesp_omac1_aes_128;
     ccmp_decrypt: Tesp_ccmp_decrypt;
     ccmp_encrypt: Tesp_ccmp_encrypt;

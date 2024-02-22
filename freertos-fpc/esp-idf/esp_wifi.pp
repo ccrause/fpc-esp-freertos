@@ -9,25 +9,29 @@ unit esp_wifi;
 {$linklib efuse, static}
 {$linklib lwip, static}
 {$linklib pp, static}
-{$linklib coexist, static}
+{$if IDF_VERSION < 50000}
+  {$linklib coexist, static}
+{$linklib tcpip_adapter, static}
+{$endif}
 {$linklib phy, static}
 {$linklib core, static}
 {$linklib rtc, static}
 {$linklib wpa_supplicant, static}
 {$linklib mbedtls, static}
 {$linklib mesh, static}
-{$linklib tcpip_adapter, static}
 
-{$if (IDF_VERSION < 40405)}
-  // esp-idf 4.4.1
-  {$linklib mbedcrypto, static}
-{$else}
-  // esp-idf 4.4.5
-  {$linklib tcp_transport, static}
-  {$linklib esp-tls, static}
+{$if (IDF_VERSION >= 40400)}
+  {$if (IDF_VERSION < 40405)}
+    // esp-idf 4.4.1
+    {$linklib mbedcrypto, static}
+  {$else}
+    // esp-idf 4.4.5
+    {$linklib tcp_transport, static}
+    {$linklib esp-tls, static}
+  {$endif}
+
+  {$linklib esp_phy, static}
 {$endif}
-
-{$linklib esp_phy, static}
 
 interface
 
@@ -59,6 +63,11 @@ const
   {$else}
     WIFI_STATIC_TX_BUFFER_NUM = 0;
   {$endif}
+  {$if defined(CONFIG_ESP32_SPIRAM_SUPPORT) or defined(CONFIG_ESP32S2_SPIRAM_SUPPORT) or defined(CONFIG_ESP32S3_SPIRAM_SUPPORT)}
+    WIFI_CACHE_TX_BUFFER_NUM = CONFIG_ESP32_WIFI_CACHE_TX_BUFFER_NUM;
+  {$else}
+    WIFI_CACHE_TX_BUFFER_NUM = 0;
+  {$endif}
   {$if defined(CONFIG_ESP32_WIFI_DYNAMIC_TX_BUFFER_NUM)}
     WIFI_DYNAMIC_TX_BUFFER_NUM = CONFIG_ESP32_WIFI_DYNAMIC_TX_BUFFER_NUM;
   {$else}
@@ -79,6 +88,13 @@ const
   {$else}
     WIFI_AMPDU_TX_ENABLED = 0;
   {$endif}
+  {$if IDF_VERSION >= 40300}
+    {$if defined(CONFIG_ESP_WIFI_AMSDU_TX_ENABLED)}
+      {$define WIFI_AMSDU_TX_ENABLED := 1}
+    {$else}
+      {$define WIFI_AMSDU_TX_ENABLED := 0}
+    {$endif}
+  {$endif}
   {$if defined(CONFIG_ESP32_WIFI_NVS_ENABLED) and (CONFIG_ESP32_WIFI_NVS_ENABLED = 1)}
     WIFI_NVS_ENABLED = 1;
   {$else}
@@ -89,7 +105,7 @@ const
   {$else}
     WIFI_NANO_FORMAT_ENABLED = 0;
   {$endif}
-    WIFI_INIT_CONFIG_MAGIC = $1F2F3F4F;
+  WIFI_INIT_CONFIG_MAGIC = $1F2F3F4F;
   {$if defined(CONFIG_ESP32_WIFI_AMPDU_TX_ENABLED) and (CONFIG_ESP32_WIFI_AMPDU_TX_ENABLED = 1)}
     WIFI_DEFAULT_TX_BA_WIN = CONFIG_ESP32_WIFI_TX_BA_WIN;
   {$else}
@@ -117,6 +133,12 @@ const
   {$endif}
     CONFIG_FEATURE_WPA3_SAE_BIT = 1 shl 0;
 
+  {$if defined(CONFIG_ESP_WIFI_STA_DISCONNECTED_PM_ENABLE)}
+    {$define WIFI_STA_DISCONNECTED_PM_ENABLED := true}
+  {$else}
+    {$define WIFI_STA_DISCONNECTED_PM_ENABLED := false}
+  {$endif}
+
 var
   g_wifi_default_wpa_crypto_funcs: Twpa_crypto_funcs; cvar; external;
   g_wifi_feature_caps: uint64; cvar; external;
@@ -127,7 +149,9 @@ type
 
   Pwifi_init_config = ^Twifi_init_config;
   Twifi_init_config = record
+    {$if IDF_VERSION < 50000}
     event_handler: Tsystem_event_handler;
+    {$endif}
     osi_funcs: Pwifi_osi_funcs;
     wpa_crypto_funcs: Twpa_crypto_funcs;
     static_rx_buf_num: int32;
@@ -135,17 +159,31 @@ type
     tx_buf_type: int32;
     static_tx_buf_num: int32;
     dynamic_tx_buf_num: int32;
+    {$if IDF_VERSION >= 40200}
+    cache_tx_buf_num: int32;
+    {$endif}
     csi_enable: int32;
     ampdu_rx_enable: int32;
     ampdu_tx_enable: int32;
+    {$if IDF_VERSION >= 40300}
+    amsdu_tx_enable: int32;
+    {$endif}
     nvs_enable: int32;
     nano_enable: int32;
+    {$if IDF_VERSION < 40200}
     tx_ba_win: int32;
+    {$endif}
     rx_ba_win: int32;
     wifi_task_core_id_ : int32; // Disambiguate from name of constant
     beacon_max_len: int32;
     mgmt_sbuf_num: int32;
     feature_caps: uint64;
+    {$if IDF_VERSION >= 40209}
+    sta_disconnected_pm: boolean;
+    {$endif}
+    {$if IDF_VERSION >= 40404}
+    espnow_max_encrypt_num: int32;
+    {$endif}
     magic: int32;
   end;
 
@@ -240,25 +278,42 @@ procedure WIFI_INIT_CONFIG_DEFAULT(var data: Twifi_init_config);
 begin
   with data do
   begin
+    {$if IDF_VERSION < 50000}
     event_handler := @esp_event_send_internal;
+    {$endif}
     osi_funcs := @g_wifi_osi_funcs;
+
     wpa_crypto_funcs := g_wifi_default_wpa_crypto_funcs;
     static_rx_buf_num := CONFIG_ESP32_WIFI_STATIC_RX_BUFFER_NUM;
     dynamic_rx_buf_num := CONFIG_ESP32_WIFI_DYNAMIC_RX_BUFFER_NUM;
     tx_buf_type := CONFIG_ESP32_WIFI_TX_BUFFER_TYPE;
     static_tx_buf_num := WIFI_STATIC_TX_BUFFER_NUM;
     dynamic_tx_buf_num := WIFI_DYNAMIC_TX_BUFFER_NUM;
+    {$if IDF_VERSION >= 40200}
+    cache_tx_buf_num :=  WIFI_CACHE_TX_BUFFER_NUM;
+    {$endif}
     csi_enable := WIFI_CSI_ENABLED;
     ampdu_rx_enable := WIFI_AMPDU_RX_ENABLED;
     ampdu_tx_enable := WIFI_AMPDU_TX_ENABLED;
+    {$if IDF_VERSION >= 40300}
+    amsdu_tx_enable := WIFI_AMSDU_TX_ENABLED;
+    {$endif}
     nvs_enable := WIFI_NVS_ENABLED;
     nano_enable := WIFI_NANO_FORMAT_ENABLED;
+    {$if IDF_VERSION < 40200}
     tx_ba_win := WIFI_DEFAULT_TX_BA_WIN;
+    {$endif}
     rx_ba_win := WIFI_DEFAULT_RX_BA_WIN;
     wifi_task_core_id_ := WIFI_TASK_CORE_ID;
     beacon_max_len := WIFI_SOFTAP_BEACON_MAX_LEN;
     mgmt_sbuf_num := WIFI_MGMT_SBUF_NUM;
     feature_caps := g_wifi_feature_caps;
+    {$if IDF_VERSION >= 40300}
+    sta_disconnected_pm := WIFI_STA_DISCONNECTED_PM_ENABLED;
+    {$endif}
+    {$if IDF_VERSION >= 40404}
+    espnow_max_encrypt_num := CONFIG_ESP_WIFI_ESPNOW_MAX_ENCRYPT_NUM;
+    {$endif}
     magic := WIFI_INIT_CONFIG_MAGIC;
   end;
 end;
