@@ -20,9 +20,9 @@ unit esp_wifi;
 {$linklib mbedtls, static}
 {$linklib mesh, static}
 
-{$if (IDF_VERSION >= 40400)}
+{$if (IDF_VERSION >= 40307)}
   {$if (IDF_VERSION < 40405)}
-    // esp-idf 4.4.1
+    // esp-idf 4.3.7, 4.4.1
     {$linklib mbedcrypto, static}
   {$else}
     // esp-idf 4.4.5
@@ -30,7 +30,9 @@ unit esp_wifi;
     {$linklib esp-tls, static}
   {$endif}
 
-  {$linklib esp_phy, static}
+  {$if (IDF_VERSION >= 40400)}
+    {$linklib esp_phy, static}
+  {$endif}
 {$endif}
 
 interface
@@ -72,6 +74,11 @@ const
     WIFI_DYNAMIC_TX_BUFFER_NUM = CONFIG_ESP32_WIFI_DYNAMIC_TX_BUFFER_NUM;
   {$else}
     WIFI_DYNAMIC_TX_BUFFER_NUM = 0;
+  {$endif}
+  {$if defined(CONFIG_ESP_WIFI_RX_MGMT_BUF_NUM_DEF) and (CONFIG_ESP_WIFI_RX_MGMT_BUF_NUM_DEF > -1)}
+    WIFI_RX_MGMT_BUF_NUM_DEF = CONFIG_ESP_WIFI_RX_MGMT_BUF_NUM_DEF;
+  {$else}
+    WIFI_RX_MGMT_BUF_NUM_DEF = 0;
   {$endif}
   {$if defined(CONFIG_ESP32_WIFI_CSI_ENABLED) and (CONFIG_ESP32_WIFI_CSI_ENABLED = 1)}
     WIFI_CSI_ENABLED = 1;
@@ -159,6 +166,10 @@ type
     tx_buf_type: int32;
     static_tx_buf_num: int32;
     dynamic_tx_buf_num: int32;
+    {$if IDF_VERSION >= 40307}
+    rx_mgmt_buf_type: uint32;
+    rx_mgmt_buf_num: uint32;
+    {$endif}
     {$if IDF_VERSION >= 40200}
     cache_tx_buf_num: int32;
     {$endif}
@@ -289,6 +300,10 @@ begin
     tx_buf_type := CONFIG_ESP32_WIFI_TX_BUFFER_TYPE;
     static_tx_buf_num := WIFI_STATIC_TX_BUFFER_NUM;
     dynamic_tx_buf_num := WIFI_DYNAMIC_TX_BUFFER_NUM;
+    {$if IDF_VERSION >= 40307}
+    rx_mgmt_buf_type := CONFIG_ESP_WIFI_DYNAMIC_RX_MGMT_BUF;
+    rx_mgmt_buf_num := WIFI_RX_MGMT_BUF_NUM_DEF;
+    {$endif}
     {$if IDF_VERSION >= 40200}
     cache_tx_buf_num :=  WIFI_CACHE_TX_BUFFER_NUM;
     {$endif}
