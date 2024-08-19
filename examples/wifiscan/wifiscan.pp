@@ -6,7 +6,7 @@ uses
   esp_err, esp_wifi, esp_wifi_types, esp_netif, esp_event
   {$ifdef CPULX6}, esp_wifi_default{$endif}
   , nvs
-  {$ifdef CPULX106}, nvs_flash, esp_event_loop{$endif};
+  {$ifdef CPULX106}, nvs_flash, esp_event_legacy{$endif};
 
 {$ifdef CPULX106}
 function eventhandler(ctx: pointer; event: Psystem_event): Tesp_err;
@@ -119,12 +119,15 @@ begin
   EspErrorCheck(esp_wifi_scan_get_ap_records(@ap_info_len, @ap_info[0]));
   EspErrorCheck(esp_wifi_scan_get_ap_num(@ap_info_len));
 
-  for i := 0 to ap_info_len-1 do
-  begin
-    write('AP #', i, ': ');
-    printAPInfo(ap_info[i]);
-    writeln;
-  end;
+  if ap_info_len > 0 then
+    for i := 0 to ap_info_len-1 do
+    begin
+      write('AP #', i, ': ');
+      printAPInfo(ap_info[i]);
+      writeln;
+    end
+  else
+    writeln('No AP records returned.');
 end;
 
 var
