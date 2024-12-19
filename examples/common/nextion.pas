@@ -122,13 +122,14 @@ type
 implementation
 
 uses
-  task, portmacro, logtouart;
+  {$ifdef FREERTOS}task, portmacro,{$endif} logtouart;
 
+{$ifdef FREERTOS}
 procedure sleep(Milliseconds: cardinal);  // Should be in SysUtils but including it causes an error in ESP32
 begin
   vTaskDelay(Milliseconds div portTICK_PERIOD_MS);
 end;
-
+{$endif}
 
 { TNextionHandler }
 
