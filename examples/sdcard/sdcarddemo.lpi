@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectOptions>
+    <Version Value="12"/>
+    <General>
+      <Flags>
+        <MainUnitHasCreateFormStatements Value="False"/>
+        <MainUnitHasTitleStatement Value="False"/>
+        <MainUnitHasScaledStatement Value="False"/>
+        <CompatibilityMode Value="True"/>
+      </Flags>
+      <SessionStorage Value="InProjectDir"/>
+      <Title Value="sdcarddemo"/>
+      <UseAppBundle Value="False"/>
+      <ResourceType Value="res"/>
+    </General>
+    <BuildModes Count="5">
+      <Item1 Name="ESP32" Default="True"/>
+      <Item2 Name="ESP8266">
+        <CompilerOptions>
+          <Version Value="11"/>
+          <Target>
+            <Filename Value="sdcarddemo"/>
+          </Target>
+          <SearchPaths>
+            <IncludeFiles Value="$(ProjOutDir);../../freertos-fpc;../../freertos-fpc/esp8266-idf"/>
+            <Libraries Value="../../fpc-esp8266-idf/libs;../../../../xtensa/xtensa-lx106-elf/xtensa-lx106-elf/sysroot/lib"/>
+            <OtherUnitFiles Value="../../freertos-fpc;../../freertos-fpc/esp8266-idf"/>
+            <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
+          </SearchPaths>
+          <Linking>
+            <Debugging>
+              <DebugInfoType Value="dsDwarf3"/>
+              <UseLineInfoUnit Value="False"/>
+            </Debugging>
+          </Linking>
+          <Other>
+            <Verbosity>
+              <ShowAll Value="True"/>
+            </Verbosity>
+            <WriteFPCLogo Value="False"/>
+            <ConfigFile>
+              <DontUseConfigFile Value="True"/>
+              <CustomConfigFile Value="True"/>
+              <ConfigFilePath Value="~/fpc/3.3.1/fpc.cfg"/>
+            </ConfigFile>
+            <CustomOptions Value="-Tfreertos 
+-Wpesp8266
+-Cacall0
+-XP/home/christo/xtensa/xtensa-lx106-elf/bin/xtensa-lx106-elf-
+-Ff/home/christo/fpc/xtensa/fpc-esp8266-idf"/>
+            <CompilerPath Value="/home/christo/fpc/3.3.1/compiler/ppcrossxtensa"/>
+          </Other>
+        </CompilerOptions>
+      </Item2>
+      <Item3 Name="fpcupdeluxe">
+        <CompilerOptions>
+          <Version Value="11"/>
+          <Target>
+            <Filename Value="sdcarddemo"/>
+          </Target>
+          <SearchPaths>
+            <IncludeFiles Value="$(ProjOutDir);../../freertos-fpc;../../freertos-fpc/esp-idf"/>
+            <OtherUnitFiles Value="../../freertos-fpc"/>
+            <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
+          </SearchPaths>
+          <Linking>
+            <Debugging>
+              <DebugInfoType Value="dsDwarf3"/>
+              <UseLineInfoUnit Value="False"/>
+            </Debugging>
+          </Linking>
+          <Other>
+            <Verbosity>
+              <ShowAll Value="True"/>
+            </Verbosity>
+            <ConfigFile>
+              <DontUseConfigFile Value="True"/>
+              <CustomConfigFile Value="True"/>
+              <ConfigFilePath Value="/home/christo/fpcupdeluxe/fpcupdeluxe/fpc/bin/x86_64-linux/fpc.cfg"/>
+            </ConfigFile>
+            <CustomOptions Value="-Tfreertos 
+-Wpesp32 
+-Cawindowed"/>
+            <CompilerPath Value="/home/christo/fpcupdeluxe/fpcupdeluxe/fpc/bin/x86_64-linux/ppcrossxtensa"/>
+          </Other>
+        </CompilerOptions>
+      </Item3>
+      <Item4 Name="fpcupdeluxe106">
+        <CompilerOptions>
+          <Version Value="11"/>
+          <Target>
+            <Filename Value="sdcarddemo"/>
+          </Target>
+          <SearchPaths>
+            <IncludeFiles Value="$(ProjOutDir);../../freertos-fpc;../../freertos-fpc/esp8266-idf"/>
+            <Libraries Value="../../fpc-esp8266-idf/libs;../../../../xtensa/xtensa-lx106-elf/xtensa-lx106-elf/sysroot/lib"/>
+            <OtherUnitFiles Value="../../freertos-fpc;../../freertos-fpc/esp8266-idf"/>
+            <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
+          </SearchPaths>
+          <Linking>
+            <Debugging>
+              <DebugInfoType Value="dsDwarf3"/>
+              <UseLineInfoUnit Value="False"/>
+            </Debugging>
+          </Linking>
+          <Other>
+            <Verbosity>
+              <ShowAll Value="True"/>
+            </Verbosity>
+            <ConfigFile>
+              <DontUseConfigFile Value="True"/>
+              <CustomConfigFile Value="True"/>
+              <ConfigFilePath Value="/home/christo/fpcupdeluxe/fpcupdeluxe/fpc/bin/x86_64-linux/fpc.cfg"/>
+            </ConfigFile>
+            <CustomOptions Value="-Tfreertos 
+-Wpesp8266
+-Cacall0
+-XP/home/christo/xtensa/xtensa-lx106-elf/bin/xtensa-lx106-elf-
+-Ff/home/christo/fpc/xtensa/fpc-esp8266-idf"/>
+            <CompilerPath Value="/home/christo/fpcupdeluxe/fpcupdeluxe/fpc/bin/x86_64-linux/ppcrossxtensa"/>
+          </Other>
+        </CompilerOptions>
+      </Item4>
+      <Item5 Name="ESP32-espsdk4fpc">
+        <CompilerOptions>
+          <Version Value="11"/>
+          <Target>
+            <Filename Value="sdcarddemo"/>
+          </Target>
+          <SearchPaths>
+            <IncludeFiles Value="$(ProjOutDir);../../freertos-fpc;../../freertos-fpc/esp-idf"/>
+            <Libraries Value="../../../../espsdk4fpc/x86_64-linux/lx6"/>
+            <OtherUnitFiles Value="../../freertos-fpc;../../freertos-fpc/esp-idf"/>
+            <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
+          </SearchPaths>
+          <CodeGeneration>
+            <TargetCPU Value="xtensa"/>
+            <TargetOS Value="freertos"/>
+            <Optimizations>
+              <OptimizationLevel Value="0"/>
+            </Optimizations>
+          </CodeGeneration>
+          <Linking>
+            <Debugging>
+              <DebugInfoType Value="dsDwarf3"/>
+              <UseLineInfoUnit Value="False"/>
+            </Debugging>
+          </Linking>
+          <Other>
+            <ConfigFile>
+              <DontUseConfigFile Value="True"/>
+              <CustomConfigFile Value="True"/>
+              <ConfigFilePath Value="~/fpc/gitlab-cc/fpc.cfg"/>
+            </ConfigFile>
+            <CustomOptions Value="-Tfreertos 
+-Wpesp32 
+-Cawindowed 
+-FD/home/christo/espsdk4fpc/x86_64-linux/bin
+-Ff/home/christo/espsdk4fpc/x86_64-linux/esp-idf-4.3"/>
+            <CompilerPath Value="/home/christo/fpc/gitlab-cc/compiler/ppcrossxtensa"/>
+          </Other>
+          <CompileReasons Run="False"/>
+        </CompilerOptions>
+      </Item5>
+    </BuildModes>
+    <PublishOptions>
+      <Version Value="2"/>
+      <UseFileFilters Value="True"/>
+    </PublishOptions>
+    <RunParams>
+      <FormatVersion Value="2"/>
+    </RunParams>
+    <Units Count="3">
+      <Unit0>
+        <Filename Value="sdcarddemo.pp"/>
+        <IsPartOfProject Value="True"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="../../freertos-fpc/esp-idf/stat_unit.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="c_filehandling.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit2>
+    </Units>
+  </ProjectOptions>
+  <CompilerOptions>
+    <Version Value="11"/>
+    <Target>
+      <Filename Value="sdcarddemo"/>
+    </Target>
+    <SearchPaths>
+      <IncludeFiles Value="$(ProjOutDir);../../freertos-fpc;../../freertos-fpc/esp-idf"/>
+      <Libraries Value="../../../../.espressif/tools/xtensa-esp32-elf/esp-2021r1-8.4.0/xtensa-esp32-elf/xtensa-esp32-elf/lib/no-rtti;../../../../.espressif/tools/xtensa-esp32-elf/esp-2021r1-8.4.0/xtensa-esp32-elf/lib/gcc/xtensa-esp32-elf/8.4.0/no-rtti;../../fpc-esp-idf/libs"/>
+      <OtherUnitFiles Value="../../freertos-fpc;../../freertos-fpc/esp-idf"/>
+      <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
+    </SearchPaths>
+    <CodeGeneration>
+      <HeapSize Value="2048"/>
+      <StackSize Value="2048"/>
+      <TargetCPU Value="xtensa"/>
+      <TargetOS Value="freertos"/>
+      <Optimizations>
+        <OptimizationLevel Value="2"/>
+      </Optimizations>
+    </CodeGeneration>
+    <Linking>
+      <Debugging>
+        <DebugInfoType Value="dsDwarf3"/>
+        <UseLineInfoUnit Value="False"/>
+      </Debugging>
+    </Linking>
+    <Other>
+      <WriteFPCLogo Value="False"/>
+      <ConfigFile>
+        <ConfigFilePath Value=""/>
+      </ConfigFile>
+      <CustomOptions Value="-Tfreertos 
+-Wpesp32"/>
+      <CompilerPath Value="/home/christo/fpc/installs/lib/fpc/3.3.1/ppcrossxtensa"/>
+    </Other>
+    <CompileReasons Run="False"/>
+  </CompilerOptions>
+  <Debugging>
+    <Exceptions Count="3">
+      <Item1>
+        <Name Value="EAbort"/>
+      </Item1>
+      <Item2>
+        <Name Value="ECodetoolError"/>
+      </Item2>
+      <Item3>
+        <Name Value="EFOpenError"/>
+      </Item3>
+    </Exceptions>
+  </Debugging>
+</CONFIG>
