@@ -4,7 +4,7 @@ program testexit;
 {$inline on}
 
 uses
-  esp_sleep, esp_system, portmacro;
+  esp_sleep, esp_system, portmacro, task;
 
 var
   // Test of -device isa-debug-exit
@@ -15,24 +15,14 @@ var
   // The port address can be changed with the command line option: -device isa-debug-exit,iobase=0xf4,iosize=0x04
   exit_register: word absolute $501;  // Default isa-debug-exit register
 
-// Register locations   a2 a3 a4 a5
-function _simcall(const a, b, c, d: uint32): uint32; assembler;
+procedure qemu_exit(const exitcode: uint32); assembler; noreturn;
 asm
+  mov  a3, a2   // copy exitcode value into a3
+  movi a2, 1    // set a2 to 1 - exit request
   simcall
-  {$ifdef FPC_ABI_WINDOWED}
-    mov a10, a2
-  {$endif}
 end;
 
-  procedure qemu_exit(const exitcode: uint32); assembler; noreturn;
-  asm
-    mov  a3, a2   // copy exitcode value into a3
-    movi a2, 1    // set a2 to 1 - exit request
-    simcall
-  end;
-
 var
-  ret: uint32;
   c: char;
 
 begin
@@ -58,9 +48,8 @@ begin
       '1':
       begin
         writeln('Calling simcall with exit code 13');
-        //ret := _simcall(1, 13, 0, 0);
-        qemu_exit(11);
-        writeln('Something unexpected happened - simcall returned with value:', ret);
+        qemu_exit(13);
+        writeln('Something unexpected happened - simcall returned.');
       end;
 
       '2':
@@ -89,5 +78,6 @@ begin
     else
       writeln('Unexpected character code: $', HexStr(word(c), 2));
     end;
+    vTaskDelay(1);
   until false;
 end.
