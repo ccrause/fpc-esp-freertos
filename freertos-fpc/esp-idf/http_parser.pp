@@ -1,6 +1,8 @@
 unit http_parser;
 
-{$linklib nghttp, static}
+{$if IDF_VERSION < 50000}
+  {$linklib nghttp, static}
+{$endif}
 {$modeswitch advancedrecords}
 
 interface
