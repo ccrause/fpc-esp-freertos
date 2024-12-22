@@ -162,83 +162,89 @@ begin
     max_transfer_sz := 4000;
   end;
 
-  writeln('Initializing SPI bus: ');
+  write('Initializing SPI bus: ');
   ret := spi_bus_initialize(Tspi_host_device(host.slot), @bus_cfg, SPI_DMA_CH1);
-  if (ret <> ESP_OK) then
+  if (ret = ESP_OK) then
   begin
-    writeln('Error - ', esp_err_to_name(ret));
-    exit;
-  end
-  else
     writeln('OK');
 
-  // This initializes the slot without card detect (CD) and write protect (WP) signals.
-  // Modify slot_config.gpio_cd and slot_config.gpio_wp if your board has these signals.
-  INIT_SDSPI_DEVICE_CONFIG_DEFAULT(slot_config);
-  slot_config.gpio_cs := Tgpio_num(PIN_NUM_CS);
-  slot_config.host_id := tspi_host_device(host.slot);
+    // This initializes the slot without card detect (CD) and write protect (WP) signals.
+    // Modify slot_config.gpio_cd and slot_config.gpio_wp if your board has these signals.
+    INIT_SDSPI_DEVICE_CONFIG_DEFAULT(slot_config);
+    slot_config.gpio_cs := Tgpio_num(PIN_NUM_CS);
+    slot_config.host_id := tspi_host_device(host.slot);
 
-  write('Mount SD card with FATFS driver: ');
-  if esp_vfs_fat_sdspi_mount(mount_point, @host, @slot_config, @mountConfig, @card) <> ESP_OK then
-  begin
+    write('Mount SD card with FATFS driver: ');
+    ret := esp_vfs_fat_sdspi_mount(mount_point, @host, @slot_config, @mountConfig, @card);
+    if ret = ESP_OK then
+    begin
+      writeln('OK');
+
+      printSDCardInfo(card);
+      writeln;
+      listRoot;
+
+      writeln(#10'Appending to out.txt');
+      {$push}{$I-} // disable runtime I/O errors
+      AssignFile(f, outputfile);
+      Append(f);
+      ioRes := IOResult;
+      // If file doesn't exist, create it
+      if ioRes = 2 then
+      begin
+        writeln('File doesn''t exist, creating new file');
+        Rewrite(f);
+        ioRes := IOResult;
+      end;
+
+      if ioRes = 0 then
+      begin
+        for i := 0 to 4 do
+          writeln(f,  i, ',', 2*i);
+      end;
+      CloseFile(f);
+      ioRes := IOResult;
+      if ioRes > 0 then
+        writeln('IO error ', ioRes, ' when closing file');
+
+      // Find size of file. File needs to be opened.
+      AssignFile(fb, outputfile);
+      FileMode := 2;
+      Reset(fb);
+      ioRes := IOResult;
+      if ioRes > 0 then
+        writeln('IO error ', ioRes, ' when calling Reset');
+
+      writeln('FileSize = ', FileSize(fb));
+      ioRes := IOResult;
+      if ioRes > 0 then
+        writeln('IO error ', ioRes, ' when calling FileSize');
+
+      CloseFile(fb);
+      ioRes := IOResult;
+      if ioRes > 0 then
+        writeln('IO error ', ioRes, ' when closing file');
+      {$pop} // restore previous runtime error state
+      writeln('Done');
+
+      write('Unmount: ');
+      if esp_vfs_fat_sdcard_unmount(mount_point, card) = ESP_OK then
+        writeln('OK')
+      else
+        writeln(esp_err_to_name(ret), '. Error: ', errno);
+    end  //esp_vfs_fat_sdspi_mount = ESP_OK
+    else
+      writeln('Error - ', esp_err_to_name(ret));
+
+    write('Freeing SPI bus: ');
+    ret :=   spi_bus_free(Tspi_host_device(host.slot));
+    if (ret = ESP_OK) then
+      writeln('OK')
+    else
+      writeln('Error - ', esp_err_to_name(ret));
+  end  // spi_bus_initialize = ESP_OK
+  else
     writeln('Error - ', esp_err_to_name(ret));
-    exit;
-  end
-  else
-    writeln('OK');
-
-  printSDCardInfo(card);
-  writeln;
-  listRoot;
-
-  writeln(#10'Appending to out.txt');
-  {$push}{$I-} // disable runtime I/O errors
-  AssignFile(f, outputfile);
-  Append(f);
-  ioRes := IOResult;
-  // If file doesn't exist, create it
-  if ioRes = 2 then
-  begin
-    writeln('File doesn''t exist, creating new file');
-    Rewrite(f);
-    ioRes := IOResult;
-  end;
-
-  if ioRes = 0 then
-  begin
-    for i := 0 to 4 do
-      writeln(f,  i, ',', 2*i);
-  end;
-  CloseFile(f);
-  ioRes := IOResult;
-  if ioRes > 0 then
-    writeln('IO error ', ioRes, ' when closing file');
-
-  // Find size of file. File needs to be opened.
-  AssignFile(fb, outputfile);
-  FileMode := 2;
-  Reset(fb);
-  ioRes := IOResult;
-  if ioRes > 0 then
-    writeln('IO error ', ioRes, ' when calling Reset');
-
-  writeln('FileSize = ', FileSize(fb));
-  ioRes := IOResult;
-  if ioRes > 0 then
-    writeln('IO error ', ioRes, ' when calling FileSize');
-
-  CloseFile(fb);
-  ioRes := IOResult;
-  if ioRes > 0 then
-    writeln('IO error ', ioRes, ' when closing file');
-  {$pop} // restore previous runtime error state
-  writeln('Done');
-
-  write('Unmount: ');
-  if esp_vfs_fat_sdcard_unmount(mount_point, card) = ESP_OK then
-    writeln('OK')
-  else
-    writeln(esp_err_to_name(ret), '. Error: ', errno);
 
   repeat
     vTaskDelay(100);
