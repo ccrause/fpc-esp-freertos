@@ -1,7 +1,5 @@
 program sdcarddemo;
 
-{$I-} // no runtime IO errors
-
 uses
   gpio, task, portmacro, spi_common, sdspi_host,
   esp_vfs_fat, sdmmc_types, esp_err, spi_types, c_dirent,
@@ -13,6 +11,7 @@ uses
 
 const
   mount_point = '/sd';
+  outputfile = mount_point + '/out.txt';
   // SPI pin definitions for communication with SD card
   PIN_NUM_MISO  = 18;
   PIN_NUM_MOSI  = 16;
@@ -142,6 +141,7 @@ var
   f: TextFile;
   fb: File of byte;
   i: integer;
+  ioRes: word;
 
 begin
   rtc_wdt_disable; // In case WDT was initialized by bootloader
@@ -150,9 +150,6 @@ begin
   mountConfig.format_if_mount_failed := false;
   mountConfig.max_files := 5;
   mountConfig.allocation_unit_size := 16 * 1024;
-
-  writeln('Initializing SD card');
-  writeln('Using SPI peripheral');
 
   INIT_SDSPI_HOST_DEFAULT(host);
   with bus_cfg do
@@ -164,14 +161,16 @@ begin
     quadhd_io_num := -1;
     max_transfer_sz := 4000;
   end;
+
+  writeln('Initializing SPI bus: ');
   ret := spi_bus_initialize(Tspi_host_device(host.slot), @bus_cfg, SPI_DMA_CH1);
   if (ret <> ESP_OK) then
   begin
-    writeln('Failed to initialize bus: ', esp_err_to_name(ret), '. Error: ', errno);
+    writeln('Error - ', esp_err_to_name(ret));
     exit;
   end
   else
-    writeln('spi_bus_initialize OK');
+    writeln('OK');
 
   // This initializes the slot without card detect (CD) and write protect (WP) signals.
   // Modify slot_config.gpio_cd and slot_config.gpio_wp if your board has these signals.
@@ -182,30 +181,57 @@ begin
   write('Mount SD card with FATFS driver: ');
   if esp_vfs_fat_sdspi_mount(mount_point, @host, @slot_config, @mountConfig, @card) <> ESP_OK then
   begin
-    writeln(esp_err_to_name(ret), '. Error: ', errno);
+    writeln('Error - ', esp_err_to_name(ret));
     exit;
   end
   else
     writeln('OK');
 
-  writeln('Filesystem mounted');
   printSDCardInfo(card);
   writeln;
   listRoot;
 
   writeln(#10'Appending to out.txt');
-  AssignFile(f, '/sd/out.txt');
+  {$push}{$I-} // disable runtime I/O errors
+  AssignFile(f, outputfile);
   Append(f);
-  for i := 0 to 4 do
-    writeln(f,  i, ',', 2*i);
+  ioRes := IOResult;
+  // If file doesn't exist, create it
+  if ioRes = 2 then
+  begin
+    writeln('File doesn''t exist, creating new file');
+    Rewrite(f);
+    ioRes := IOResult;
+  end;
+
+  if ioRes = 0 then
+  begin
+    for i := 0 to 4 do
+      writeln(f,  i, ',', 2*i);
+  end;
   CloseFile(f);
+  ioRes := IOResult;
+  if ioRes > 0 then
+    writeln('IO error ', ioRes, ' when closing file');
 
   // Find size of file. File needs to be opened.
-  AssignFile(fb, '/sd/out.txt');
+  AssignFile(fb, outputfile);
   FileMode := 2;
   Reset(fb);
+  ioRes := IOResult;
+  if ioRes > 0 then
+    writeln('IO error ', ioRes, ' when calling Reset');
+
   writeln('FileSize = ', FileSize(fb));
+  ioRes := IOResult;
+  if ioRes > 0 then
+    writeln('IO error ', ioRes, ' when calling FileSize');
+
   CloseFile(fb);
+  ioRes := IOResult;
+  if ioRes > 0 then
+    writeln('IO error ', ioRes, ' when closing file');
+  {$pop} // restore previous runtime error state
   writeln('Done');
 
   write('Unmount: ');
