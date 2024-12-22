@@ -10,7 +10,7 @@ uses
   rtc_wdt, aj_sr04m_unit, flowmeter,
   projdefs, timer, timer_types,
   queue, dataunit,
-  semphr, storage, hardwareconfig, runstateunit,
+  semphr, settingsmanager, hardwareconfig, runstateunit,
   timeunit;
 
 // AP credentials not stored in shared code

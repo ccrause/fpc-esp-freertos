@@ -1,6 +1,7 @@
 unit runstateunit;
 
-{$mode ObjFPC}{$H+}
+{ This unit implements a finite state machine that keeps track of the
+  pump logic state and execute actions as required per state. }
 
 interface
 
@@ -32,7 +33,7 @@ type
 implementation
 
 uses
-  storage, gpio, gpio_types, hardwareconfig;
+  settingsmanager, gpio, gpio_types, hardwareconfig;
 
 { TRunStateMachine }
 

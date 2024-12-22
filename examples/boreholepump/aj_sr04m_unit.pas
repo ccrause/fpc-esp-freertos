@@ -1,5 +1,8 @@
 unit aj_sr04m_unit;
 
+{ This unit implements a UART interface to an ultrasonic distance sensor.
+  Developed for the AJ-SR04M sensor configured for serial triggered mode. }
+
 interface
 
 uses
@@ -34,7 +37,6 @@ begin
   uart_cfg.source_clk := UART_SCLK_APB;
 {$endif}
 
-  //esp_log_write(ESP_LOG_INFO, '+', 'Before driver install'#10);
 {$ifdef FPC_MCU_ESP32}
   EspErrorCheck(uart_driver_install(uart_port, 256, 256, 0, nil, 0));
   EspErrorCheck(uart_param_config(uart_port, @uart_cfg));

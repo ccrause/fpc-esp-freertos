@@ -1,5 +1,8 @@
 unit dataunit;
 
+{ This unit hosts global current and time series data and
+  implementas data logging via SD card. }
+
 interface
 
 uses

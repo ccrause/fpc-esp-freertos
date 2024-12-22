@@ -1,5 +1,7 @@
 unit hardwareconfig;
 
+{ This unit is used to list all pins and some other hardware resources }
+
 interface
 
 uses

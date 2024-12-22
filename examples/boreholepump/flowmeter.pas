@@ -1,6 +1,7 @@
 unit flowmeter;
 
-// Compatible with pulse type flow sensors such as YF-Bx
+{ This unit implements a pulse counter based flow meter.
+  Compatible with pulse type flow sensors such as YF-Bx }
 
 interface
 
@@ -8,7 +9,6 @@ uses
   pcnt;
 
 type
-
   { TPulseFlowmeter }
 
   TPulseFlowmeter = object

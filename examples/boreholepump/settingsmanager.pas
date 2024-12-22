@@ -1,4 +1,6 @@
-unit storage;
+unit settingsmanager;
+
+{ This unit manages loading and saving of application settings via NVS }
 
 interface
 
