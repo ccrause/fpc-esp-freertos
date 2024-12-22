@@ -1,11 +1,11 @@
-unit pinsconfig;
+unit hardwareconfig;
 
 interface
 
 uses
   pcnt;
 
-{ Take note of following GPIO pins that impacts bootup and debugging on ESP32:
+{ Take note of following GPIO pins on ESP32:
    0 - Bootstrap (pullup): 1 = SPI boot, 0 = download boot (if GPIO2 = 0)
    1 - Default serial over USB TX (idle high)
    2 - Bootstrap (pulldown): 0 = download boot (if GPIO0 = 0)
@@ -28,6 +28,12 @@ const
 
   pumpOutputPin = 2;  // Also onboard LED, high when pump should be on
   lowLevelPin = 17;   // Pin is high when level is low
+
+  // SD card SPI connections
+  sdCSpin   =  4;
+  sdMOSIpin = 16;
+  sdCLKpin  = 17;
+  sdMISOpin = 18;
 
 implementation
 

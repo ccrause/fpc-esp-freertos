@@ -82,7 +82,7 @@
     <RunParams>
       <FormatVersion Value="2"/>
     </RunParams>
-    <Units Count="8">
+    <Units Count="10">
       <Unit0>
         <Filename Value="pumpcontroller.pp"/>
         <IsPartOfProject Value="True"/>
@@ -115,6 +115,14 @@
         <Filename Value="runstateunit.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit7>
+      <Unit8>
+        <Filename Value="../../freertos-fpc/esp-idf/c_time.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit8>
+      <Unit9>
+        <Filename Value="timeunit.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit9>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -133,7 +141,7 @@
       <TargetCPU Value="xtensa"/>
       <TargetOS Value="freertos"/>
       <Optimizations>
-        <OptimizationLevel Value="3"/>
+        <OptimizationLevel Value="2"/>
       </Optimizations>
     </CodeGeneration>
     <Linking>

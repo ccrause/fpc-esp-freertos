@@ -6,12 +6,12 @@ program pumpcontroller;
 uses
   wificonnect,
   webserver,
-  pcnt,
   esp_err, portmacro, esp_log,
   rtc_wdt, aj_sr04m_unit, flowmeter,
   projdefs, timer, timer_types,
   queue, dataunit,
-  semphr, storage, pinsconfig, runstateunit;
+  semphr, storage, hardwareconfig, runstateunit,
+  timeunit;
 
 // AP credentials not stored in shared code
 // Put credentials in text file and include below
@@ -30,7 +30,6 @@ type
   end;
 
   Texample_timer_event = record
-    //info: TTimerInfo;
     timer_counter_value: uint64;
   end;
 
@@ -62,7 +61,7 @@ begin
     timer_group_set_alarm_value_in_isr(info^.timerGroup, info^.timerIndex, timer_counter_value);
   end;
 
-  ///* Now just send the event data back to the main program task */
+  // Now just send the event data back to the main program task
   xQueueSendFromISR(s_timer_queue, @evt, @high_task_awoken);
 
   Result := high_task_awoken = pdTRUE; // return whether we need to yield at the end of ISR
@@ -120,7 +119,7 @@ var
 // ~/fpc/xtensa/esp-idf-4.4.7/components/esptool_py/esptool/esptool.py -p /dev/ttyUSB0 -b 921600 -c auto write_flash 0x10000 pumpcontroller.bin
 
 const
-  maxCount = 60;  // Save data every minute
+  maxCount = 15; //60;  // Save data every minute
 
 begin
   rtc_wdt_disable; // In case WDT was initialized by bootloader
@@ -153,6 +152,10 @@ begin
   writeln('Starting web server...');
   start_webserver;
 
+  // Uses NTP, so start after WiFi is connected
+  writeln('Init time');
+  initTime;
+
   writeln('init level sensor');
   levelSensor.init(levelSensorUart, levelSensorTxPin, levelSensorRxPin);
 
@@ -164,7 +167,6 @@ begin
   repeat
     xQueueReceive(s_timer_queue, @evt, portMAX_DELAY);
     count := flowsensor.getReading;
-    //writeln;
 
     if levelSensor.readDistance(currentLevel) then
     begin
@@ -200,6 +202,10 @@ begin
       if dataIndex > high(levels) then
         dataIndex := 0;
       xSemaphoreGive(dataSem);
+
+      // Construct CSV data for log file
+      // Format: timestamp,level[mm from top],flow[L/min avg]
+      logToFile(level, flow);
 
       dataCount := 0;
       level := 0;

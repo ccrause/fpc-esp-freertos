@@ -32,7 +32,7 @@ type
 implementation
 
 uses
-  storage, gpio, gpio_types, pinsconfig;
+  storage, gpio, gpio_types, hardwareconfig;
 
 { TRunStateMachine }
 
