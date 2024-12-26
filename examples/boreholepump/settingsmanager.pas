@@ -54,21 +54,21 @@ end;
 function loadSettings: Tesp_err;
 var
   sz: Tsize;
-  err: Tesp_err;
 begin
-  Result := ESP_OK;
-  err := initNVS;
+  Result := initNVS;
 
-  if err = ESP_OK then
+  if Result = ESP_OK then
   begin
     sz := SizeOf(settings);
-    err := nvs_get_blob(storageHandle, 'settings', @settings, @sz);
-    if (err <> ESP_OK) or (sz <> SizeOf(settings)) then
+    Result := nvs_get_blob(storageHandle, 'settings', @settings, @sz);
+    if (Result <> ESP_OK) then
     begin
       write('Error reading settings: ');
       writeln(esp_err_to_name(Result));
       Result := ESP_FAIL;
-    end;
+    end
+    else if sz <> SizeOf(settings) then
+      writeln('Error reading settings. Read ', sz, ' of ', SizeOf(settings), ' bytes');
 
     nvs_close(storageHandle)
   end;
@@ -91,14 +91,14 @@ begin
     if Result = ESP_OK then
     begin
       Result := nvs_commit(storageHandle);
-      if Result <> ESP_OK then
-      begin
-        write('Error commiting settings: ');
-        writeln(esp_err_to_name(Result));
-      end;
-
       nvs_close(storageHandle);
     end;
+  end;
+
+  if Result <> ESP_OK then
+  begin
+    write('Error saving settings: ');
+    writeln(esp_err_to_name(Result));
   end;
 end;
 
