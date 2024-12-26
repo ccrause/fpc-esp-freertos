@@ -4,7 +4,7 @@ program pumpcontroller;
 {$inline on}
 
 uses
-  wificonnect,
+  wificonnect2, ap_login,
   webserver,
   esp_err, portmacro, esp_log,
   rtc_wdt, aj_sr04m_unit, flowmeter,
@@ -12,13 +12,6 @@ uses
   queue, dataunit,
   semphr, settingsmanager, hardwareconfig, runstateunit,
   timeunit, timeralarm, task;
-
-// AP credentials not stored in shared code
-// Put credentials in text file and include below
-// format of entries in include file
-// {$define AP_NAME := 'name of access point'}
-// {$define PWD := 'password for AP'}
-{$include credentials.ignore}
 
 var
   levelSensor: TAJ_SR04M;
@@ -39,6 +32,30 @@ begin
   rtc_wdt_disable; // In case WDT was initialized by bootloader
   esp_log_level_set('*', ESP_LOG_WARN);
 
+  tmpSSID := '';
+  tmpPassword := '';
+  repeat
+    connectWifiAP(tmpSSID, tmpPassword);
+    if not stationConnected then
+    begin
+      writeln('Could not connect to wifi, starting local access point');
+      stopWifi;
+      // Get list of access points for APserver
+      wifi_scan;
+
+      reconnect := false;
+      createWifiAP('selectSSID', '');
+      start_APserver;
+      while not reconnect do
+        vTaskDelay(100);
+
+      writeln('Attempting reconnecting to wifi');
+      stop_APserver;
+      stopWifi;
+    end;
+  until stationConnected;
+  //start_webserver;
+
   oldcount := 0;
   dataIndex := 0;
   dataCount := 0;
@@ -53,6 +70,7 @@ begin
 
   if loadSettings() = ESP_FAIL then
   begin
+    writeln('Using default settings');
     // Set default values
     settings.LLstart      := 750; // mm
     settings.HLstop       := 500; // mm
@@ -61,13 +79,12 @@ begin
     settings.startDeadTime:= 15;  // s
   end;
 
-  connectWifiAP(AP_NAME, PWD);
-  writeln('Starting web server...');
-  start_webserver;
-
   // Uses NTP, so start after WiFi is connected
   writeln('Init time');
   initTime;
+
+  writeln('Starting web server...');
+  start_webserver;
 
   writeln('init level sensor');
   levelSensor.init(levelSensorUart, levelSensorTxPin, levelSensorRxPin);
