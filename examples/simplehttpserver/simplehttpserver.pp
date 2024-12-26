@@ -2,11 +2,7 @@ program simplehttpserver;
 
 uses
   freertos,
-  //{$ifdef CPULX6}
   wificonnect,
-  //{$else}
-  //wificonnect_esp8266,
-  //{$endif}
   esp_http_server, esp_err, http_parser,
   portable, task;
 
@@ -24,7 +20,7 @@ const
   htmlpage = '<!DOCTYPE html><html><body><h1>Welcome to FPC + ESP-IDF</h1><p><img src="/fpclogo.gif" alt="FPC"></p></body></html>';
 
 // Import fpc logo in gif format as array of char
-{$include fpclogo.inc}
+{$include ../common/fpclogo.inc}
 
 function hello_get_handler(req: Phttpd_req): Tesp_err;
 var

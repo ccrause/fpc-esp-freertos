@@ -35,7 +35,7 @@ const
   htmlpage2 = '</body></html>';
 
 // Import fpc logo in gif format as array of char
-{$include fpclogo.inc}
+{$include ../common/fpclogo.inc}
 
 function hello_get_handler(req: Phttpd_req): Tesp_err;
 var
