@@ -34,7 +34,7 @@ begin
 
   tmpSSID := '';
   tmpPassword := '';
-  repeat
+  //repeat
     connectWifiAP(tmpSSID, tmpPassword);
     if not stationConnected then
     begin
@@ -50,11 +50,12 @@ begin
         vTaskDelay(100);
 
       writeln('Attempting reconnecting to wifi');
+      writeln('SSID: ', tmpSSID);
+      writeln('Password: ', tmpPassword);
       stop_APserver;
       stopWifi;
     end;
-  until stationConnected;
-  //start_webserver;
+  //until stationConnected;
 
   oldcount := 0;
   dataIndex := 0;
@@ -79,12 +80,15 @@ begin
     settings.startDeadTime:= 15;  // s
   end;
 
-  // Uses NTP, so start after WiFi is connected
-  writeln('Init time');
-  initTime;
+  if stationConnected then
+  begin
+    // Uses NTP, so start after WiFi is connected
+    writeln('Init time');
+    initTime;
 
-  writeln('Starting web server...');
-  start_webserver;
+    writeln('Starting web server...');
+    start_webserver;
+  end;
 
   writeln('init level sensor');
   levelSensor.init(levelSensorUart, levelSensorTxPin, levelSensorRxPin);
@@ -109,8 +113,7 @@ begin
 
     if count < uint16($FFFF) then
     begin
-      //writeln('Count = ', count);
-      currentFlow := (count - oldcount) / 27; // Datasheet factor: 6.6;
+      currentFlow := (count - oldcount) / 13.2 {27}; // Datasheet factor: 6.6 per full cycle;
       writeln('flow = ', currentFlow:1:2, ' L/min');
       oldcount := count;
       flow := flow + currentFlow;
