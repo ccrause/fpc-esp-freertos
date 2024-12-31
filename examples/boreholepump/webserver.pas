@@ -12,7 +12,7 @@ function start_webserver: Thttpd_handle;
 implementation
 
 uses
-  esp_err, http_parser,
+  esp_err, http_parser, esp_wifi, esp_wifi_types,
   dataUnit, semphr, portmacro, settingsmanager;
 
 const
@@ -21,7 +21,6 @@ const
           '<title>Borehole pump monitor</title>'+
           '<meta name="viewport" content="width=device-width, initial-scale=1.0">'+
           '<style>* {box-sizing:border-box;}';
-          //'.menu{float:top; padding:10px; text-align:left; background-color:lightgrey; border-radius:5px; margin:2px;}'+
 
   menustyle  =
           '.menu{float:top; padding:2px; text-align:left; background-color:lightgrey;'+
@@ -35,7 +34,9 @@ const
           '@media only screen and (max-width: 620px)'+
           '{.left, .right {width:100%;}}</style></head>';
 
-  menu =  '<div class="menu"><ul><li><a href="/">Home</a></li> <li><a href="settings">Settings</a></li></ul></div>';
+  menu1 =  '<span><div class="menu"><ul><li><a href="/">Home</a></li> <li><a href="settings">Settings</a></li><span style=float:right>';
+           // insert SSID and signal strength here - SSID (-90 dB)
+  menu2 =  '</span></ul></div></span>';
 
   mainc = '<h2>Borehole pump monitor & control</h2>'+
           '<div style="overflow:auto"><div class="left">'+
@@ -76,11 +77,11 @@ const
 
   settings_hlstop =
   '<div class="container"><form method="post" action="save">'+
-  '<label for="HLstop">High level stop, mm</label>'+
+  '<label for="HLstop">High level, mm</label>'+
   '<input type="text" name="HLstop" value="';
   //500
   settings_llstart =
-  '" /><label for="LLstart">Low level start, mm</label>'+
+  '" /><label for="LLstart">Low level, mm</label>'+
   '<input type="text" name="LLstart" value="';
   //750
   settings_startdelay =
@@ -88,7 +89,7 @@ const
   '<input type="text" name="restartDelay" value="';
   //15
   settings_lowflowstop =
-  '" /><label for="LFstop">Low flow stop, L/min</label>'+
+  '" /><label for="LFstop">Low flow, L/min</label>'+
   '<input type="text" name="LFstop" value="';
   //10
   settings_startdeadtime =
@@ -112,6 +113,25 @@ const
   '@media (prefers-color-scheme: dark) { :root { filter: none; } } </style></svg>';
 
 
+procedure sendMenu_chunk(req: Phttpd_req);
+var
+  s1: string[8];
+  s: shortstring;
+  APinfo: Twifi_ap_record;
+begin
+  httpd_resp_send_chunk(req, menu1, length(menu1));
+  if esp_wifi_sta_get_ap_info(@APinfo) = ESP_OK then
+  begin
+    Str(APinfo.rssi, s1);
+    s := PChar(@APinfo.ssid[0]) + ' (' + s1 + ' dB)';
+  end
+  else
+    s := '??? (?? dB)';
+  httpd_resp_send_chunk(req, @s[1], length(s));
+  httpd_resp_send_chunk(req, menu2, length(menu2));
+end;
+
+
 function main_get_handler(req: Phttpd_req): Tesp_err;
 var
   s: shortstring;
@@ -121,7 +141,9 @@ begin
   httpd_resp_send_chunk(req, maina, length(maina));
   httpd_resp_send_chunk(req, menustyle, length(menustyle));
   httpd_resp_send_chunk(req, mainb, length(mainb));
-  httpd_resp_send_chunk(req, menu, length(menu));
+
+  sendMenu_chunk(req);
+
   httpd_resp_send_chunk(req, mainc, length(mainc));
 
   // Write current level
@@ -206,7 +228,8 @@ begin
   httpd_resp_send_chunk(req, settingsa, length(settingsa));
   httpd_resp_send_chunk(req, menustyle, length(menustyle));
   httpd_resp_send_chunk(req, settingsb, length(settingsb));
-  httpd_resp_send_chunk(req, menu, length(menu));
+
+  sendMenu_chunk(req);
 
   httpd_resp_send_chunk(req, settings_hlstop, length(settings_hlstop));
   Str(settings.HLstop, s1);
