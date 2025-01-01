@@ -114,7 +114,7 @@ begin
   {$endif}
   esp_log_level_set('*', ESP_LOG_WARN);
 
-  tmpSSID := '';
+  tmpSSID := '@@@';
   tmpPassword := '';
   repeat
     connectWifiAP(tmpSSID, tmpPassword);
@@ -126,12 +126,15 @@ begin
       wifi_scan;
 
       reconnect := false;
-      createWifiAP('selectSSID', '');
+      // SSID = wireless + telescope
+      createWifiAP(#$f0#$9f#$9b#$9c#$f0#$9f#$94#$ad, '');
       start_APserver;
       while not reconnect do
         vTaskDelay(100);
 
       writeln('Attempting reconnecting to wifi');
+      writeln('SSID: ', tmpSSID);
+      writeln('Password: ', tmpPassword);
       stop_APserver;
       stopWifi;
     end;
