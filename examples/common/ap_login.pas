@@ -23,9 +23,15 @@ uses
 const
   APnum = 10;
 
+type
+  APdescriptor = record
+    SSID: string[33];
+    RSSI: integer;
+  end;
+
 var
   server: Thttpd_handle;
-  APlist: array[0..APnum-1] of string[33];
+  APlist: array[0..APnum-1] of APdescriptor;
 
 const
   apSelectPage1 =
@@ -83,14 +89,15 @@ begin
   begin
     for i := 0 to ap_info_len-1 do
     begin
-      APlist[i] := PChar(@(ap_info[i].ssid[0]));
-      writeln('AP #', i, ': ', APlist[i]);
+      APlist[i].SSID := PChar(@(ap_info[i].ssid[0]));
+      APlist[i].RSSI := ap_info[i].rssi;
+      writeln('AP #', i, ': ', APlist[i].SSID, ' (', APlist[i].RSSI, ' dB)');
     end;
 
     // Set remainder of list to empty strings
     if ap_info_len < APnum then
       for i := ap_info_len to APnum-1 do
-        APlist[i] := '';
+        APlist[i].SSID := '';
   end
   else
     writeln('No AP records returned.');
@@ -101,15 +108,18 @@ end;
 
 function get_handler(req: Phttpd_req): Tesp_err;
 var
-  s: string[64];
+  s: string[128];
+  tmp: string[6];
   i: integer;
 begin
   httpd_resp_send_chunk(req, apSelectPage1, length(apSelectPage1));
 
   i := 0;
-  while (i < APnum) and (APlist[i] <> '') do
+  while (i < APnum) and (APlist[i].SSID <> '') do
   begin
-    s := '<option value="'+APlist[i]+'">'+APlist[i]+'</option>';
+    Str(APlist[i].RSSI, tmp);
+    s := '<option value="'+APlist[i].SSID+'">'+APlist[i].SSID+
+         ' ('+tmp+' dB)</option>';
     httpd_resp_send_chunk(req, @s[1], length(s));
     inc(i);
   end;
