@@ -15,8 +15,8 @@ procedure UpdateValvePositions(valveAOpen, valveBOpen: boolean);
 
 procedure doUploadSettingsToDisplay;
 
-var
-  flagUpdateValvePositions: boolean;
+//var
+//  flagUpdateValvePositions: boolean;
 
 implementation
 
@@ -149,8 +149,10 @@ begin
   begin
     nex.cid := 4 + i;
     NexPrimary.setValue(nex, storage.PressureSettings.Warnings[i]);
+    nexSecondary.setValue(nex, storage.PressureSettings.Warnings[i]);
     nex.cid := 9 + i;
     NexPrimary.setValue(nex, storage.PressureSettings.LowPressures[i]);
+    nexSecondary.setValue(nex, storage.PressureSettings.LowPressures[i]);
   end;
 
   nex.pid := 2;
@@ -230,9 +232,9 @@ begin
     nexSecondary.processInputData;
   end;
 
-  if flagUpdateValvePositions then
+  //if flagUpdateValvePositions then
   begin
-    flagUpdateValvePositions := false;
+    //flagUpdateValvePositions := false;
     updateValvePositionsOnDisplays;
   end;
 
@@ -617,7 +619,7 @@ begin
   end;
 
   // Display page seems to show incorrect valve positions when switching back
-  flagUpdateValvePositions := true;
+  //flagUpdateValvePositions := true;
 end;
 
 procedure handleTouchEvent(pid, cid: integer; pressed: boolean);
@@ -687,7 +689,7 @@ end;
 
 procedure initDisplays;
 begin
-  flagUpdateValvePositions := false;
+  //flagUpdateValvePositions := false;
   // Use SecondaryUartPort for debug printing
   {$ifndef debugprint}
   initSecondaryNextionUart;
@@ -700,10 +702,10 @@ begin
   uart_flush_input(SecondaryUartPort);
   // Disable result codes on Nextion
   nexSecondary.sendCommand('bkcmd=0');
-  // Disable touch events on Nextion
-  nexSecondary.sendCommand('tsw 255,0');
   // Ensure displaying page 0
   nexSecondary.setCurrentPage(0);
+  // Disable touch events on Nextion
+  nexSecondary.sendCommand('tsw 255,0');
 {$endif}
 
   initPrimaryNextionUart;
@@ -739,7 +741,7 @@ begin
   repeat
     handleDisplayMessages;
     // Update screen every ~ 2 sec, or if valve positions needs updating
-    if ((loopcount and 7) = 0) or flagUpdateValvePositions then
+    if ((loopcount and 7) = 0) {or flagUpdateValvePositions} then
     begin
       updateDisplays;
     end;
@@ -758,7 +760,7 @@ begin
   repeat
     handleDisplayMessages;
     // Update screen every ~ 2 sec, or if valve positions needs updating
-    if ((loopcount and 7) = 0) or flagUpdateValvePositions then
+    if ((loopcount and 7) = 0) {or flagUpdateValvePositions} then
     begin
       updateDisplays;
     end;
@@ -791,7 +793,7 @@ procedure updateValvePositions(valveAOpen, valveBOpen: boolean);
 begin
   valveAIsOpen := valveAOpen;
   valveBIsOpen := valveBOpen;
-  flagUpdateValvePositions := true;
+  //flagUpdateValvePositions := true;
 end;
 
 end.

@@ -48,7 +48,7 @@ begin
     handleDisplayMessages;
     Sleep(230);
     // Only update displays every 8th iteration
-    if ((loopcount and 7) = 0) or flagUpdateValvePositions then
+    if ((loopcount and 7) = 0) {or flagUpdateValvePositions} then
     begin
       updateDisplays;
       Sleep(10);
