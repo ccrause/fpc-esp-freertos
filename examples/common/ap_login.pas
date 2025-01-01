@@ -46,7 +46,8 @@ const
   'span.pwd{float:right; padding-top:16px;}'+
   '@media screen and (max-width:300px) {span.pwd{display:block;float: none;}}'+
   '</style></head><body><h2>Connect to WiFi</h2>'+
-  '<form action="/login" method="post">'+
+  '<form action="/login" method="post" '+
+  'enctype="application/x-www-form-urlencoded" accept-charset="utf8">'+
   '<div class="container">'+
   '<label for="SSID"><b>Select SSID</b></label>'+
   '<select type="ssid" name="SSID" required>';
@@ -130,16 +131,77 @@ begin
   result := ESP_OK;
 end;
 
+// Taken from fcl-base/src/uriparser.pp
+function HexValue(c: Char): Integer;
+begin
+  case c of
+    '0'..'9': Result := ord(c) - ord('0');
+    'A'..'F': Result := ord(c) - (ord('A') - 10);
+    'a'..'f': Result := ord(c) - (ord('a') - 10);
+  else
+    Result := 0;
+  end;
+end;
+
+// Adapted from fcl-base/src/uriparser.pp
+// added expansion of '+' to ' '
+// Perform in place decoding
+procedure urlDecode(var s: shortstring);
+var
+  i, decodedLen: Integer;
+  P: PChar;
+begin
+  i := 1;
+  P := PChar(@s[1]);
+  decodedLen := 0;
+  while i <= Length(s) do
+  begin
+    if s[i] = '%' then
+    begin
+      P[decodedLen] := Chr(HexValue(s[i + 1]) shl 4 or HexValue(s[i + 2]));
+      Inc(i, 3);
+    end
+    else if s[i] = '+' then
+    begin
+      P[decodedLen] := ' ';
+      Inc(i);
+    end
+    else
+    begin
+      P[decodedLen] := s[i];
+      Inc(i);
+    end;
+    Inc(decodedLen);
+  end;
+  SetLength(s, decodedLen);
+end;
+
 // Handler should receive content: SSID=ssid_name&pwd=password
 function post_handler(req: Phttpd_req): Tesp_err;
 var
   size, ret: integer;
-  buf: array[0..180] of char;
+  buf: shortstring;
+  decode: boolean;
 begin
   reconnect := false;
-  FillChar(buf, SizeOf(buf), #0);
-  size := length(buf);
-  ret := httpd_req_recv(req, @buf, size);
+  decode := false;
+
+  // Inspect encoding of response
+  FillChar(buf[1], high(buf), #0);
+  if httpd_req_get_hdr_value_str(req, 'Content-Type', @buf[1], high(buf)) = ESP_OK then
+  begin
+    SetLength(buf, length(PChar(@buf[1])));
+    decode := pos('x-www-form-urlencoded', buf) > 0;
+  end
+  else
+  begin
+    writeln('Content-Type not found.');
+    decode := false;
+  end;
+
+  FillChar(buf[1], high(buf), #0);
+  size := high(buf);
+  ret := httpd_req_recv(req, @buf[1], size);
   if ret <= 0 then
   begin
     if ret = HTTPD_SOCK_ERR_TIMEOUT then
@@ -149,13 +211,17 @@ begin
       httpd_resp_send_408(req);
     {$endif}
     exit(ESP_FAIL);
-  end;
+  end
+  else
+    SetLength(buf, ret);
 
   FillChar(tmpSSID[1], high(tmpSSID), #0);
-  if httpd_query_key_value(@buf, 'SSID'#0, @tmpSSID[1], high(tmpSSID)) = ESP_OK then
+  if httpd_query_key_value(@buf[1], 'SSID'#0, @tmpSSID[1], high(tmpSSID)) = ESP_OK then
   begin
     reconnect := true;
     SetLength(tmpSSID, length(PChar(@tmpSSID[1])));
+    if decode then
+      urlDecode(tmpSSID);
   end
   else
     writeln('Error reading SSID');
@@ -163,8 +229,12 @@ begin
   if reconnect then
   begin
     FillChar(tmpPassword[1], high(tmpPassword), #0);
-    if httpd_query_key_value(@buf, 'pwd'#0, @tmpPassword[1], high(tmpPassword)) = ESP_OK then
-      SetLength(tmpPassword, length(PChar(@tmpPassword[1])))
+    if httpd_query_key_value(@buf[1], 'pwd'#0, @tmpPassword[1], high(tmpPassword)) = ESP_OK then
+    begin
+      SetLength(tmpPassword, length(PChar(@tmpPassword[1])));
+      if decode then
+        urlDecode(tmpPassword);
+    end
     else
     begin
       writeln('Error reading pwd');
