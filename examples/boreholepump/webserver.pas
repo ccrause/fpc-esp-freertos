@@ -112,7 +112,6 @@ const
   '</g></svg><style>@media (prefers-color-scheme: light) { :root { filter: none; } } '+
   '@media (prefers-color-scheme: dark) { :root { filter: none; } } </style></svg>';
 
-
 procedure sendMenu_chunk(req: Phttpd_req);
 var
   s1: string[8];
@@ -130,7 +129,6 @@ begin
   httpd_resp_send_chunk(req, @s[1], length(s));
   httpd_resp_send_chunk(req, menu2, length(menu2));
 end;
-
 
 function main_get_handler(req: Phttpd_req): Tesp_err;
 var

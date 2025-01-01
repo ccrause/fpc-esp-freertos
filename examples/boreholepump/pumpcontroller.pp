@@ -44,7 +44,8 @@ begin
       wifi_scan;
 
       reconnect := false;
-      createWifiAP('selectSSID', '');
+      // SSID = wireless signal + telescope
+      createWifiAP(#$f0#$9f#$9b#$9c#$f0#$9f#$94#$ad, '');
       start_APserver;
       while not reconnect do
         vTaskDelay(100);
