@@ -14,6 +14,8 @@ procedure wifi_scan;
 function start_APserver: Thttpd_handle;
 procedure stop_APserver;
 
+procedure attachLoginToServer(AServer: Thttpd_handle);
+
 implementation
 
 uses
@@ -293,6 +295,25 @@ begin
     httpd_stop(server);
     server := nil;
   end;
+end;
+
+procedure attachLoginToServer(AServer: Thttpd_handle);
+var
+  config: Thttpd_config;
+  postUriHandlerConfig: Thttpd_uri;
+begin
+  with postUriHandlerConfig do
+  begin
+    uri       := '/login';
+    method    := HTTP_POST;
+    handler   := @post_handler;
+    user_ctx  := nil;
+  end;
+
+  if assigned(AServer) then
+    httpd_register_uri_handler(AServer, @postUriHandlerConfig)
+  else
+    writeln('### Failed to attach login handlers');
 end;
 
 end.

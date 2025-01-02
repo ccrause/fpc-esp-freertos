@@ -5,14 +5,16 @@ interface
 {$inline on}
 
 uses
-  esp_http_server;
+  esp_http_server, esp_err;
 
 function start_webserver: Thttpd_handle;
+
+function register_uri_handler(uri_handler: Phttpd_uri_t): Tesp_err;
 
 implementation
 
 uses
-  esp_err, http_parser, esp_wifi, esp_wifi_types,
+  http_parser, esp_wifi, esp_wifi_types,
   dataUnit, semphr, portmacro, settingsmanager;
 
 const
@@ -111,6 +113,9 @@ const
   '<polyline stroke="#2196f3" fill="none" points="2,9 7,9 12,7 15,7"></polyline>'+
   '</g></svg><style>@media (prefers-color-scheme: light) { :root { filter: none; } } '+
   '@media (prefers-color-scheme: dark) { :root { filter: none; } } </style></svg>';
+
+var
+  server: Thttpd_handle = nil;
 
 procedure sendMenu_chunk(req: Phttpd_req);
 var
@@ -349,13 +354,13 @@ end;
 
 function start_webserver: Thttpd_handle;
 var
-  server: Thttpd_handle;
   config: Thttpd_config;
   mainUriHandlerConfig: Thttpd_uri;
   settingsUriHandlerConfig: Thttpd_uri;
   saveUriHandlerConfig: Thttpd_uri;
   faviconUriHandlerConfig: Thttpd_uri;
 begin
+  server := nil;
   config := HTTPD_DEFAULT_CONFIG();
 
   with mainUriHandlerConfig do
@@ -406,6 +411,14 @@ begin
     result := nil;
     writeln('### Failed to start httpd');
   end;
+end;
+
+function register_uri_handler(uri_handler: Phttpd_uri_t): Tesp_err;
+begin
+  if assigned(server) then
+    Result := httpd_register_uri_handler(server, uri_handler)
+  else
+    Result := ESP_FAIL;
 end;
 
 end.
