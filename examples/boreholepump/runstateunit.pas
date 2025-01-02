@@ -19,6 +19,7 @@ type
     fState: TRunState;
     fRunNoStopTimeout: integer;
     fLowFlowTimeout: integer;
+    fPretripCount: integer;
 
     procedure fStop;
     procedure fStart;
@@ -34,6 +35,9 @@ implementation
 
 uses
   settingsmanager, gpio, gpio_types, hardwareconfig;
+
+const
+  pretripMaxCount = 3;
 
 { TRunStateMachine }
 
@@ -73,6 +77,7 @@ begin
   fState := rsIdle;
   fRunNoStopTimeout := 0;
   fLowFlowTimeout := 0;
+  fPretripCount := 0;
 end;
 
 procedure TRunStateMachine.update(level: integer; flow: single);
@@ -104,6 +109,7 @@ begin
       begin
         fState := rsRun;
         writeln('state: rsRunNoStopTimeout -> rsRun');
+        fPretripCount := 0;
       end;
     end;
 
@@ -117,11 +123,17 @@ begin
       end
       else if (flow < settings.LFstop) then
       begin
-        fStop();
-        fState := rsLowFlowTimeout;
-        fLowFlowTimeout := settings.restartDelay * 60;
-        writeln('state: rsRun -> rsLowFlowTimeout');
-      end;
+        inc(fPretripCount);
+        if fPretripCount > pretripMaxCount then
+        begin
+          fStop();
+          fState := rsLowFlowTimeout;
+          fLowFlowTimeout := settings.restartDelay * 60;
+          writeln('state: rsRun -> rsLowFlowTimeout');
+        end;
+      end
+      else
+        fPretripCount := 0;
     end;
 
     rsLowFlowTimeout:        // Stop and wait for timeout then move to idle
