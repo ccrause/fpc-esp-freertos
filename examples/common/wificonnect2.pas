@@ -36,13 +36,11 @@ procedure stopWifi;
 implementation
 
 const
-  MaxRetries     = 100; // or loop until reconnected?
   WifiConnect    = BIT0;
   WifiFail       = BIT1;
 
 var
   WifiEventGroup: TEventGroupHandle;
-  retries: uint32 = 0;
   {$ifdef CPULX6}
   netif_handle: Pesp_netif;
   {$endif}
@@ -78,13 +76,8 @@ begin
 
       WIFI_EVENT_STA_DISCONNECTED:
       begin
-        if (retries < MaxRetries) then
-        begin
-          esp_wifi_connect();
-          inc(retries);
-        end
-        else
-          xEventGroupSetBits(WifiEventGroup, WifiFail);
+        stationConnected := false;
+        esp_wifi_connect();
       end;
 
       else
@@ -99,7 +92,6 @@ begin
         event := Pip_event_got_ip(AEventData);
         addr := event^.ip_info.ip.addr;
         writeln('Got ip: ',  addr and $FF, '.', (addr shr 8) and $FF, '.', (addr shr 16) and $FF, '.', addr shr 24);
-        retries := 0;
         stationConnected := true;
 
         if assigned(WifiEventGroup) then
@@ -139,7 +131,6 @@ begin
   EspErrorCheck(initNVS);
 
   stationConnected := false;
-  retries := 0;
   WifiEventGroup := xEventGroupCreate();
 
   if not isNetifInit then
@@ -197,11 +188,6 @@ begin
     writeln('### Failed to connect')
   else
     writeln('Unexpected: timeout waiting for WifiEventGroup');
-
-  // Done, now clean up event group
-  EspErrorCheck(esp_event_handler_unregister(IP_EVENT, ord(IP_EVENT_STA_GOT_IP), Tesp_event_handler(@EventHandler)));
-  EspErrorCheck(esp_event_handler_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, Tesp_event_handler(@EventHandler)));
-  vEventGroupDelete(WifiEventGroup);
 end;
 
 procedure createWifiAP(const APName, APassword: shortstring);
