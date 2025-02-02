@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectOptions>
+    <Version Value="12"/>
+    <General>
+      <Flags>
+        <MainUnitHasCreateFormStatements Value="False"/>
+        <MainUnitHasTitleStatement Value="False"/>
+        <MainUnitHasScaledStatement Value="False"/>
+        <CompatibilityMode Value="True"/>
+      </Flags>
+      <SessionStorage Value="InProjectDir"/>
+      <Title Value="wifisignal"/>
+      <UseAppBundle Value="False"/>
+      <ResourceType Value="res"/>
+    </General>
+    <BuildModes Count="2">
+      <Item1 Name="ESP32" Default="True"/>
+      <Item2 Name="ESP8266">
+        <CompilerOptions>
+          <Version Value="11"/>
+          <Target>
+            <Filename Value="bin/wifisignal-esp8266"/>
+          </Target>
+          <SearchPaths>
+            <IncludeFiles Value="$(ProjOutDir);../../freertos-fpc;../../freertos-fpc/esp8266-idf"/>
+            <OtherUnitFiles Value="../../freertos-fpc;../../freertos-fpc/esp8266-idf;../common"/>
+            <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
+          </SearchPaths>
+          <CodeGeneration>
+            <HeapSize Value="1024"/>
+            <TargetProcessor Value="lx106"/>
+            <TargetCPU Value="xtensa"/>
+            <TargetOS Value="freertos"/>
+          </CodeGeneration>
+          <Linking>
+            <Debugging>
+              <DebugInfoType Value="dsDwarf3"/>
+              <UseLineInfoUnit Value="False"/>
+            </Debugging>
+          </Linking>
+          <Other>
+            <CompilerPath Value="/home/christo/fpc/installs/lib/fpc/3.3.1/ppcrossxtensa"/>
+          </Other>
+        </CompilerOptions>
+      </Item2>
+    </BuildModes>
+    <PublishOptions>
+      <Version Value="2"/>
+      <UseFileFilters Value="True"/>
+    </PublishOptions>
+    <RunParams>
+      <FormatVersion Value="2"/>
+    </RunParams>
+    <Units Count="1">
+      <Unit0>
+        <Filename Value="wifisignal.pp"/>
+        <IsPartOfProject Value="True"/>
+      </Unit0>
+    </Units>
+    <Debugger>
+      <ClassConfig Version="1">
+        <Config ConfigName="New" ConfigClass="TGDBMIDebugger" UID="{BCE5F8A4-5D2A-4EEA-BF4C-9A6F278709C0}"/>
+        <Config ConfigName="New (2)" ConfigClass="TGDBMIDebugger" UID="{1E9797F9-FD06-4D2D-BF1C-3584B6004D2C}"/>
+        <Config ConfigName="RSP" ConfigClass="TFpRspRemoteDebugger" UID="{A810DF37-E2BA-40E3-840F-EAC1A7CF5F92}"/>
+        <Config ConfigName="FPD" ConfigClass="TFpDebugDebugger" Active="True" UID="{90F7843E-260D-42FF-BACA-87ECB5118EFB}"/>
+      </ClassConfig>
+    </Debugger>
+  </ProjectOptions>
+  <CompilerOptions>
+    <Version Value="11"/>
+    <Target>
+      <Filename Value="bin/wifisignal-esp32"/>
+    </Target>
+    <SearchPaths>
+      <IncludeFiles Value="$(ProjOutDir);../../freertos-fpc;../../freertos-fpc/esp-idf"/>
+      <OtherUnitFiles Value="../../freertos-fpc;../../freertos-fpc/esp-idf;../common"/>
+      <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
+    </SearchPaths>
+    <CodeGeneration>
+      <HeapSize Value="1024"/>
+      <TargetProcessor Value="lx6"/>
+      <TargetCPU Value="xtensa"/>
+      <TargetOS Value="freertos"/>
+    </CodeGeneration>
+    <Linking>
+      <Debugging>
+        <DebugInfoType Value="dsDwarf3"/>
+        <UseLineInfoUnit Value="False"/>
+      </Debugging>
+    </Linking>
+    <Other>
+      <CustomOptions Value="-Xm"/>
+      <CompilerPath Value="/home/christo/fpc/installs/lib/fpc/3.3.1/ppcrossxtensa"/>
+    </Other>
+    <CompileReasons Run="False"/>
+  </CompilerOptions>
+  <Debugging>
+    <Exceptions Count="3">
+      <Item1>
+        <Name Value="EAbort"/>
+      </Item1>
+      <Item2>
+        <Name Value="ECodetoolError"/>
+      </Item2>
+      <Item3>
+        <Name Value="EFOpenError"/>
+      </Item3>
+    </Exceptions>
+  </Debugging>
+</CONFIG>
