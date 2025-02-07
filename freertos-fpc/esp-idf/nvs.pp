@@ -7,7 +7,7 @@ interface
 uses
   esp_err, esp_partition, portmacro;
 
-{$linklib cxx, static}     // required by libstdc++
+//{$linklib cxx, static}     // required by libstdc++
 {$linklib nvs_flash, static}
 {$linklib stdc++, static}  // required by nvs_flash for new/delete
 {$linklib gcc, static}     // required by libstdc++
