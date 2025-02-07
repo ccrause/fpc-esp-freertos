@@ -1,6 +1,7 @@
 unit esp_adc_cal;
 
 {$linklib esp_adc_cal, static}
+{$linklib efuse, static}
 
 interface
 
