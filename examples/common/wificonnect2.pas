@@ -114,7 +114,7 @@ begin
   if (Result = ESP_ERR_NVS_NO_FREE_PAGES) {$ifdef CPULX6}or (Result = ESP_ERR_NVS_NEW_VERSION_FOUND){$endif} then
   begin
     writeln('nvs_flash_erase');
-    EspErrorCheck(nvs_flash_erase());
+    EspErrorCheck(nvs_flash_erase(), 'nvs_flash_erase');
     writeln('nvs_flash_init()');
     Result := nvs_flash_init();
   end
@@ -128,51 +128,46 @@ var
   wifi_config: Twifi_config;
   bits: TEventBits;
 begin
-  EspErrorCheck(initNVS);
+  EspErrorCheck(initNVS, 'initNVS');
 
   stationConnected := false;
   WifiEventGroup := xEventGroupCreate();
 
-  if not isNetifInit then
-    EspErrorCheck(esp_netif_init());
+  EspErrorCheck(esp_netif_init(), 'esp_netif_init');
+  EspErrorCheck(esp_event_loop_create_default(), 'esp_event_loop_create_default');
 
-  if not isEventLoopCreated then
-  begin
-    EspErrorCheck(esp_event_loop_create_default());
-    isEventLoopCreated := true;
-  end;
   {$ifdef CPULX6}
   netif_handle := esp_netif_create_default_wifi_sta();
   {$endif}
 
   WIFI_INIT_CONFIG_DEFAULT(cfg);
-  EspErrorCheck(esp_wifi_init(@cfg));
+  EspErrorCheck(esp_wifi_init(@cfg), 'esp_wifi_init');
 
-  EspErrorCheck(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, Tesp_event_handler(@EventHandler), nil));
-  EspErrorCheck(esp_event_handler_register(IP_EVENT, ord(IP_EVENT_STA_GOT_IP), Tesp_event_handler(@EventHandler), nil));
+  EspErrorCheck(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, Tesp_event_handler(@EventHandler), nil), 'esp_event_handler_register');
+  EspErrorCheck(esp_event_handler_register(IP_EVENT, ord(IP_EVENT_STA_GOT_IP), Tesp_event_handler(@EventHandler), nil), 'esp_event_handler_register');
 
-  EspErrorCheck(esp_wifi_set_mode(WIFI_MODE_STA) );
+  EspErrorCheck(esp_wifi_set_mode(WIFI_MODE_STA), 'esp_wifi_set_mode');
 
+  FillChar(wifi_config, sizeof(wifi_config), #0);
   // If no AP name is given, just start wifi
   // it should use previously saved credentials if available
   if APName <> '' then
   begin
-    FillChar(wifi_config, sizeof(wifi_config), #0);
     CopyStringToBuffer(APName, @(wifi_config.sta.ssid[0]));
     CopyStringToBuffer(APassword, @(wifi_config.sta.password[0]));
-    EspErrorCheck(esp_wifi_set_config(ESP_IF_WIFI_STA, @wifi_config));
   end;
+  EspErrorCheck(esp_wifi_set_config(ESP_IF_WIFI_STA, @wifi_config), 'esp_wifi_set_config');
 
-  EspErrorCheck(esp_wifi_start());
+  EspErrorCheck(esp_wifi_start(), 'esp_wifi_start');
 
   if hostName <> nil then
     {$ifdef CPULX6}
-    EspErrorCheck(esp_netif_set_hostname(netif_handle, @hostName[1]));
+    EspErrorCheck(esp_netif_set_hostname(netif_handle, @hostName[1]), 'esp_netif_set_hostname');
     {$else}
-    EspErrorCheck(tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, @hostName[1]));
+    EspErrorCheck(tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, @hostName[1]), 'tcpip_adapter_set_hostname');
     {$endif}
 
-  EspErrorCheck(esp_wifi_connect());
+  EspErrorCheck(esp_wifi_connect(), 'esp_wifi_connect');
 
   // Wait until either WifiConnected or WifiFail bit gets set
   // by xEventGroupSetBits call in EventHandler_ESP32
@@ -200,16 +195,9 @@ var
   info: Tesp_netif_ip_info;
   {$endif}
 begin
-  EspErrorCheck(initNVS);
-
-  if not isNetifInit then
-    EspErrorCheck(esp_netif_init());
-
-  if not isEventLoopCreated then
-  begin
-    EspErrorCheck(esp_event_loop_create_default());
-    isEventLoopCreated := true;
-  end;
+  EspErrorCheck(initNVS, 'initNVS');
+  EspErrorCheck(esp_netif_init(), 'esp_netif_init');
+  EspErrorCheck(esp_event_loop_create_default(), 'esp_event_loop_create_default');
 
   FillByte(info, 0, sizeof(info));
   info.ip.addr := IP4ToAddress(192, 168, 4, 1);
@@ -218,18 +206,17 @@ begin
 
   {$ifdef CPULX106}
   tcpip_adapter_init;
-  EspErrorCheck(tcpip_adapter_dhcps_stop(TCPIP_ADAPTER_IF_AP));
-  EspErrorCheck(tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_AP, @info));
-  EspErrorCheck(tcpip_adapter_dhcps_start(TCPIP_ADAPTER_IF_AP));
+  EspErrorCheck(tcpip_adapter_dhcps_stop(TCPIP_ADAPTER_IF_AP), 'tcpip_adapter_dhcps_stop);
+  EspErrorCheck(tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_AP, @info), 'tcpip_adapter_set_ip_info');
+  EspErrorCheck(tcpip_adapter_dhcps_start(TCPIP_ADAPTER_IF_AP), 'tcpip_adapter_dhcps_start');
   {$else}
   netif_handle := esp_netif_create_default_wifi_ap();
-  esp_netif_dhcps_stop(netif_handle);
   esp_netif_set_ip_info(netif_handle, @info);
   esp_netif_dhcps_start(netif_handle);
   {$endif}
 
   WIFI_INIT_CONFIG_DEFAULT(cfg);
-  EspErrorCheck(esp_wifi_init(@cfg));
+  EspErrorCheck(esp_wifi_init(@cfg), 'esp_wifi_init');
 
   FillChar(wifi_config, sizeof(wifi_config), #0);
   if APassword = '' then
@@ -246,16 +233,21 @@ begin
   wifi_config.ap.beacon_interval := 100;
   wifi_config.ap.max_connection := 4;
 
-  EspErrorCheck(esp_wifi_set_mode(WIFI_MODE_AP));
-  EspErrorCheck(esp_wifi_set_config(WIFI_IF_AP, @wifi_config));
-  EspErrorCheck(esp_wifi_start());
+  EspErrorCheck(esp_wifi_set_mode(WIFI_MODE_AP), 'esp_wifi_set_mode');
+  EspErrorCheck(esp_wifi_set_config(WIFI_IF_AP, @wifi_config), 'esp_wifi_set_config');
+  EspErrorCheck(esp_wifi_start(), 'esp_wifi_start');
 end;
 
 procedure stopWifi;
 begin
+  EspErrorCheck(esp_event_handler_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, Tesp_event_handler(@EventHandler)), 'esp_event_handler_unregister');
+  EspErrorCheck(esp_event_handler_unregister(IP_EVENT, ord(IP_EVENT_STA_GOT_IP), Tesp_event_handler(@EventHandler)), 'esp_event_handler_unregister');
+  EspErrorCheck(esp_event_loop_delete_default, 'esp_event_loop_delete_default');
+
   esp_wifi_stop();
   esp_wifi_deinit();
   {$ifdef CPULX6}
+  esp_netif_dhcps_stop(netif_handle);
   esp_wifi_clear_default_wifi_driver_and_handlers(netif_handle);
   esp_netif_destroy(netif_handle);
   {$else}

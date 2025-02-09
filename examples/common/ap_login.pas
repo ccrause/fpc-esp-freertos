@@ -73,19 +73,19 @@ var
   ap_info_len: uint16 = APnum;
   i: integer;
 begin
-  EspErrorCheck(esp_event_loop_create_default());
+  EspErrorCheck(esp_event_loop_create_default(), 'esp_event_loop_create_default');
   WIFI_INIT_CONFIG_DEFAULT(cfg);
-  EspErrorCheck(esp_wifi_init(@cfg));
-  EspErrorCheck(esp_wifi_set_mode(WIFI_MODE_STA));
-  EspErrorCheck(esp_wifi_start());
+  EspErrorCheck(esp_wifi_init(@cfg), 'esp_wifi_init');
+  EspErrorCheck(esp_wifi_set_mode(WIFI_MODE_STA), 'esp_wifi_set_mode');
+  EspErrorCheck(esp_wifi_start(), 'esp_wifi_start');
 
   // Start scan with default settings, block until done
-  EspErrorCheck(esp_wifi_scan_start(nil, true));
+  EspErrorCheck(esp_wifi_scan_start(nil, true), 'esp_wifi_scan_start');
 
   // Get collected records
   ap_info_len := length(ap_info);
-  EspErrorCheck(esp_wifi_scan_get_ap_records(@ap_info_len, @ap_info[0]));
-  EspErrorCheck(esp_wifi_scan_get_ap_num(@ap_info_len));
+  EspErrorCheck(esp_wifi_scan_get_ap_records(@ap_info_len, @ap_info[0]), 'esp_wifi_scan_get_ap_records');
+  EspErrorCheck(esp_wifi_scan_get_ap_num(@ap_info_len), 'esp_wifi_scan_get_ap_num');
 
   // Copy SSIDs to APlist
   if ap_info_len > 0 then
@@ -105,6 +105,7 @@ begin
   else
     writeln('No AP records returned.');
 
+  EspErrorCheck(esp_event_loop_delete_default(), 'esp_event_loop_delete_default');
   esp_wifi_stop();
   esp_wifi_deinit();
 end;

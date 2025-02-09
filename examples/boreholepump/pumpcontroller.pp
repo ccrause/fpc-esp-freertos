@@ -11,7 +11,8 @@ uses
   projdefs, timer, timer_types,
   queue, dataunit,
   semphr, settingsmanager, hardwareconfig, runstateunit,
-  timeunit, timeralarm, task, esp_http_server;
+  timeunit, timeralarm, task, esp_http_server,
+  temputils;
 
 var
   levelSensor: TAJ_SR04M;
@@ -35,36 +36,31 @@ begin
 
   tmpSSID := '';
   tmpPassword := '';
-  //repeat
-    //connectWifiAP(tmpSSID, tmpPassword);
-    //if not stationConnected then
-    //begin
-    //  writeln('Could not connect to wifi, starting local access point');
-    //  stopWifi;
-    //  // Get list of access points for APserver
-    //  wifi_scan;
-    //
-    //  reconnect := false;
-      // SSID = wireless signal + telescope
-      //createWifiAP(#$f0#$9f#$9b#$9c#$f0#$9f#$94#$ad, '');
-      //start_APserver;
-      //while not reconnect do
-      //  vTaskDelay(100);
-      //
-      //writeln('Attempting reconnecting to wifi');
-      //writeln('SSID: ', tmpSSID);
-      //writeln('Password: ', tmpPassword);
-      //stop_APserver;
-      //stopWifi;
-      //
-      //connectWifiAP(tmpSSID, tmpPassword);
-    //end;
-  //until stationConnected;
+  writeln('Connecting to wifi');
+  connectWifiAP(tmpSSID, tmpPassword);
+  if not stationConnected then
+  begin
+    writeln('Could not connect to wifi, starting local access point');
+    stopWifi;
+    // Get list of access points for APserver
+    writeln('wifi_scan');
+    wifi_scan;
 
-  createWifiAP(#$f0#$9f#$9b#$9c#$f0#$9f#$94#$ad, '');
-  writeln('Starting web server...');
-  tmpServer := start_webserver;
-  //attachLoginToServer(tmpServer);
+    reconnect := false;
+    // SSID = wireless signal + telescope
+    createWifiAP(#$f0#$9f#$9b#$9c#$f0#$9f#$94#$ad, '');
+    start_APserver;
+    while not reconnect do
+      sleep(1000);
+
+    writeln('Attempting reconnecting to wifi');
+    writeln('SSID: ', tmpSSID);
+    writeln('Password: ', tmpPassword);
+    stop_APserver;
+    stopWifi;
+
+    connectWifiAP(tmpSSID, tmpPassword);
+  end;
 
   oldcount := 0;
   dataIndex := 0;
@@ -89,21 +85,18 @@ begin
     settings.startDeadTime:= 15;  // s
   end;
 
-  if stationConnected then
-  begin
-    // Uses NTP, so start after WiFi is connected
-    writeln('Init time');
-    initTime;
+  writeln('Init time');
+  initTime;
 
-    //writeln('Starting web server...');
-    //start_webserver;
-  end;
+  writeln('Starting web server...');
+  start_webserver;
 
   writeln('init level sensor');
   levelSensor.init(levelSensorUart, levelSensorTxPin, levelSensorRxPin);
 
   writeln('init pulse counter');
   flowsensor.init(flowSensorCounterUnit, flowSensorPulsePin);
+
   writeln('Done init'#10);
 
   // Loop runs every 1 second
