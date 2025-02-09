@@ -22,20 +22,20 @@ uses
 
 const
   levelSensorUart = 2;
-  levelSensorTxPin = 17;
-  levelSensorRxPin = 16;
+  levelSensorTxPin = 18;
+  levelSensorRxPin = 5;
 
   flowSensorCounterUnit = PCNT_UNIT_0;
   flowSensorPulsePin = 13;  // Interferes with JTAG debugging
 
-  pumpOutputPin = 4;  // high when pump should be on
-  lowLevelPin = 2;    // high when level is low, also onboard LED
+  pumpOutputPin = 21;  // high when pump should be on
+  lowLevelPin = 19;    // high when level is low, also onboard LED
 
   // SD card SPI connections
-  sdCSpin   = 26;
-  sdMOSIpin = 25;
-  sdCLKpin  = 33;
-  sdMISOpin = 32;
+  sdCSpin   = 25;
+  sdMOSIpin = 33;
+  sdCLKpin  = 32;
+  sdMISOpin = 35;
 
 implementation
 
