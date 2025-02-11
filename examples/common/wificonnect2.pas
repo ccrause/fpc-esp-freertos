@@ -155,8 +155,8 @@ begin
   begin
     CopyStringToBuffer(APName, @(wifi_config.sta.ssid[0]));
     CopyStringToBuffer(APassword, @(wifi_config.sta.password[0]));
+    EspErrorCheck(esp_wifi_set_config(ESP_IF_WIFI_STA, @wifi_config), 'esp_wifi_set_config');
   end;
-  EspErrorCheck(esp_wifi_set_config(ESP_IF_WIFI_STA, @wifi_config), 'esp_wifi_set_config');
 
   EspErrorCheck(esp_wifi_start(), 'esp_wifi_start');
 
