@@ -174,7 +174,7 @@ begin
         j := j - high(levels) - 1;
 
       Str(i, s1);
-      tmp := levels[j] div 20;
+      tmp := levels[j] div 6; // 300 * 6 = 1800 mm will be 0%
       if tmp > 300 then tmp := 300;
       Str(tmp, s2);
       s := s + ' ' + s1 + ',' + s2;
