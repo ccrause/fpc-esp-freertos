@@ -62,25 +62,16 @@ begin
     max_transfer_sz := 4000;
   end;
 
-  writeln('Initializing SPI bus: ');
-  ret := spi_bus_initialize(Tspi_host_device(host.slot), @bus_cfg, SPI_DMA_CH1);
-  if (ret = ESP_OK) then
+  if EspErrorCheck( spi_bus_initialize(Tspi_host_device(host.slot), @bus_cfg, SPI_DMA_CH1), 'spi_bus_initialize') then
   begin
-    writeln('OK');
-
     // This initializes the slot without card detect (CD) and write protect (WP) signals.
     // Modify slot_config.gpio_cd and slot_config.gpio_wp if your board has these signals.
     INIT_SDSPI_DEVICE_CONFIG_DEFAULT(slot_config);
     slot_config.gpio_cs := Tgpio_num(sdCSpin);
     slot_config.host_id := tspi_host_device(host.slot);
 
-    write('Mount SD card with FATFS driver: ');
-    ret := esp_vfs_fat_sdspi_mount(mount_point, @host, @slot_config, @mountConfig, @card);
-    if ret = ESP_OK then
+    if EspErrorCheck(esp_vfs_fat_sdspi_mount(mount_point, @host, @slot_config, @mountConfig, @card), 'esp_vfs_fat_sdspi_mount') then
     begin
-      writeln('OK');
-
-      writeln(#10'Appending to ', logfile);
       {$push}{$I-} // disable runtime I/O errors
       AssignFile(f, logfile);
       Append(f);
@@ -107,25 +98,11 @@ begin
         writeln('IO error ', ioRes, ' when closing log file');
       {$pop} // restore previous runtime error state
 
-      write('Unmount: ');
-      ret := esp_vfs_fat_sdcard_unmount(mount_point, card);
-      if ret = ESP_OK then
-        writeln('OK')
-      else
-        writeln('Error - ', esp_err_to_name(ret));
-    end  //esp_vfs_fat_sdspi_mount = ESP_OK
-    else
-      writeln('Error - ', esp_err_to_name(ret));
+      EspErrorCheck(esp_vfs_fat_sdcard_unmount(mount_point, card), 'esp_vfs_fat_sdcard_unmount');
+    end;  // esp_vfs_fat_sdspi_mount
 
-    writeln('Freeing SPI bus: ');
-    ret :=   spi_bus_free(Tspi_host_device(host.slot));
-    if (ret = ESP_OK) then
-      writeln('OK')
-    else
-      writeln('Error - ', esp_err_to_name(ret));
-  end  // spi_bus_initialize = ESP_OK
-  else
-    writeln('Error - ', esp_err_to_name(ret));
+    EspErrorCheck(spi_bus_free(Tspi_host_device(host.slot)), 'spi_bus_free');
+  end;  // spi_bus_initialize
 end;
 
 end.
