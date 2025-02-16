@@ -91,10 +91,10 @@ begin
   writeln('Starting web server...');
   start_webserver;
 
-  writeln('init level sensor');
+  //writeln('init level sensor');
   levelSensor.init(levelSensorUart, levelSensorTxPin, levelSensorRxPin);
 
-  writeln('init pulse counter');
+  //writeln('init pulse counter');
   flowsensor.init(flowSensorCounterUnit, flowSensorPulsePin);
 
   writeln('Done init'#10);
@@ -107,7 +107,7 @@ begin
 
     if levelSensor.readDistance(currentLevel) then
     begin
-      write('Level = ', currentLevel:4, 'mm   ');
+      //write('Level = ', currentLevel:4, 'mm   ');
       level := level + currentLevel;
     end
     else // Communication error, assume same reading as disconnected sensor
@@ -116,14 +116,14 @@ begin
     if count < uint16($FFFF) then
     begin
       currentFlow := (count - oldcount) / 13.2 {27}; // Datasheet factor: 6.6 per full cycle;
-      writeln('flow = ', currentFlow:1:2, ' L/min');
+      //writeln('flow = ', currentFlow:1:2, ' L/min');
       oldcount := count;
       flow := flow + currentFlow;
     end
     else
     begin  // Unlikely, but then what to do?
       currentFlow := 0;
-      writeln('Error reading flowsensor.');
+      //writeln('Error reading flowsensor.');
     end;
 
     if dataCount >= maxCount-1 then
