@@ -34,17 +34,34 @@ procedure _esp_error_check_failed(rc: Tesp_err; afile: PChar;
 procedure _esp_error_check_failed_without_abort(rc: Tesp_err; afile: PChar;
   line: longint; _function: PChar; expression: PChar); external;
 
-procedure EspErrorCheck(code: Tesp_err);
+function EspErrorCheck(code: Tesp_err): boolean;
+function EspErrorCheck(code: Tesp_err; const name: shortstring): boolean;
+function EspErrorCheckLog(code: Tesp_err; const name: shortstring): boolean;
 
 implementation
 
 // Non-aborting version, just print an error message
-procedure EspErrorCheck(code: Tesp_err);
+function EspErrorCheck(code: Tesp_err): boolean;
 begin
-  if not (code = ESP_OK) then
-  begin
+  Result := code = ESP_OK;
+  if not Result then
     writeln('Error: ', esp_err_to_name(code));
-  end;
+end;
+
+function EspErrorCheck(code: Tesp_err; const name: shortstring): boolean;
+begin
+  Result := code = ESP_OK;
+  if not Result then
+    writeln(name, ': ', esp_err_to_name(code));
+end;
+
+function EspErrorCheckLog(code: Tesp_err; const name: shortstring): boolean;
+begin
+  Result := code = ESP_OK;
+  if not Result then
+    writeln(name, ': ', esp_err_to_name(code))
+  else
+    writeln(name, ': OK');
 end;
 
 end.
