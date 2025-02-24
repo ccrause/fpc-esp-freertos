@@ -2,11 +2,12 @@ program mqtt_client_demo;
 
 uses
   fmem, freertos,
-  wificonnect,
+  wificonnect2,
   esp_http_server, esp_err, http_parser,
   portable, task,
   esp_log, mqtt_client, esp_event_base,
-  gpio, gpio_types, portmacro;
+  gpio, {$ifdef CPULX6}gpio_types,{$endif} portmacro,
+  esp_system;
 
 {$macro on}
 {$inline on}
@@ -20,20 +21,45 @@ uses
 
 const
   TAG = 'MQTT_EXAMPLE';
-  cmndTopic = 'cmnd/BinLatch/Position';
-  statTopic = 'stat/BinLatch/Position';
   mqttserver = 'mqtt://192.168.1.115';  // OpenHAB with mosquitto running on RPi on local netwrok
-  statClose = '1';
-  statOpen = '0';
 
-  LED = GPIO_NUM_2;  // NodeMCU LED on ESP-12E module, also ESP32 DevKit V1 from DOIT
-  Button = GPIO_NUM_0; // ESP32 DevKit V1 board boot button
+  // Input pin and mqtt topics
+  InputPin = GPIO_NUM_3;  // ESP-01 RX pin
+  InputCmndTopic = 'cmnd/Input/State';  //
+  InputStatTopic = 'stat/Input/State';
+
+  OutputPin = GPIO_NUM_2; // ESP-01
+  OutputStatTopic = 'stat/Output/State';
+
+  statHigh = '1';
+  statLow = '0';
 
 var
   myClient: Tesp_mqtt_client_handle;
   disconnected: boolean;
-  latched: boolean;
-  buttonPressed: boolean;
+  InputState: boolean;
+  OutputState: boolean;
+  localControl: boolean;
+
+function makeStationName: shortstring;
+const
+  nameLength = {$if defined(CPULX6)}18{$else}20{$endif};
+  namePrefix = {$if defined(FPC_MCU_ESP32)}'esp32-'{$elseif defined(FPC_MCU_ESP8266)}'esp8266-'{$else}'???????-'{$endif};
+var
+  mac: array[0..5] of byte;
+  s: string[2];
+  i: integer;
+begin
+  SetLength(Result, namelength);
+  FillChar(Result[1], namelength, #0);
+  Move(namePrefix[1], Result[1], length(namePrefix));
+  EspErrorCheck(esp_efuse_mac_get_default(@mac[0]), 'esp_efuse_mac_get_default');
+  for i := 0 to high(mac) do
+  begin
+    s := HexStr(mac[i], 2);
+    Move(s[1], Result[length(namePrefix) + 1 + 2*i], length(s));
+  end;
+end;
 
 procedure mqtt_event_handler(handler_args: pointer; base: Tesp_event_base; event_id: int32; event_data: pointer);
 var
@@ -48,14 +74,19 @@ begin
     MQTT_EVENT_CONNECTED:
     begin
       esp_log_write(ESP_LOG_INFO, TAG, 'MQTT_EVENT_CONNECTED'#10);
-      esp_mqtt_client_subscribe(client, cmndTopic, 0);
+      esp_mqtt_client_subscribe(client, InputCmndTopic, 0);
       disconnected := false;
 
       // Update current status on mqtt server
-      if latched then
-        esp_mqtt_client_publish(myClient, statTopic, statClose, 0, 0, 0)
+      if InputState then
+        esp_mqtt_client_publish(myClient, InputStatTopic, statHigh, 0, 0, 0)
       else
-        esp_mqtt_client_publish(myClient, statTopic, statOpen, 0, 0, 0);
+        esp_mqtt_client_publish(myClient, InputStatTopic, statLow, 0, 0, 0);
+
+      if OutputState then
+        esp_mqtt_client_publish(myClient, OutputStatTopic, statHigh, 0, 0, 0)
+      else
+        esp_mqtt_client_publish(myClient, OutputStatTopic, statLow, 0, 0, 0);
     end;
 
     MQTT_EVENT_DISCONNECTED:
@@ -85,27 +116,33 @@ begin
       esp_log_write(ESP_LOG_INFO, TAG, 'mqtt: %.*s [%.*s]'#10,
         length(topic), @topic[1], length(data), @data[1]); // Lazy workaround for shortstrings!
 
-      if CompareChar(topic[1], cmndTopic[1], length(topic)) = 0 then
+      if CompareChar(topic[1], InputCmndTopic[1], length(topic)) = 0 then
       begin
         if length(data) = 0 then
         begin
           // Empty data means return status
-          if latched then
-            esp_mqtt_client_publish(myClient, statTopic, statClose, 0, 0, 0)
+          if InputState then
+            esp_mqtt_client_publish(myClient, InputStatTopic, statHigh, 0, 0, 0)
           else
-            esp_mqtt_client_publish(myClient, statTopic, statOpen, 0, 0, 0);
+            esp_mqtt_client_publish(myClient, InputStatTopic, statLow, 0, 0, 0);
         end
         else if (data[1] = '1') or (CompareChar(data[1], 'ON', length(data)) = 0) then
         begin
-          gpio_set_level(LED, 1);
-          latched := true;
+          gpio_set_level(OutputPin, 1);
+          localControl := false;
+          InputState := true;
+          esp_mqtt_client_publish(myClient, OutputStatTopic, statHigh, 0, 0, 0);
+          writeln('mqtt override: Output 1');
         end
         else if (data[1] = '0') or (CompareChar(data[1], 'OFF', length(data)) = 0) then
         begin
-          gpio_set_level(LED, 0);
-          latched := false;
+          gpio_set_level(OutputPin, 0);
+          localControl := false;
+          InputState := false;
+          esp_mqtt_client_publish(myClient, OutputStatTopic, statLow, 0, 0, 0);
+          writeln('mqtt override: Output 0');
         end;
-      end;
+      end
     end;
 
     MQTT_EVENT_ERROR:
@@ -123,7 +160,7 @@ var
   mqtt_cfg: Tesp_mqtt_client_config;
 begin
   FillByte(mqtt_cfg, SizeOf(mqtt_cfg), 0);
-  mqtt_cfg.uri := mqttserver; //'mqtt://test.mosquitto.org';
+  mqtt_cfg.uri := {mqttserver; //}'mqtt://test.mosquitto.org';
   myClient := esp_mqtt_client_init(mqtt_cfg);
   // The last argument may be used to pass data to the event handler, in this example mqtt_event_handler */
   esp_mqtt_client_register_event(myClient, MQTT_EVENT_ANY, @mqtt_event_handler, nil);
@@ -132,69 +169,72 @@ end;
 
 var
   cfg: Tgpio_config;
+  stationName: shortstring;
 
 begin
-  esp_log_level_set('wifi', ESP_LOG_ERROR);
-  // Configure LED pin
-  cfg.pin_bit_mask := 1 shl ord(LED) ;
+  esp_log_level_set('*', ESP_LOG_WARN);
+  // Configure output pin
+  cfg.pin_bit_mask := 1 shl ord(OutputPin);
   cfg.mode := GPIO_MODE_OUTPUT;
   cfg.pull_up_en := GPIO_PULLUP_DISABLE;
   cfg.pull_down_en := GPIO_PULLDOWN_DISABLE;
   cfg.intr_type := GPIO_INTR_DISABLE;
   gpio_config(cfg);
-  gpio_set_direction(LED, GPIO_MODE_OUTPUT);
 
-  // Configure button pin
-  cfg.pin_bit_mask := 1 shl ord(Button) ;
+  // Configure input pin with internal pulldown
+  cfg.pin_bit_mask := 1 shl ord(InputPin) ;
   cfg.mode := GPIO_MODE_INPUT;
   cfg.pull_up_en := GPIO_PULLUP_DISABLE;
-  cfg.pull_down_en := GPIO_PULLDOWN_DISABLE;
+  cfg.pull_down_en := GPIO_PULLDOWN_ENABLE;
   cfg.intr_type := GPIO_INTR_DISABLE;
   gpio_config(cfg);
 
-  connectWifiAP(AP_NAME, PWD);
+  stationName := makeStationName();
+  writeln('Station name: ', stationName);
+  connectWifiAP(AP_NAME, PWD, PChar(@stationName[1]));
   disconnected := false;
   mqtt_app_start();
 
-  latched := false;
-  buttonPressed := false;
-  repeat
-    vTaskDelay(100 div portTICK_PERIOD_MS);
+  InputState := false;
+  OutputState := false;
+  localControl := true;
 
+  // Make inputState inverse of InputPin state so that change logic in loop triggers
+  inputState := gpio_get_level(InputPin) = 0;
+
+  repeat
     if disconnected then
     begin
       esp_mqtt_client_reconnect(myClient);
     end;
 
-    if gpio_get_level(Button) = 0 then
+    if localControl then
     begin
-      if not buttonPressed then
+      if gpio_get_level(InputPin) = 0 then
       begin
-        buttonPressed := true;
-        writeln('Button pressed');
-      end;
-    end
-    else
-    begin
-      if buttonPressed then
+        if InputState then
+        begin
+          writeln('Input low');
+          InputState := false;
+          OutputState := false;
+          gpio_set_level(OutputPin, 0);
+          esp_mqtt_client_publish(myClient, OutputStatTopic, statLow, 0, 0, 0);
+        end;
+      end
+      else
       begin
-        buttonPressed := false;
-        if not latched then
+        if not InputState then
         begin
-          latched := true;
-          gpio_set_level(LED, 1);
-          writeln('LED = 1');
-          esp_mqtt_client_publish(myClient, statTopic, statClose, 0, 0, 0);
-        end
-        else
-        begin
-          latched := false;
-          gpio_set_level(LED, 0);
-          writeln('LED = 0');
-          esp_mqtt_client_publish(myClient, statTopic, statOpen, 0, 0, 0);
+          writeln('Input high');
+          InputState := true;
+          OutputState := true;
+          gpio_set_level(OutputPin, 1);
+          esp_mqtt_client_publish(myClient, OutputStatTopic, statHigh, 0, 0, 0);
         end;
       end;
     end;
+
+    vTaskDelay(100 div portTICK_PERIOD_MS);
   until false;
 end.
 
