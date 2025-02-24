@@ -162,9 +162,9 @@ begin
 
   if hostName <> nil then
     {$ifdef CPULX6}
-    EspErrorCheck(esp_netif_set_hostname(netif_handle, @hostName[1]), 'esp_netif_set_hostname');
+    EspErrorCheck(esp_netif_set_hostname(netif_handle, @hostName[0]), 'esp_netif_set_hostname');
     {$else}
-    EspErrorCheck(tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, @hostName[1]), 'tcpip_adapter_set_hostname');
+    EspErrorCheck(tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, @hostName[0]), 'tcpip_adapter_set_hostname');
     {$endif}
 
   EspErrorCheck(esp_wifi_connect(), 'esp_wifi_connect');
@@ -206,7 +206,7 @@ begin
 
   {$ifdef CPULX106}
   tcpip_adapter_init;
-  EspErrorCheck(tcpip_adapter_dhcps_stop(TCPIP_ADAPTER_IF_AP), 'tcpip_adapter_dhcps_stop);
+  EspErrorCheck(tcpip_adapter_dhcps_stop(TCPIP_ADAPTER_IF_AP), 'tcpip_adapter_dhcps_stop');
   EspErrorCheck(tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_AP, @info), 'tcpip_adapter_set_ip_info');
   EspErrorCheck(tcpip_adapter_dhcps_start(TCPIP_ADAPTER_IF_AP), 'tcpip_adapter_dhcps_start');
   {$else}
