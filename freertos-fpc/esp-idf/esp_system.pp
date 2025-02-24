@@ -2,6 +2,8 @@ unit esp_system;
 
 {$include sdkconfig.inc}
 
+{$linklib mbedx509, static}
+
 interface
 
 uses
