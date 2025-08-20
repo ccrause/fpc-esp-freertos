@@ -5,11 +5,11 @@ unit wificonnect;
 interface
 
 uses
-  esp_err, esp_wifi, esp_wifi_types, esp_netif, esp_event,
+  esp_err, esp_wifi, esp_wifi_types, esp_netif, esp_event, esp_event_base,
   {$ifdef CPULX6}
-  esp_netif_types, esp_wifi_default, esp_event_base, esp_bit_defs, esp_netif_ip_addr,
+  esp_netif_types, esp_wifi_default, esp_bit_defs, esp_netif_ip_addr,
   {$else}
-  nvs_flash, eagle_soc, tcpip_adapter, esp_event_loop, ip4_addr,
+  nvs_flash, eagle_soc, tcpip_adapter, esp_event_legacy, ip4_addr,
   {$endif}
   nvs, event_groups,
   esp_interface, projdefs, portmacro;
