@@ -1,10 +1,12 @@
 program simplehttpserver;
 
 uses
+  fmem,
   freertos,
   wificonnect,
   esp_http_server, esp_err, http_parser,
-  portable, task;
+  portable, task
+  {$ifdef CPULX6}, rtc_wdt{$endif};
 
 {$macro on}
 {$inline on}
@@ -102,6 +104,7 @@ begin
 end;
 
 begin
+  {$ifdef CPULX6}rtc_wdt_disable;{$endif}
   connectWifiAP(AP_NAME, PWD);
   writeln('Starting web server...');
   start_webserver;
