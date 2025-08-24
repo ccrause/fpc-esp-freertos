@@ -24,11 +24,14 @@ uses
 var
   StationConnected: boolean;
 
+// NOTE: hostName is an optional name for this network interface.
+// It should be shorter than TCPIP_HOSTNAME_MAX_SIZE = 32 bytes
+
 // Connect to an external access point using provided credetials
-procedure connectWifiAP(const APName, APassword: shortstring);
+procedure connectWifiAP(const APName, APassword: shortstring; hostName: pchar = nil);
 
 // Create a wifi access point with the given name and password
-procedure createWifiAP(const APName, APassword: shortstring);
+procedure createWifiAP(const APName, APassword: shortstring; hostName: pchar = nil);
 
 implementation
 
@@ -45,6 +48,7 @@ var
   ret: longint;
   WifiEventGroup: TEventGroupHandle;
   retries: uint32 = 0;
+  pHostName: pchar;
 
 // Rather use StrPLCopy, but while sysutils are not yet working...
 procedure CopyStringToBuffer(const s: shortstring; const buf: PChar);
@@ -127,14 +131,10 @@ end;
 function EventHandler_ESP8266(ctx: pointer; event: Psystem_event): Tesp_err;
 var
   addr: uint32;
+  err: Tesp_err;
 begin
   writeln('Event: ', event^.event_id);
-  if (event^.event_id = SYSTEM_EVENT_STA_START) then
-  begin
-    writeln('Wifi started, now connecting...');
-    esp_wifi_connect();
-  end
-  else if (event^.event_id = SYSTEM_EVENT_STA_DISCONNECTED) then
+  if (event^.event_id = SYSTEM_EVENT_STA_DISCONNECTED) then
   begin
     StationConnected := false;
     if (retries < MaxRetries) then
@@ -169,6 +169,13 @@ begin
   end
   else if (event^.event_id = SYSTEM_EVENT_AP_START) then
   begin
+    if pHostName <> nil then
+    begin
+      err := tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, pHostName);
+      if err <> ESP_OK then
+        writeln('Error setting hostname: ', err);
+    end;
+
     if assigned(WifiEventGroup) then
       xEventGroupSetBits(WifiEventGroup, APStarted);
   end
@@ -178,6 +185,46 @@ begin
   end;
   result := ESP_OK;
 end;
+
+procedure on_wifi_disconnect(arg: pointer; event_base: Tesp_event_base;
+                             event_id: int32; event_data: pointer);
+begin
+  writeln('Wi-Fi disconnected, trying to reconnect...');
+  if Psystem_event_sta_disconnected(event_data)^.reason = ord(WIFI_REASON_BASIC_RATE_NOT_SUPPORT) then
+  begin
+    //Switch to 802.11 bgn mode */
+    esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCOL_11B or WIFI_PROTOCOL_11G or WIFI_PROTOCOL_11N);
+  end;
+  StationConnected := false;
+  EspErrorCheck(esp_wifi_connect());
+end;
+
+procedure on_wifi_connect(arg: pointer; event_base: Tesp_event_base;
+                             event_id: int32; event_data: pointer);
+begin
+  writeln('Wifi connected');
+end;
+
+procedure on_got_ip(arg: pointer; event_base: Tesp_event_base;
+                             event_id: int32; event_data: pointer);
+var
+  addr: uint32;
+begin
+  addr := Pip_event_got_ip(event_data)^.ip_info.ip.addr;
+  writeln('Got ip: ',  addr and $FF, '.', (addr shr 8) and $FF, '.', (addr shr 16) and $FF, '.', addr shr 24);
+  retries := 0;
+  StationConnected := true;
+  if assigned(WifiEventGroup) then
+    xEventGroupSetBits(WifiEventGroup, WifiConnected);
+end;
+
+procedure on_lost_ip(arg: pointer; event_base: Tesp_event_base;
+                             event_id: int32; event_data: pointer);
+begin
+  writeln('Lost ip');
+  StationConnected := false;
+end;
+
 {$endif}
 
 procedure WifiInitStationMode(const APName, APassword: shortstring);
@@ -208,11 +255,11 @@ begin
   EspErrorCheck(esp_event_handler_register(IP_EVENT, ord(IP_EVENT_STA_GOT_IP), Tesp_event_handler(@EventHandler_ESP32), nil));
   {$else}
   if not eventLoopInitDone then
-  begin
     eventLoopInitDone := true;
-    writeln('esp_event_loop_init');
-    EspErrorCheck(esp_event_loop_init(Tsystem_event_cb(@EventHandler_ESP8266), nil));
-  end;
+  EspErrorCheck(esp_event_handler_register(WIFI_EVENT, ord(WIFI_EVENT_STA_CONNECTED), @on_wifi_connect, nil));
+  EspErrorCheck(esp_event_handler_register(WIFI_EVENT, ord(WIFI_EVENT_STA_DISCONNECTED), @on_wifi_disconnect, nil));
+  EspErrorCheck(esp_event_handler_register(IP_EVENT, ord(IP_EVENT_STA_GOT_IP), @on_got_ip, nil));
+  EspErrorCheck(esp_event_handler_register(IP_EVENT, ord(IP_EVENT_STA_LOST_IP), @on_lost_ip, nil));
   {$endif}
 
   writeln('esp_wifi_set_mode');
@@ -231,6 +278,14 @@ begin
   end;
   writeln('esp_wifi_start');
   EspErrorCheck(esp_wifi_start());
+  {$ifdef CPULX6}
+  //EspErrorCheck(esp_netif_set_hostname(@esp_interface, 'esp32-fpc'));
+  {$else}
+  EspErrorCheck(esp_wifi_connect());
+
+  if pHostName <> nil then
+    EspErrorCheck(tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, pHostName));
+  {$endif}
 
   // Wait until either WifiConnected or WifiFail bit gets set
   // by xEventGroupSetBits call in EventHandler_ESP32
@@ -242,16 +297,12 @@ begin
           10 * configTICK_RATE_HZ);  // timeout after 10 seconds
           //portMAX_DELAY);
 
-  //StationConnected := false;
   if (bits and WifiConnected) = WifiConnected then
-  begin
-    //StationConnected := true;
     writeln('Connected. Test connection by pinging the above IP address from the same network')
-  end
   else if (bits and WifiFail) = WifiFail then
     writeln('### Failed to connect')
   else
-    writeln('## UNEXPECTED EVENT, bits = ', bits);
+    writeln('Unexpected: timeout waiting for WifiEventGroup');
 
   // Done, now clean up event group
   {$ifdef CPULX6}
@@ -261,8 +312,9 @@ begin
   vEventGroupDelete(WifiEventGroup);
 end;
 
-procedure connectWifiAP(const APName, APassword: shortstring);
+procedure connectWifiAP(const APName, APassword: shortstring; hostName: pchar);
 begin
+  pHostName := hostName;
   // In case default logging causes flood of messages
   //esp_log_level_set('*', ESP_LOG_WARN);
 
@@ -281,11 +333,10 @@ begin
   WifiInitStationMode(APName, APassword);
 end;
 
-procedure createWifiAP(const APName, APassword: shortstring);
+procedure createWifiAP(const APName, APassword: shortstring; hostName: pchar);
 var
   cfg: Twifi_init_config;
   wifi_config: Twifi_config;
-  bits: TEventBits;
   {$ifdef CPULX106}
   info: Ttcpip_adapter_ip_info;
   {$else}
@@ -293,6 +344,7 @@ var
   info: Tesp_netif_ip_info;
   {$endif}
 begin
+  pHostName := hostName;
   writeln('nvs_flash_init');
   ret := nvs_flash_init();
   if (ret = ESP_ERR_NVS_NO_FREE_PAGES) {$ifdef CPULX6}or (ret = ESP_ERR_NVS_NEW_VERSION_FOUND){$endif} then
@@ -318,10 +370,6 @@ begin
   EspErrorCheck(tcpip_adapter_dhcps_start(TCPIP_ADAPTER_IF_AP));
   {$else}
   netif_handle := esp_netif_create_default_wifi_ap();
-  // This doesn't seem to work on ESP32
-  //esp_netif_dhcps_stop(netif_handle);
-  //esp_netif_set_ip_info(netif_handle, @info);
-  //esp_netif_dhcps_start(netif_handle);
   {$endif}
 
   WIFI_INIT_CONFIG_DEFAULT(cfg);
