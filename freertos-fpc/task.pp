@@ -5,7 +5,7 @@ unit task;
 interface
 
 uses
-  projdefs, portmacro, portable, list;
+  projdefs, portmacro, portable, list, freertos;
 
 const
   // ESP8266_RTOS_SDK V3.4 sits at V10.0

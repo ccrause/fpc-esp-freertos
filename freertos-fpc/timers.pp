@@ -6,22 +6,22 @@ unit timers;
 interface
 
 uses
-  portmacro, task;
+  portmacro, task, freertos;
 
 const
-   tmrCOMMAND_EXECUTE_CALLBACK_FROM_ISR 	=  -2;
-   tmrCOMMAND_EXECUTE_CALLBACK				    =  -1;
-   tmrCOMMAND_START_DONT_TRACE				    =  0;
-   tmrCOMMAND_START					              =  1;
-   tmrCOMMAND_RESET						            =  2;
-   tmrCOMMAND_STOP							          =  3;
-   tmrCOMMAND_CHANGE_PERIOD				        =  4;
-   tmrCOMMAND_DELETE						          =  5;
-   tmrFIRST_FROM_ISR_COMMAND				      =  6;
-   tmrCOMMAND_START_FROM_ISR				      =  6;
-   tmrCOMMAND_RESET_FROM_ISR				      =  7;
-   tmrCOMMAND_STOP_FROM_ISR				        =  8;
-   tmrCOMMAND_CHANGE_PERIOD_FROM_ISR		  =  9;
+   tmrCOMMAND_EXECUTE_CALLBACK_FROM_ISR = -2;
+   tmrCOMMAND_EXECUTE_CALLBACK          = -1;
+   tmrCOMMAND_START_DONT_TRACE          =  0;
+   tmrCOMMAND_START                     =  1;
+   tmrCOMMAND_RESET                     =  2;
+   tmrCOMMAND_STOP                      =  3;
+   tmrCOMMAND_CHANGE_PERIOD             =  4;
+   tmrCOMMAND_DELETE                    =  5;
+   tmrFIRST_FROM_ISR_COMMAND            =  6;
+   tmrCOMMAND_START_FROM_ISR            =  6;
+   tmrCOMMAND_RESET_FROM_ISR            =  7;
+   tmrCOMMAND_STOP_FROM_ISR             =  8;
+   tmrCOMMAND_CHANGE_PERIOD_FROM_ISR    =  9;
 
 type
   TTimerHandle = pointer;
@@ -31,19 +31,19 @@ type
 
 {$if defined(configSUPPORT_DYNAMIC_ALLOCATION) and (configSUPPORT_DYNAMIC_ALLOCATION = 1)}
 function xTimerCreate(pcTimerName: PChar;
-								const xTimerPeriodInTicks: TTickType;
-								const uxAutoReload: TUBaseType;
-								pvTimerID: pointer;
-								pxCallbackFunction: TTimerCallbackFunction): TTimerCallbackFunction; external;
+                      const xTimerPeriodInTicks: TTickType;
+                      const uxAutoReload: TUBaseType;
+                      pvTimerID: pointer;
+                      pxCallbackFunction: TTimerCallbackFunction): TTimerCallbackFunction; external;
 {$endif}
 
 {$if defined(configSUPPORT_STATIC_ALLOCATION) and (configSUPPORT_STATIC_ALLOCATION = 1)}
 function  xTimerCreateStatic(pcTimerName: PChar;
-									const xTimerPeriodInTicks: TTickType,
-									const uxAutoReload: TUBaseType;
-									pvTimerID: pointer;
-									pxCallbackFunction: TTimerCallbackFunction;
-									pxTimerBuffer: PStaticTimer): TTimerHandle; external;
+			     const xTimerPeriodInTicks: TTickType;
+			     const uxAutoReload: TUBaseType;
+			     pvTimerID: pointer;
+			     pxCallbackFunction: TTimerCallbackFunction;
+			     pxTimerBuffer: PStaticTimer): TTimerHandle; external;
 {$endif}
 function pvTimerGetTimerID(xTimer: TTimerHandle): pointer; external;
 function vTimerSetTimerID(xTimer: TTimerHandle; pvNewID: pointer): pointer; external;

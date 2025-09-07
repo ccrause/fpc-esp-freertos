@@ -29,7 +29,7 @@ const
 function xSemaphoreTake(xSemaphore: TSemaphoreHandle; xBlockTime: TTickType): TBaseType; inline;
 function xSemaphoreTakeRecursive(xMutex: TSemaphoreHandle; xBlockTime: TTickType): TBaseType; inline;
 function xSemaphoreAltTake(xSemaphore: TSemaphoreHandle; xBlockTime: TTickType): TBaseType; inline;
-function xSemaphoreGive(xSemaphore: TSemaphoreHandle): TBaseType; inline; inline;
+function xSemaphoreGive(xSemaphore: TSemaphoreHandle): TBaseType; inline;
 function xSemaphoreGiveRecursive(xMutex: TSemaphoreHandle): TBaseType; inline;
 function xSemaphoreAltGive(xSemaphore: TSemaphoreHandle): TBaseType; inline;
 function xSemaphoreGiveFromISR(xSemaphore: TSemaphoreHandle; pxHigherPriorityTaskWoken: PBaseType)
