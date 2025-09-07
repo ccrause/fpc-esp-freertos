@@ -3,7 +3,7 @@ unit esp_ota_ops;
 interface
 
 uses
-  esp_err, esp_partition, esp_app_format, esp_flash_partitions;
+  esp_err, esp_partition, esp_app_format, esp_flash_partitions, portmacro;
 
 const
   OTA_SIZE_UNKNOWN = $ffffffff;

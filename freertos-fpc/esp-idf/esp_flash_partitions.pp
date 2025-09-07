@@ -5,7 +5,7 @@ unit esp_flash_partitions;
 interface
 
 uses
-  esp_err;
+  esp_err, portmacro;
 
 const
   ESP_PARTITION_MAGIC = $50AA;
