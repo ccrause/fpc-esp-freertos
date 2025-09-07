@@ -6,21 +6,19 @@ program otatest;
 uses
   esp_err, esp_wifi, esp_wifi_types, esp_netif, esp_event, esp_ota_ops, esp_partition,
   wificonnect, esp_http_server, http_parser, task, esp_system, portmacro, otapush
-  {$ifdef CPULX6}, esp_wifi_default, esp_app_format, nvs {$endif}
-  {$ifdef CPULX106}, nvs_flash, esp_event_loop{$endif};
+  {$ifdef CPULX6}, esp_wifi_default{$endif}, esp_app_format, nvs
+  {$ifdef CPULX106}, nvs_flash{$endif};
 
 var
   it: Tesp_partition_iterator;
   part: Pesp_partition;
   pt: Tesp_partition_type;
-  {$ifdef CPULX6}
   nvs_it: Tnvs_iterator;
   info: Tnvs_entry_info;
-  {$endif}
   part_conf, part_running: Pesp_partition;
 
 const
-  versionStr = 'V0.d';
+  versionStr = 'V0.a';
 
   homeScreen = '<html><head><title>Welcome [' + versionStr + ']</title></head>'#13#10 +
     '<body>'#13#10 +
@@ -101,7 +99,6 @@ begin
     begin
       part := esp_partition_get(it);
       writeln('    Found partition "', part^._label, '" at offset $', HexStr(part^.address, 4), ' with size ', part^.size, '. Subtype = ', part^.subtype);
-      {$ifdef _CPULX6}
       if (pt = ESP_PARTITION_TYPE_DATA) and (part^.subtype = ESP_PARTITION_SUBTYPE_DATA_NVS) then
       begin
         if nvs_flash_init_partition(part^._label) = ESP_OK then
@@ -119,7 +116,6 @@ begin
         else
           writeln('    Error calling nvs_flash_init');
       end;
-      {$endif}
       it := esp_partition_next(it);
     end;
     esp_partition_iterator_release(it);
@@ -151,7 +147,8 @@ end.
 // 0x10000 firmware.bin
 
 // Flash ota partition information and firmaware for esp8266:
-// esptool.py -p /dev/ttyUSB0 -b 500000 --chip auto --before default_reset --after hard_reset  write_flash --flash_mode dio --flash_size detect --flash_freq 40m 0x0000 ~/xtensa/examples/simple-ota-esp8266/build/bootloader/bootloader.bin 0xd000 ~/xtensa/examples/simple-ota-esp8266/build/ota_data_initial.bin 0x8000 ~/xtensa/examples/simple-ota-esp8266/build/partitions_two_ota.bin 0x10000 otatest.bin
+// esptool.py -p /dev/ttyUSB0 -b 500000 --chip auto --before default_reset --after hard_reset  write_flash --flash_mode dio --flash_size detect --flash_freq 40m 0x0000 ~/fpc/xtensa/fpc-esp8266-idf-3.4/libs/bootloader.bin 0xd000 ~/fpc/xtensa/fpc-esp8266-idf-3.4/libs/ota_data_initial.bin 0x8000 ~/fpc/xtensa/fpc-esp8266-idf-3.4/libs/partitions_two_ota.bin 0x10000 otatest.bin
+// esptool.py -p /dev/ttyUSB0 -b 500000 --chip auto --before default_reset --after hard_reset  write_flash --flash_mode dio --flash_size detect --flash_freq 40m 0x0000 ~/fpc/xtensa/test-rtos-3.4/lx106/release/bootloader.bin 0xd000 ~/fpc/xtensa/test-rtos-3.4/lx106/ota_data_initial.bin 0x8000 ~/fpc/xtensa/test-rtos-3.4/lx106/partitions_two_ota.bin 0x10000 otatest.bin
 
 // Flash ota partition and firmware for esp32:
 // esptool.py --chip auto -p /dev/ttyUSB0 --baud 500000 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0x1000 ~/fpc/xtensa/fpc-esp-idf/libs/bootloader.bin 0xd000 ~/fpc/xtensa/fpc-esp-idf/libs/ota_data_initial.bin 0x8000 ~/fpc/xtensa/fpc-esp-idf/libs/partitions_two_ota.bin 0x10000 otatest.bin
