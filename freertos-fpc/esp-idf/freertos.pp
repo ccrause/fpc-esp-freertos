@@ -300,6 +300,8 @@ type
     uxDummy6: uint32;
     ucDummy7: byte;
   end;
+  TStaticTimer = TxSTATIC_TIMER;
+  PStaticTimer = ^TStaticTimer;
 
 implementation
 
