@@ -15,6 +15,9 @@ uses
   mcpwm, mcpwm_types, esp_err;
 
 type
+
+  { TPWM_mcpwm }
+
   TPWM_mcpwm = object
   private
     fPWMunit: Tmcpwm_unit;
@@ -26,6 +29,7 @@ type
     function init(PWMunit: Tmcpwm_unit; PWMtimer: Tmcpwm_timer;
       PWMgenerator: Tmcpwm_generator; pin: int32): Tesp_err;
     function setDuty(duty: single): Tesp_err;
+    function setDuty_us(duty: uint32): Tesp_err;
     function setFrequency(freq: uint32): Tesp_err;
     function stop: Tesp_err;
     function start: Tesp_err;
@@ -171,6 +175,12 @@ function TPWM_mcpwm.setDuty(duty: single): Tesp_err;
 begin
   writeln('setDuty: ', duty);
   Result := mcpwm_set_duty(fPWMunit, fPWMtimer, fPWMgenerator, duty);
+end;
+
+function TPWM_mcpwm.setDuty_us(duty: uint32): Tesp_err;
+begin
+  writeln('setDuty_us: ', duty);
+  Result := mcpwm_set_duty_in_us(fPWMunit, fPWMtimer, fPWMgenerator, duty);
 end;
 
 function TPWM_mcpwm.setFrequency(freq: uint32): Tesp_err;
