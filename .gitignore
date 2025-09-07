@@ -8,3 +8,5 @@
 *.bak
 .DS_Store
 *.lps
+*.ppu
+*.o
