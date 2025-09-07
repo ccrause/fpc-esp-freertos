@@ -11,9 +11,9 @@ end;
 
 const
 {$ifdef FPC_MCU_ESP32}
-  UART_PORT = 1;
-  TX1_PIN = 19;
-  RX1_PIN = 18;
+  UART_PORT = 2;//1;
+  TX1_PIN = 17;//19;
+  RX1_PIN = 16;//18;
 {$else}
   // Use UART1 on GPIO2 / D4
   UART_PORT: Tuart_port = UART_NUM_1;
@@ -25,13 +25,7 @@ var
   uart_cfg: Tuart_config;
 
 begin
-{$ifdef FPC_MCU_ESP32}
   uart_cfg.baud_rate  := 115200;
-{$else}
-  // On my esp8266 board the baud rate is low by a factor 26/40
-  // Adjust baud rate specified to get to the actual desired baud:
-  uart_cfg.baud_rate  := (115200*40) div 26;
-{$endif}
   uart_cfg.data_bits  := UART_DATA_8_BITS;
   uart_cfg.parity     := UART_PARITY_DISABLE;
   uart_cfg.stop_bits  := UART_STOP_BITS_1;
