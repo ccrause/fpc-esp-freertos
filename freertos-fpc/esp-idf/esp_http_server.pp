@@ -105,6 +105,11 @@ type
     method: Thttpd_method;
     handler: function(r: Phttpd_req_t): Tesp_err;
     user_ctx: pointer;
+    {$ifdef CONFIG_HTTPD_WS_SUPPORT}
+    is_websocket: longbool;
+    handle_ws_control_frames: longbool;
+    supported_subprotocol: PChar;
+    {$endif}
   end;
   Thttpd_uri_t = Thttpd_uri;
   Phttpd_uri_t = ^Thttpd_uri_t;
@@ -215,11 +220,49 @@ function httpd_sess_trigger_close(handle: Thttpd_handle;
 function httpd_sess_update_lru_counter(handle: Thttpd_handle;
   sockfd: longint): Tesp_err; external;
 
+function httpd_get_client_list(handle: Thttpd_handle; var fds: Tsize;
+  client_fds: Pinteger): Tesp_err; external;
+
 type
   Thttpd_work_fn = procedure(arg: pointer);
 
 function httpd_queue_work(handle: Thttpd_handle; work: Thttpd_work_fn;
   arg: pointer): Tesp_err; external;
+
+{$ifdef CONFIG_HTTPD_WS_SUPPORT}
+type
+  Thttpd_ws_type = (
+    HTTPD_WS_TYPE_CONTINUE   := $00,
+    HTTPD_WS_TYPE_TEXT       := $01,
+    HTTPD_WS_TYPE_BINARY     := $02,
+    HTTPD_WS_TYPE_CLOSE      := $08,
+    HTTPD_WS_TYPE_PING       := $09,
+    HTTPD_WS_TYPE_PONG       := $0A);
+
+  Thttpd_ws_client_info = (
+    HTTPD_WS_CLIENT_INVALID        := 0,
+    HTTPD_WS_CLIENT_HTTP           := 1,
+    HTTPD_WS_CLIENT_WEBSOCKET      := 2);
+
+  Thttpd_ws_frame = record
+    final: boolean;
+    fragmented: boolean;
+    _type: Thttpd_ws_type;
+    payload: PByte;
+    len: Tsize;
+  end;
+  phttpd_ws_frame = ^Thttpd_ws_frame;
+
+function httpd_ws_recv_frame(req: Phttpd_req; pkt: Phttpd_ws_frame; max_len:
+  Tsize): Tesp_err; external;
+
+function httpd_ws_send_frame(req: Phttpd_req; pkt: Phttpd_ws_frame): Tesp_err; external;
+
+function httpd_ws_send_frame_async(hd: Thttpd_handle; fd: integer;
+  frame: Phttpd_ws_frame): Tesp_err; external;
+
+function httpd_ws_get_fd_info(hd: Thttpd_handle; fd: integer): Thttpd_ws_client_info; external;
+{$endif CONFIG_HTTPD_WS_SUPPORT}
 
 implementation
 
