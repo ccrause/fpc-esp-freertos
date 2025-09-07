@@ -20,10 +20,7 @@ var
   cfg: Tgpio_config;
 
 begin
-//  Below function only implemented on ESP32, on ESP8266 it is implemented as a convoluted macro
-//  gpio_pad_select_gpio(ord(LED));
-
-// For compatibility rather set the GPIO function using the gpio_config function
+// For compatibility set the GPIO function using the gpio_config function
   cfg.pin_bit_mask := 1 shl ord(LED);
   cfg.mode := GPIO_MODE_OUTPUT;
   cfg.pull_up_en := GPIO_PULLUP_DISABLE;
