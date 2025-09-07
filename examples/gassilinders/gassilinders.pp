@@ -4,7 +4,7 @@ uses
   fmem, fthreads, task, portmacro, esp_err,
   readadc, nextionscreenconfig, shared,
   storage, pressureswitchover, handleSMS, logtouart,
-  esp_system;
+  esp_system, rtc_wdt;
 
 {$include freertosconfig.inc}
 
@@ -16,6 +16,7 @@ var
   resetTimeout: TTickType;
 
 begin
+  rtc_wdt_disable;
   initLogUart;
   startAdcThread;
   // Load saved settings from NVS
@@ -71,21 +72,3 @@ begin
     Sleep(200);
   until false;
 end.
-
-{
-OpenOCD command:
-~/.espressif/tools/openocd-esp32/v0.11.0-esp32-20211220/openocd-esp32/bin/openocd -f ~/.espressif/tools/openocd-esp32/v0.11.0-esp32-20211220/openocd-esp32/share/openocd/scripts/interface/ftdi/ft232h-jtag.cfg -f ~/.espressif/tools/openocd-esp32/v0.11.0-esp32-20211220/openocd-esp32/share/openocd/scripts/board/esp-wroom-32.cfg
-
-Flash command:
-~/fpc/xtensa/esp-idf-4.3.2/components/esptool_py/esptool/esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 921600 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0x10000 gassilinders.bin
-
-Flash bootloader
-~/fpc/xtensa/esp-idf-4.3.2/components/esptool_py/esptool/esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 921600 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0x1000 /home/christo/fpc/xtensa/esp-idf-4.3.2/libs/bootloader.bin 0x8000 /home/christo/fpc/xtensa/esp-idf-4.3.2/libs/partitions_singleapp.bin
-
-Objdump command:
-~/.espressif/tools/xtensa-esp32-elf/esp-2021r2-8.4.0/xtensa-esp32-elf/bin/xtensa-esp32-elf-objdump -d gassilinders.elf > gassilinders.lss
-
-Dump nvs partition
-~/fpc/xtensa/esp-idf-4.3.2/components/partition_table/parttool.py --port=/dev/ttyUSB0 read_partition --partition-name=nvs --output=tmp.hex
-
-}
