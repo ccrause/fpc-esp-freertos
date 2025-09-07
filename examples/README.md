@@ -11,7 +11,7 @@ Subsequently the binary image for the project can be flashed:
 
 ## ESP32
 The first time flashing a project from this library to a board, update the bootloader and partition table:
-`~/fpcupdeluxe/working/cross/bin/xtensa-freertos/esp-idf-4.3.2/components/esptool_py/esptool/esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 115200 --before default_reset --after hard_reset write_flash -z --flash_mode dout --flash_freq 40m --flash_size 4MB 0x0 ~/fpcupdeluxe/working/cross/lib/xtensa-freertos/lx6/bootloader.bin 0x8000 ~/fpcupdeluxe/working/cross/lib/xtensa-freertos/lx6/partitions_singleapp.bin` 
+`~/fpcupdeluxe/working/cross/bin/xtensa-freertos/esp-idf-4.3.2/components/esptool_py/esptool/esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 115200 --before default_reset --after hard_reset write_flash -z --flash_mode dout --flash_freq 40m --flash_size 4MB 0x1000 ~/fpcupdeluxe/working/cross/lib/xtensa-freertos/lx6/bootloader.bin 0x8000 ~/fpcupdeluxe/working/cross/lib/xtensa-freertos/lx6/partitions_singleapp.bin` 
 
 Subsequently the binary image for the project can be flashed:
 `~/fpcupdeluxe/working/cross/bin/xtensa-freertos/esp-idf-4.3.2/components/esptool_py/esptool/esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 115200 --before default_reset --after hard_reset write_flash -z --flash_mode dout --flash_freq 40m --flash_size 4MB 0x10000 blink.bin`  
