@@ -1,10 +1,4 @@
-{$if defined(CPULX6)}
-  {$include esp-idf/sdkconfig.inc}
-{$elseif defined(FPC_MCU_ESP8266)}
-  {$include esp8266-idf/sdkconfig.inc}
-{$else}
-  {$ERROR Unknown sub architecture, cannot decide which idf folder to include}
-{$endif}
+{$include sdkconfig.inc}
 
 {$ifndef CONFIG_FREERTOS_UNICORE}
   {$define portNUM_PROCESSORS := 2}
