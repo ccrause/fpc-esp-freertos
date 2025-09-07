@@ -1,6 +1,8 @@
 program adctest;
 
 {$include sdkconfig.inc}
+{$linklib efuse,static}
+
 
 uses
   esp_err, gpio, adc, esp_adc_cal, adc_types, freertos,
