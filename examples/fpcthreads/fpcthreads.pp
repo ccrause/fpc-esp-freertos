@@ -4,12 +4,12 @@ program fpcthreads;
 {$inline on}
 
 uses
-  fmem, fthreads, task, esp_err, portmacro, portable, projdefs,
+  fmem, fthreads, task, esp_err, portmacro, projdefs,
   gpio {$ifdef CPULX6}, gpio_types {$endif};
 
 const
-  numSpinTasks            = 5;
-  MaxIterations           = 500;     // Actual CPU cycles used will depend on compiler optimization
+  numSpinTasks            = 2;
+  MaxIterations           = 400;     // Actual CPU cycles used will depend on compiler optimization
   taskArraySafetyMargin   = 5;          // Safety margin to cater for new tasks launched
 
 var
@@ -49,7 +49,7 @@ begin
     if (startTaskArraySize > 0) then
     begin
       // Now calculate and format results
-      writeln('=====================================================================================');
+      writeln('p===================================================================================q');
       writeln('| Task             | Pinned to core | Run Time   | Min stack clearance | State      |');
       writeln('|------------------+----------------+------------+---------------------+------------|');
       // Match each task in startTaskArray to those in the endTaskArray
@@ -88,7 +88,7 @@ begin
         printLeftAlignedPadded(s, 11);
         writeln('|');
       end;
-      writeln('=====================================================================================');
+      writeln('b===================================================================================d');
     end; // startTaskArraySize > 0
     FreeMem(startTaskArray);
   end // startTaskArray <> nil
@@ -147,6 +147,7 @@ var
   blinkID: TThreadID;
   statsTick: uint32;
   loopcount: uint32 = 0;
+  taskName: string[16];
 
 begin
   //Create RTL event to signal spin threads
@@ -158,7 +159,7 @@ begin
     // Pass i as parameter to task
     // Larger i will run fewer spin cycles
     BeginThread(@spinThread,        // thread to launch
-               nil,//pointer(i),          // pointer parameter to be passed to thread function
+               pointer(i),          // pointer parameter to be passed to thread function
                blinkID,             // new thread ID
                2*1024);             // stacksize
   end;
@@ -179,12 +180,13 @@ begin
   // Blink thread...
   InitCriticalSection(blinkCS);
   EnterCriticalSection(blinkCS);  // blinkCS will now block
-  writeln('Starting blink thread');
+  //writeln('Starting blink thread');
+  taskName := 'blink';
   fBeginThreadNamed(2*1024,        // stacksize
                     @blinkThread,  // thread to launch
                     nil,           // pointer parameter to be passed to thread function
                     blinkID,       // the new thread ID
-                    'blink');
+                    taskName);
 
   //Allow other core to finish initialization
   vTaskDelay(pdMS_TO_TICKS(100));
