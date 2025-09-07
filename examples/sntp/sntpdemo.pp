@@ -22,6 +22,7 @@ procedure sntpCallback(tv: Ptimeval);
 begin
   writeln('sntpCallback received value: ', tv^.tv_sec, ' s');
   settimeofday(tv, nil);
+  sntp_set_sync_status(SNTP_SYNC_STATUS_COMPLETED);
 end;
 
 // Simple formatting procedure because SysUtils.Format() is not available
