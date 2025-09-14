@@ -58,6 +58,10 @@ function xEventGroupGetBits(xEventGroup: TEventGroupHandle): TEventBits;
 function xEventGroupGetBitsFromISR(xEventGroup: TEventGroupHandle): TEventBits;
   external;
 procedure vEventGroupDelete(xEventGroup: TEventGroupHandle); external;
+
+implementation
+
+// Internal use only
 procedure vEventGroupSetBitsCallback(pvEventGroup: pointer;
   ulBitsToSet: uint32); external;
 procedure vEventGroupClearBitsCallback(pvEventGroup: pointer;
@@ -65,10 +69,8 @@ procedure vEventGroupClearBitsCallback(pvEventGroup: pointer;
 
 {$if defined(configUSE_TRACE_FACILITY) and (configUSE_TRACE_FACILITY = 1)}
   function uxEventGroupGetNumber(xEventGroup: pointer): TUBaseType; external;
-	procedure vEventGroupSetNumber(xEventGroup: pointer; uxEventGroupNumber: TUBaseType); external;
+  procedure vEventGroupSetNumber(xEventGroup: pointer; uxEventGroupNumber: TUBaseType); external;
 {$endif}
-
-implementation
 
 {$if not defined(configUSE_TRACE_FACILITY) or (configUSE_TRACE_FACILITY = 0)}
 function xEventGroupClearBitsFromISR(xEventGroup: TEventGroupHandle;

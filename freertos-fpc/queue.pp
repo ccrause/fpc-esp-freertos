@@ -36,7 +36,10 @@ const
 
 {$if defined(configSUPPORT_STATIC_ALLOCATION) and (configSUPPORT_STATIC_ALLOCATION = 1)}
   function xQueueCreateStatic(uxQueueLength, uxItemSize: TUBaseType;
-    pucQueueStorage: PUBaseType; pxQueueBuffer: pointer): TQueueHandle; inline;
+    pucQueueStorage: PByte; pxQueueBuffer: pointer): TQueueHandle; inline;
+
+  function xQueueGetStaticBuffers(xQueue: TQueueHandle; ppucQueueStorage: ppByte;
+                                  ppxStaticQueue: PPStaticQueue): TBaseType; inline;
 {$endif}
 
 function xQueueSendToFront(xQueue: TQueueHandle; pvItemToQueue: pointer;
@@ -46,6 +49,7 @@ function xQueueSendToBack(xQueue: TQueueHandle; pvItemToQueue: pointer;
 function xQueueSend(xQueue: TQueueHandle; pvItemToQueue: pointer;
   xTicksToWait: TTickType): TBaseType; inline;
 function xQueueOverwrite(xQueue: TQueueHandle; pvItemToQueue: pointer): TBaseType; inline;
+
 function xQueueGenericSend(xQueue: TQueueHandle; pvItemToQueue: pointer;
   xTicksToWait: TTickType; xCopyPosition: TBaseType): TBaseType; external;
 function xQueuePeek(xQueue: TQueueHandle; pvBuffer: pointer; xTicksToWait: TTickType): TBaseType; external;
@@ -53,8 +57,8 @@ function xQueuePeekFromISR(xQueue: TQueueHandle; pvBuffer: pointer): TBaseType; 
 function xQueueReceive(xQueue: TQueueHandle; pvBuffer: pointer; xTicksToWait: TTickType): TBaseType; external;
 
 // Not for external use
-function xQueueGenericReceive(xQueue: TQueueHandle; pvBuffer: pointer;
-  xTicksToWait: TTickType; xJustPeek: TBaseType): TBaseType; external;
+//function xQueueGenericReceive(xQueue: TQueueHandle; pvBuffer: pointer;
+//  xTicksToWait: TTickType; xJustPeek: TBaseType): TBaseType; external;
 
 function uxQueueMessagesWaiting(xQueue: TQueueHandle): TUBaseType; external;
 function uxQueueSpacesAvailable(xQueue: TQueueHandle): TUBaseType; external;
@@ -80,10 +84,10 @@ function uxQueueMessagesWaitingFromISR(xQueue: TQueueHandle): TUBaseType;
   external;
 
 // Not for external use
-function xQueueAltGenericSend(xQueue: TQueueHandle; pvItemToQueue: pointer;
-  xTicksToWait: TTickType; xCopyPosition: TBaseType): TBaseType; external;
-function xQueueAltGenericReceive(xQueue: TQueueHandle; pvBuffer: pointer;
-  xTicksToWait: TTickType; xJustPeeking: TBaseType): TBaseType; external;
+//function xQueueAltGenericSend(xQueue: TQueueHandle; pvItemToQueue: pointer;
+//  xTicksToWait: TTickType; xCopyPosition: TBaseType): TBaseType; external;
+//function xQueueAltGenericReceive(xQueue: TQueueHandle; pvBuffer: pointer;
+//  xTicksToWait: TTickType; xJustPeeking: TBaseType): TBaseType; external;
 //function xQueueAltSendToFront(xQueue: TQueueHandle; pvItemToQueue: pointer;
 //  xTicksToWait: TTickType): TBaseType; inline;
 //function xQueueAltSendToBack(xQueue: TQueueHandle; pvItemToQueue: pointer;
@@ -92,27 +96,16 @@ function xQueueAltGenericReceive(xQueue: TQueueHandle; pvBuffer: pointer;
 //  xTicksToWait: TTickType): TBaseType; inline;
 //function xQueueAltPeek(xQueue: TQueueHandle; pvBuffer: pointer;
 //  xTicksToWait: TTickType): TBaseType; inline;
-function xQueueCRSendFromISR(xQueue: TQueueHandle; pvItemToQueue: pointer;
-  xCoRoutinePreviouslyWoken: TBaseType): TBaseType; external;
-function xQueueCRReceiveFromISR(xQueue: TQueueHandle; pvBuffer: pointer;
-  pxTaskWoken: PBaseType): TBaseType; external;
-function xQueueCRSend(xQueue: TQueueHandle; pvItemToQueue: pointer;
-  xTicksToWait: TTickType): TBaseType; external;
-function xQueueCRReceive(xQueue: TQueueHandle; pvBuffer: pointer;
-  xTicksToWait: TTickType): TBaseType; external;
 
-// Not for external use
-function xQueueCreateMutex(ucQueueType: byte): TQueueHandle; external;
-function xQueueCreateMutexStatic(ucQueueType: byte;
-  pxStaticQueue: PStaticQueue): TQueueHandle; external;
-function xQueueCreateCountingSemaphore(uxMaxCount: TUBaseType;
-  uxInitialCount: TUBaseType): TQueueHandle; external;
-function xQueueCreateCountingSemaphoreStatic(uxMaxCount, uxInitialCount: TUBaseType;
-  pxStaticQueue: PStaticQueue): TQueueHandle; external;
-function xQueueGetMutexHolder(xSemaphore: TQueueHandle): pointer; external;
-function xQueueTakeMutexRecursive(xMutex: TQueueHandle;
-  xTicksToWait: TTickType): TBaseType; external;
-function xQueueGiveMutexRecursive(pxMutex: TQueueHandle): TBaseType; external;
+// Co-routine variants - non needed?
+//function xQueueCRSendFromISR(xQueue: TQueueHandle; pvItemToQueue: pointer;
+//  xCoRoutinePreviouslyWoken: TBaseType): TBaseType; external;
+//function xQueueCRReceiveFromISR(xQueue: TQueueHandle; pvBuffer: pointer;
+//  pxTaskWoken: PBaseType): TBaseType; external;
+//function xQueueCRSend(xQueue: TQueueHandle; pvItemToQueue: pointer;
+//  xTicksToWait: TTickType): TBaseType; external;
+//function xQueueCRReceive(xQueue: TQueueHandle; pvBuffer: pointer;
+//  xTicksToWait: TTickType): TBaseType; external;
 
 function xQueueReset(xQueue: TQueueHandle): TBaseType; inline;
 
@@ -135,7 +128,7 @@ function xQueueReset(xQueue: TQueueHandle): TBaseType; inline;
 
 {$if defined(configSUPPORT_STATIC_ALLOCATION) and (configSUPPORT_STATIC_ALLOCATION = 1)}
   function xQueueGenericCreateStatic(uxQueueLength, uxItemSize: TUBaseType;
-    pucQueueStorage: PChar; pxStaticQueue: PStaticQueue;
+    pucQueueStorage: PByte; pxStaticQueue: PStaticQueue;
     ucQueueType: byte): TQueueHandle; external;
 {$endif}
 
@@ -160,8 +153,12 @@ function xQueueSelectFromSetFromISR(xQueueSet: TQueueSetHandle):
 //function uxQueueGetQueueNumber(xQueue: TQueueHandle): TUBaseType; external;
 //function ucQueueGetQueueType(xQueue: TQueueHandle): byte; external;
 
-implementation
+{$if defined(configSUPPORT_STATIC_ALLOCATION) and (configSUPPORT_STATIC_ALLOCATION = 1)}
+  function xQueueGenericGetStaticBuffers(xQueue: TQueueHandle; ppucQueueStorage: ppByte;
+                                         ppxStaticQueue: PPStaticQueue): TBaseType; external;
+{$endif}
 
+implementation
 
 {$if defined(configSUPPORT_DYNAMIC_ALLOCATION) and (configSUPPORT_DYNAMIC_ALLOCATION = 1)}
   function xQueueCreate(uxQueueLength, uxItemSize: TUBaseType): TQueueHandle;
@@ -172,10 +169,17 @@ implementation
 
 {$if defined(configSUPPORT_STATIC_ALLOCATION) and (configSUPPORT_STATIC_ALLOCATION = 1)}
   function xQueueCreateStatic(uxQueueLength, uxItemSize: TUBaseType;
-    pucQueueStorage: PUBaseType_t; pxQueueBuffer: pointer): TQueueHandle;
+    pucQueueStorage: PByte; pxQueueBuffer: pointer): TQueueHandle;
   begin
     xQueueCreateStatic := xQueueGenericCreateStatic(
       uxQueueLength, uxItemSize, pucQueueStorage, pxQueueBuffer, queueQUEUE_TYPE_BASE);
+  end;
+
+  function xQueueGetStaticBuffers(xQueue: TQueueHandle; ppucQueueStorage: PPByte;
+                                  ppxStaticQueue: PPStaticQueue): TBaseType;
+  begin
+    xQueueGetStaticBuffers := xQueueGenericGetStaticBuffers(xQueue,
+      ppucQueueStorage, ppxStaticQueue);
   end;
 {$endif}
 

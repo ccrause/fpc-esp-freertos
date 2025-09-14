@@ -5,14 +5,7 @@ unit task;
 interface
 
 uses
-  projdefs, portmacro, portable, list, freertos;
-
-const
-  // ESP8266_RTOS_SDK V3.4 sits at V10.0
-  tskKERNEL_VERSION_NUMBER = 'V10.2.1';
-  tskKERNEL_VERSION_MAJOR = 10;
-  tskKERNEL_VERSION_MINOR = 2;
-  tskKERNEL_VERSION_BUILD = 1;
+  portmacro, portable, list, freertos, projdefs;
 
 type
   TTaskHookFunction = function(para1: pointer): TBaseType;
@@ -64,7 +57,7 @@ type
     pxStackBase: PStackType;
     usStackHighWaterMark: uint16;
     {$if defined(configTASKLIST_INCLUDE_COREID)}
-    	xCoreID: TBaseType;
+      xCoreID: TBaseType;
     {$endif}
   end;
   PTaskStatus = ^TTaskStatus;
@@ -86,7 +79,7 @@ const
   taskSCHEDULER_NOT_STARTED = TBaseType(1);
   taskSCHEDULER_RUNNING = TBaseType(2);
 
-procedure taskYIELD; inline;
+procedure taskYIELD; external name 'vPortYield';
 function taskENTER_CRITICAL_FROM_ISR: uint32; inline;
 procedure taskDISABLE_INTERRUPTS; inline;
 procedure taskENABLE_INTERRUPTS; inline;
@@ -251,7 +244,7 @@ procedure vTaskInternalSetTimeOutState(pxTimeOut: PTimeOut); external;
     external;
 {$endif}
 
-{$if defined(configNUM_THREAD_LOCAL_STORAGE_POINTERS) and (configNUM_THREAD_LOCAL_STORAGE_POINTERS > 0)}
+{$if declared(configNUM_THREAD_LOCAL_STORAGE_POINTERS) and (configNUM_THREAD_LOCAL_STORAGE_POINTERS > 0)}
   procedure vTaskSetThreadLocalStoragePointer(xTaskToSet: TTaskHandle;
     xIndex: TBaseType; pvValue: pointer); external;
   function pvTaskGetThreadLocalStoragePointer(xTaskToQuery: TTaskHandle;
@@ -302,12 +295,6 @@ implementation
     xTaskGetCurrentTaskHandleForCPU := xTaskGetCurrentTaskHandle;
   end;
 {$endif portNUM_PROCESSORS}
-
-procedure taskYIELD;
-begin
-  // Redirect to portmacro
-  portYIELD;
-end;
 
 function taskENTER_CRITICAL_FROM_ISR: uint32;
 begin

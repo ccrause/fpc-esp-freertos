@@ -69,11 +69,27 @@ function xTimerPendFunctionCallFromISR(xFunctionToPend: TPendedFunction;
 function xTimerPendFunctionCall(xFunctionToPend: TPendedFunction;
   pvParameter1: pointer; ulParameter2: uint32; xTicksToWait: TTickType): TBaseType;
   external;
-function pcTimerGetTimerName(xTimer: TTimerHandle): PChar; external;
+function pcTimerGetName(xTimer: TTimerHandle): PChar; external;
+
+procedure vTimerSetReloadMode(xTimer: TTimerHandle; xAutoReload: TBaseType); external;
+function xTimerGetReloadMode(xTimer: TTimerHandle): TBaseType; external;
+function uxTimerGetReloadMode(xTimer: TTimerHandle): TUBaseType; external;
+
+{$if defined(configSUPPORT_STATIC_ALLOCATION) and (configSUPPORT_STATIC_ALLOCATION = 1)}
+  function xTimerGetStaticBuffer(xTimer: TTimerHandle; ppxTimerBuffer: PPStaticTimer): TBaseType; external;
+{$endif}
+
 function xTimerCreateTimerTask: TBaseType; external;
 function xTimerGenericCommand(xTimer: TTimerHandle;
   const xCommandID: TBaseType; const xOptionalValue: TTickType;
   pxHigherPriorityTaskWoken: PBaseType; const xTicksToWait: TTickType): TBaseType; external;
+
+{$if defined(configSUPPORT_STATIC_ALLOCATION) and (configSUPPORT_STATIC_ALLOCATION = 1)}
+  procedure vApplicationGetTimerTaskMemory(ppxTimerTaskTCBBuffer: PPStaticTask;
+                                           ppxTimerTaskStackBuffer: PPStackType;
+                                           pulTimerTaskStackSize: puint32); external;
+
+{$endif}
 
 implementation
 
