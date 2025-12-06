@@ -41,8 +41,8 @@ uses
 
 const
   TAG = 'MQTT_EXAMPLE';
-  //mqttserver = 'mqtt://test.mosquitto.org';
-  mqttserver = 'mqtt://192.168.1.115';  // OpenHAB with mosquitto running on RPi on local network
+  mqttserver = 'mqtt://test.mosquitto.org';
+  //mqttserver = 'mqtt://192.168.1.115';  // OpenHAB with mosquitto running on RPi on local network
 
   // mqtt topic fragments
   availabilityStr = 'availability';
@@ -360,7 +360,10 @@ begin
     end;
 
     MQTT_EVENT_BEFORE_CONNECT: ;  // Do nothing
+
+    {$ifdef CPULX6}
     MQTT_EVENT_DELETED: ; // Do nothing;
+    {$endif}
 
     otherwise
       esp_log_write(ESP_LOG_INFO, TAG, 'MQTT unhandled event: %d'#10, event^.event_id);
@@ -373,8 +376,10 @@ var
 begin
   FillByte(mqtt_cfg, SizeOf(mqtt_cfg), 0);
   mqtt_cfg.uri := mqttserver;
-  mqtt_cfg.username := 'openhabian';
-  mqtt_cfg.password := 'openhabian';
+  mqtt_cfg.username := '';
+  mqtt_cfg.password := '';
+  //mqtt_cfg.username := 'openhabian';
+  //mqtt_cfg.password := 'openhabian';
 
   mqtt_cfg.lwt_topic := @LWTtopic[1];
   mqtt_cfg.lwt_msg := @LWTmessage[1];
@@ -392,8 +397,9 @@ var
   stationName: shortstring;
 
 begin
+  {$ifdef CPULX6}
   esp_log_level_set('*', ESP_LOG_WARN);
-
+  {$endif}
   stationName := makeStationName();
   writeln('Station name: ', stationName);
   connectWifiAP(AP_NAME, PWD, PChar(@stationName[1]));

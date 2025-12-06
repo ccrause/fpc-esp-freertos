@@ -39,6 +39,7 @@
             </Debugging>
           </Linking>
           <Other>
+            <CustomOptions Value="-Wpesp8266"/>
             <CompilerPath Value="/home/christo/fpc/installs/lib/fpc/3.3.1/ppcrossxtensa"/>
           </Other>
         </CompilerOptions>
