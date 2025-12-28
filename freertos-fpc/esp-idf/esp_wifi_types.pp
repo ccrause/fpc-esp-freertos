@@ -506,7 +506,7 @@ end;
 
 procedure Twifi_ant_config.SetAnt1(AValue: TBitRange4);
 begin
-  _enable := (_enable and $0F) or (AValue shl 4);
+  _enable := (_enable and $0F) or byte(AValue shl 4);
 end;
 
 { Twifi_sta_info }
