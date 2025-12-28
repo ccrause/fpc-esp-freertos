@@ -12,7 +12,8 @@ uses
   queue, dataunit,
   semphr, settingsmanager, hardwareconfig, runstateunit,
   timeunit, timeralarm, task, esp_http_server,
-  temputils;
+  temputils,
+  fmem;
 
 var
   levelSensor: TAJ_SR04M;
@@ -23,7 +24,6 @@ var
   dataCount: integer;
   runState: TRunStateMachine;
   alarm: TTimerAlarm;
-  tmpServer: Thttpd_handle = nil;
 
 // ~/fpc/xtensa/esp-idf-4.4.7/components/esptool_py/esptool/esptool.py -p /dev/ttyUSB0 -b 921600 -c auto write_flash 0x10000 pumpcontroller.bin
 
