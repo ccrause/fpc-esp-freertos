@@ -40,7 +40,6 @@ procedure logToFile(const ALevel: integer; const AFlow: single);
 var
   mountConfig: Tesp_vfs_fat_sdmmc_mount_config;
   card: Psdmmc_card;
-  ret: Tesp_err;
   host: Tsdmmc_host;
   slot_config: Tsdspi_device_config;
   f: TextFile;
@@ -88,12 +87,12 @@ begin
       begin
         currentTimeAsString(tmp);
         writeln(f, tmp, ',', Alevel,',', Aflow);
+        CloseFile(f);
+        ioRes := IOResult;
       end
       else
         writeln('IO error ', ioRes, ', no data written to log file');
 
-      CloseFile(f);
-      ioRes := IOResult;
       if ioRes > 0 then
         writeln('IO error ', ioRes, ' when closing log file');
       {$pop} // restore previous runtime error state
