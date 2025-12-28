@@ -16,9 +16,10 @@ const
 
 type
   Pspi_flash_wrap_mode = ^Tspi_flash_wrap_mode;
-  Tspi_flash_wrap_mode = (FLASH_WRAP_MODE_8B = 0, FLASH_WRAP_MODE_16B = 2,
-    FLASH_WRAP_MODE_32B = 4, FLASH_WRAP_MODE_64B = 6,
-    FLASH_WRAP_MODE_DISABLE = 1);
+  Tspi_flash_wrap_mode = (
+    FLASH_WRAP_MODE_8B = 0, FLASH_WRAP_MODE_DISABLE = 1,
+    FLASH_WRAP_MODE_16B = 2, FLASH_WRAP_MODE_32B = 4,
+    FLASH_WRAP_MODE_64B = 6);
 
   Pspi_flash_mmap_memory = ^Tspi_flash_mmap_memory;
   Tspi_flash_mmap_memory = (SPI_FLASH_MMAP_DATA, SPI_FLASH_MMAP_INST);

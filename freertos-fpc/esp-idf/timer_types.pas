@@ -35,14 +35,15 @@ type
 
   Ptimer_intr = ^Ttimer_intr;
   Ttimer_intr = (
+    TIMER_INTR_NONE := 0,
     TIMER_INTR_T0 := BIT0,
     {$if declared(SOC_TIMER_GROUP_TIMERS_PER_GROUP) and (SOC_TIMER_GROUP_TIMERS_PER_GROUP > 1)}
     TIMER_INTR_T1 := BIT1,
-    TIMER_INTR_WDT := BIT2,
+    TIMER_INTR_WDT := BIT2
     {$else}
-    TIMER_INTR_WDT := BIT1,
+    TIMER_INTR_WDT := BIT1
     {$endif}
-    TIMER_INTR_NONE := 0);
+    );
 
   Ttimer_alarm = (
     TIMER_ALARM_DIS := 0,

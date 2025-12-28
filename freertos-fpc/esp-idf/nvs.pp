@@ -53,10 +53,13 @@ type
   Tnvs_open_mode = (NVS_READONLY, NVS_READWRITE);
 
   Pnvs_type = ^Tnvs_type;
-  Tnvs_type = (NVS_TYPE_U8 = $01, NVS_TYPE_I8 = $11, NVS_TYPE_U16 = $02,
-    NVS_TYPE_I16 = $12, NVS_TYPE_U32 = $04, NVS_TYPE_I32 = $14,
-    NVS_TYPE_U64 = $08, NVS_TYPE_I64 = $18, NVS_TYPE_STR = $21,
-    NVS_TYPE_BLOB = $42, NVS_TYPE_ANY = $ff);
+  Tnvs_type = (
+    NVS_TYPE_U8 = $01, NVS_TYPE_U16 = $02,
+    NVS_TYPE_U32 = $04, NVS_TYPE_U64 = $08,
+    NVS_TYPE_I8 = $11, NVS_TYPE_I16 = $12,
+    NVS_TYPE_I32 = $14, NVS_TYPE_I64 = $18,
+    NVS_TYPE_STR = $21, NVS_TYPE_BLOB = $42,
+    NVS_TYPE_ANY = $ff);
 
   Pnvs_entry_info = ^Tnvs_entry_info;
   Tnvs_entry_info = record
