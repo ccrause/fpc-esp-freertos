@@ -6,7 +6,7 @@ unit timers;
 interface
 
 uses
-  portmacro, task, freertos;
+  portmacro, task;
 
 const
    tmrCOMMAND_EXECUTE_CALLBACK_FROM_ISR = -2;

@@ -7,9 +7,6 @@ unit http_parser;
 
 interface
 
-uses
-  portmacro;
-
 const
   HTTP_PARSER_VERSION_MAJOR = 2;
   HTTP_PARSER_VERSION_MINOR = 7;

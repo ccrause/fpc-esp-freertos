@@ -38,7 +38,7 @@ unit esp_wifi;
 interface
 
 uses
-  esp_err, esp_bit_defs, esp_event, esp_event_legacy, esp_wifi_types,
+  esp_err, esp_event_legacy, esp_wifi_types,
   esp_wifi_crypto_types, wifi_os_adapter, portmacro;
 
 const

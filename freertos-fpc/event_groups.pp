@@ -5,7 +5,7 @@ unit event_groups;
 interface
 
 uses
-  portmacro, timers, freertos;
+  portmacro;
 
 type
   TEventGroupDef = record end;

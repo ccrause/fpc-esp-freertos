@@ -4,9 +4,6 @@ interface
 
 {$include sdkconfig.inc}
 
-uses
-  esp_bit_defs;
-
 const
   SOC_CAPS_ECO_VER = CONFIG_ESP32_REV_MIN;
   SOC_CAPS_ECO_VER_MAX = 3;

@@ -5,7 +5,7 @@ unit wifi_os_adapter;
 interface
 
 uses
-  esp_err, portmacro;
+  portmacro;
 
 const
   ESP_WIFI_OS_ADAPTER_VERSION = $00000004;

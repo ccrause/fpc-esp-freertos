@@ -6,7 +6,7 @@ interface
 // Translated from esp_rom/include/esp32/rom/gpio.h
 // Differences between esp32 and esp32s2 are ifdef'ed below
 uses
-  esp_err, esp_bit_defs, gpio_types, io_mux_reg;
+  esp_err, esp_bit_defs, gpio_types;
 
 const
   GPIO_ID_PIN0 = 0;

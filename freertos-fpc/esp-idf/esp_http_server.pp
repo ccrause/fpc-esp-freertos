@@ -6,7 +6,7 @@ unit esp_http_server;
 interface
 
 uses
-  esp_err, task, portable, http_parser, portmacro;
+  esp_err, task, http_parser, portmacro;
 
 const
   ESP_ERR_HTTPD_BASE = $b000;

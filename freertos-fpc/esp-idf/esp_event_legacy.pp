@@ -5,7 +5,7 @@ unit esp_event_legacy;
 interface
 
 uses
-  esp_err, esp_wifi_types, esp_netif, esp_netif_types, esp_event_base, portmacro;
+  esp_err, esp_wifi_types, esp_netif_types, esp_event_base, portmacro;
 
 type
   Psystem_event_id = ^Tsystem_event_id;

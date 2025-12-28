@@ -6,7 +6,7 @@ unit semphr;
 interface
 
 uses
-  queue, portmacro, projdefs, freertos;
+  queue, portmacro, projdefs;
 
 type
   PSemaphoreHandle = ^TSemaphoreHandle;

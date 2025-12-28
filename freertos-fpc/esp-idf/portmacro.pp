@@ -6,7 +6,7 @@ unit portmacro;
 interface
 
 uses
-  hal, esp_heap_caps, xtruntime, crosscore_int, core_isa, portbenchmark;
+  esp_heap_caps, xtruntime, crosscore_int, core_isa, portbenchmark;
 
 type
   portCHAR        = int8;
