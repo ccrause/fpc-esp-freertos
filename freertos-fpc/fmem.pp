@@ -98,11 +98,8 @@ begin
 end;
 
 function fGetHeapStatus: THeapStatus;
-var
-  res: THeapStatus;
 begin
-  FillChar(res, sizeof(res), 0);
-  fGetHeapStatus := res;
+  FillChar(fGetHeapStatus, sizeof(fGetHeapStatus), 0);
 end;
 
 function fGetFPCHeapStatus: TFPCHeapStatus;
@@ -111,21 +108,20 @@ begin
 end;
 
 const
- fMemoryManager : TMemoryManager =
-    (
-      NeedLock : false;
-      GetMem : @fGetMem;
-      FreeMem : @fFreeMem;
-      FreememSize : @fFreeMemSize;
-      AllocMem : @fAllocMem;
-      ReallocMem : @fReAllocMem;
-      MemSize : @fMemSize;
-      InitThread : nil;
-      DoneThread : nil;
-      RelocateHeap : nil;
-      GetHeapStatus : @fGetHeapStatus;
-      GetFPCHeapStatus: @fGetFPCHeapStatus;
-    );
+  fMemoryManager : TMemoryManager = (
+    NeedLock : false;
+    GetMem : @fGetMem;
+    FreeMem : @fFreeMem;
+    FreememSize : @fFreeMemSize;
+    AllocMem : @fAllocMem;
+    ReallocMem : @fReAllocMem;
+    MemSize : @fMemSize;
+    InitThread : nil;
+    DoneThread : nil;
+    RelocateHeap : nil;
+    GetHeapStatus : @fGetHeapStatus;
+    GetFPCHeapStatus: @fGetFPCHeapStatus;
+  );
 
 var
   OldMemoryManager : TMemoryManager;
