@@ -6,13 +6,11 @@ uses
   esp_err;
 
 type
-  // Don't use SysUtils yet!!!
-  TByteArray = array of byte;
-
   { TI2cMaster }
-
+  // Note: The device's I2C address should be left adjusted
   TI2cMaster = object
     procedure Initialize(i2cPort, SdaPin, SclPin: integer);
+    procedure Finalize;
     //function ReadByte(address: byte; out data: byte): Tesp_err;
     function ReadByteFromReg(i2caddress, regAddress: byte; out data: byte): Tesp_err; overload;
     function ReadByteFromReg(i2caddress: byte; regAddress: uint16; out data: byte): Tesp_err; overload;
@@ -75,14 +73,18 @@ begin
     {$endif CPULX6}
   end;
 
-  ret := i2c_param_config(Ti2c_port(Fi2cPort), @config);
-  if ret <> ESP_OK then
-    writeln('Error calling i2c_param_config: ', esp_err_to_name(ret));
-
   ret := i2c_driver_install(Ti2c_port(Fi2cPort), config.mode {$ifdef CPULX6}, 0, 0, 0{$endif});
   if ret <> ESP_OK then
     writeln('Error calling i2c_driver_install: ', esp_err_to_name(ret));
 
+  ret := i2c_param_config(Ti2c_port(Fi2cPort), @config);
+  if ret <> ESP_OK then
+    writeln('Error calling i2c_param_config: ', esp_err_to_name(ret));
+end;
+
+procedure TI2cMaster.Finalize;
+begin
+  i2c_driver_delete(Ti2c_port(Fi2cPort));
 end;
 
 function TI2cMaster.ReadByte(address: byte; out data: byte): Tesp_err;
@@ -91,7 +93,7 @@ var
 begin
   cmd := i2c_cmd_link_create();
   i2c_master_start(cmd);
-  i2c_master_write_byte(cmd, (address shl 1) or 1, true);
+  i2c_master_write_byte(cmd, address or 1, true);
   i2c_master_read_byte(cmd, @data, I2C_MASTER_NACK);
   i2c_master_stop(cmd);
   result := i2c_master_cmd_begin(Ti2c_port(Fi2cPort), cmd, 1000 div portTICK_PERIOD_MS);
@@ -121,12 +123,12 @@ begin
   cmd := i2c_cmd_link_create();
   i2c_master_start(cmd);
   // Write register to be read
-  i2c_master_write_byte(cmd, (i2caddress shl 1), true);
+  i2c_master_write_byte(cmd, i2caddress, true);
   i2c_master_write(cmd, @regAddress, 1, true);
 
   // Now read data
   i2c_master_start(cmd);
-  i2c_master_write_byte(cmd, (i2caddress shl 1) or 1, true);
+  i2c_master_write_byte(cmd, i2caddress or 1, true);
   if (size > 1) then
   begin
     i2c_master_read(cmd, data, size-1, I2C_MASTER_ACK);
@@ -146,7 +148,7 @@ var
 begin
   cmd := i2c_cmd_link_create();
   i2c_master_start(cmd);
-  i2c_master_write_byte(cmd, (i2caddress shl 1), true);
+  i2c_master_write_byte(cmd, i2caddress, true);
   // Write register to be read in MSB order
   addr[0] := (regAddress shr 8);
   addr[1] := byte(regAddress);
@@ -162,7 +164,7 @@ begin
     cmd := i2c_cmd_link_create();
     // Now read data
     i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, (i2caddress shl 1) or 1, true);
+    i2c_master_write_byte(cmd, i2caddress or 1, true);
     if (size > 1) then
     begin
       i2c_master_read(cmd, data, size-1, I2C_MASTER_ACK);
@@ -181,7 +183,7 @@ var
 begin
   cmd := i2c_cmd_link_create();
   i2c_master_start(cmd);
-  i2c_master_write_byte(cmd, (address shl 1) or 1, true);
+  i2c_master_write_byte(cmd, address or 1, true);
 
   if (size > 1) then
   begin
@@ -200,7 +202,7 @@ var
 begin
   cmd := i2c_cmd_link_create();
   i2c_master_start(cmd);
-  i2c_master_write_byte(cmd, (address shl 1), true);
+  i2c_master_write_byte(cmd, address, true);
   i2c_master_write (cmd, @data, 1, true);
   i2c_master_stop(cmd);
   result := i2c_master_cmd_begin(Ti2c_port(Fi2cPort), cmd, 10);
@@ -237,7 +239,7 @@ begin
   cmd := i2c_cmd_link_create();
   i2c_master_start(cmd);
   // Write register address
-  i2c_master_write_byte(cmd, (i2caddress shl 1), true);
+  i2c_master_write_byte(cmd, i2caddress, true);
   i2c_master_write(cmd, @regAddress, 1, true);
 
   // Now write data
@@ -256,7 +258,7 @@ begin
   cmd := i2c_cmd_link_create();
   i2c_master_start(cmd);
   // Write register address
-  i2c_master_write_byte(cmd, (i2caddress shl 1), true);
+  i2c_master_write_byte(cmd, i2caddress, true);
   addr[0] := regAddress shr 8;
   i2c_master_write(cmd, @addr, 1, true);
   addr[1] := byte(regAddress);
@@ -276,7 +278,7 @@ var
 begin
   cmd := i2c_cmd_link_create();
   i2c_master_start(cmd);
-  i2c_master_write_byte(cmd, (address shl 1), true);
+  i2c_master_write_byte(cmd, address, true);
   i2c_master_write (cmd, data, size, true);
   i2c_master_stop(cmd);
   result := i2c_master_cmd_begin(Ti2c_port(Fi2cPort), cmd, 10);
@@ -289,7 +291,7 @@ var
 begin
   cmd := i2c_cmd_link_create;
   i2c_master_start(cmd);
-  i2c_master_write_byte(cmd, (address shl 1) or 1, true);
+  i2c_master_write_byte(cmd, address or 1, true);
   i2c_master_stop(cmd);
   Result := i2c_master_cmd_begin(Ti2c_port(Fi2cPort), cmd, 10);
   i2c_cmd_link_delete(cmd);
