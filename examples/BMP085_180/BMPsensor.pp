@@ -17,6 +17,7 @@ var
   b: byte;
   T: int32;
   P: uint32;
+  oss: TOversampling;
 
 begin
   {$ifdef CPULX6}
@@ -42,13 +43,19 @@ begin
     exit;
   end;
 
-  repeat
-    if bmp.readTP(T, P) then
-      writeln('T = ', T div 10, '.', T mod 10, ' C, P = ', P, ' Pa')
-    else
-      writeln('TP = ERR');
 
-    vTaskDelay(200);
+  repeat
+    for oss := os1 to os8 do
+    begin
+      write('oss = ', ord(oss), ': ');
+      bmp.setOverSampling(oss);
+      if bmp.readTP(T, P) then
+        writeln('T = ', T div 10, '.', T mod 10, ' C, P = ', P, ' Pa')
+      else
+        writeln('TP = ERR');
+
+      vTaskDelay(200);
+    end;
   until false;
 end.
 
