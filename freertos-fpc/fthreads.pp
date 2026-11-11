@@ -59,7 +59,8 @@ const
 
 var
   FreeRTOSThreadManager: TThreadManager;
-  TLSInitialized: boolean32 = false;
+  { longint-sized flag for InterLockedExchange (not a 1-byte boolean). }
+  TLSInitialized: longint = 0;
 
 procedure HandleError(Errno : Longint); external name 'FPC_HANDLEERROR';
 procedure fpc_threaderror; [external name 'FPC_THREADERROR'];
@@ -82,7 +83,7 @@ begin
   { exceptions which use threadvars but      }
   { these aren't allocated yet ...           }
   { allocate room on the heap for the thread vars }
-  if TLSAPISupported and TLSInitialized then // let's stick with the FreeRTOS TLS block for now
+  if TLSAPISupported and (TLSInitialized <> 0) then // let's stick with the FreeRTOS TLS block for now
   begin
     // TODO: Not sure whether it is safe to call GetMem or the OS provided routine...
     p := GetMem(ThreadVarBlockSize); // ThreadVarBlockSize is global, the TLS size is the same for all the threads;
@@ -114,25 +115,26 @@ end;
 
 procedure SysInitMultithreading;
 begin
-  // consider here only the FreeRTOS provided TLS space for now
-  //if InterLockedExchange(longint(TLSInitialized),ord(true)) = 0 then
+  { Once-only. InitThreadVars → init_all_unit_threadvars → SysInitThreadvar
+    only increments ThreadVarBlockSize and (re)assigns offsets. Calling it
+    again from every BeginThread grows the block and corrupts offsets.
+    An InterLockedExchange guard existed here historically and was commented
+    out during demo bring-up (commit 42d4b8e9); restore it. }
+  if InterLockedExchange(TLSInitialized, 1) = 0 then
   begin
-    begin
-      TLSAPISupported := true;
-      IsMultiThread := true;
-      TLSInitialized := true;
+    TLSAPISupported := true;
+    IsMultiThread := true;
 
-      // 1. Calls init_all_unit_threadvars which
-      //    a) Calls init_all_unit_threadvars which calls init_unit_threadvars in a loop which
-      //       i) Calls InitThreadvar which returns offset into threadvar block and increment ThreadBlockVarSize with size of variable
-      // 2. Calls AllocateThreadVars with the final block size stored in global variable ThreadBlockVarSize
-      //    a) Allocate memory for the TLS block
-      //    b) Store pointer to TLS data block with vTaskSetThreadLocalStoragePointer
-      // 3. Calls copy_all_unit_threadvars which iterates over copy_unit_threadvars which then:
-      //    a) Call RelocateThreadVar to get a destination pointer, and which should increment the pointer
-      //    b) Call Move to copy data from the original storage to the TLS block
-      InitThreadVars(@SysRelocateThreadVar);
-    end
+    // 1. Calls init_all_unit_threadvars which
+    //    a) Calls init_all_unit_threadvars which calls init_unit_threadvars in a loop which
+    //       i) Calls InitThreadvar which returns offset into threadvar block and increment ThreadBlockVarSize with size of variable
+    // 2. Calls AllocateThreadVars with the final block size stored in global variable ThreadBlockVarSize
+    //    a) Allocate memory for the TLS block
+    //    b) Store pointer to TLS data block with vTaskSetThreadLocalStoragePointer
+    // 3. Calls copy_all_unit_threadvars which iterates over copy_unit_threadvars which then:
+    //    a) Call RelocateThreadVar to get a destination pointer, and which should increment the pointer
+    //    b) Call Move to copy data from the original storage to the TLS block
+    InitThreadVars(@SysRelocateThreadVar);
   end;
 end;
 
