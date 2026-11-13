@@ -67,9 +67,9 @@ procedure fpc_threaderror; [external name 'FPC_THREADERROR'];
 
 procedure SysInitThreadvar (var Offset: dword; Size: dword);
 begin
-  {$ifdef CPUXTENSA}
+  { Align on all FreeRTOS targets. Guarding with CPUXTENSA left RISC-V
+    (e.g. ESP32-C3/S31) with unaligned dword threadvars that overlap. }
   ThreadVarBlockSize := align(ThreadVarBlockSize, 4);
-  {$endif CPUXTENSA}
   Offset := ThreadVarBlockSize;
   Inc(ThreadVarBlockSize, Size);
 end;
@@ -115,11 +115,9 @@ end;
 
 procedure SysInitMultithreading;
 begin
-  { Once-only. InitThreadVars → init_all_unit_threadvars → SysInitThreadvar
-    only increments ThreadVarBlockSize and (re)assigns offsets. Calling it
-    again from every BeginThread grows the block and corrupts offsets.
-    An InterLockedExchange guard existed here historically and was commented
-    out during demo bring-up (commit 42d4b8e9); restore it. }
+  { Once-only: every BeginThread re-enters here; re-running InitThreadVars
+    reassigns offsets and grows ThreadVarBlockSize. Guard was commented out
+    in 42d4b8e9 during demo bring-up — restore it. }
   if InterLockedExchange(TLSInitialized, 1) = 0 then
   begin
     TLSAPISupported := true;
@@ -365,8 +363,14 @@ end;
 
 procedure SysDoneCriticalSection(var CS);
 begin
-  xSemaphoreGiveRecursive(TSemaphoreHandle(CS));
-  vSemaphoreDelete(TSemaphoreHandle(CS));
+  { Created with xSemaphoreCreateMutex (non-recursive). Give + clear so a
+    repeated Done cannot delete the same handle twice. }
+  if pointer(CS) <> nil then
+  begin
+    xSemaphoreGive(TSemaphoreHandle(CS));
+    vSemaphoreDelete(TSemaphoreHandle(CS));
+    pointer(CS) := nil;
+  end;
 end;
 
 procedure SysEnterCriticalSection(var CS);
@@ -528,20 +532,35 @@ end;
 
 procedure SysRTLEventResetEvent (AEvent: PRTLEvent);
 begin
-  if not (xSemaphoreTake(TSemaphoreHandle(AEvent), 0) = pdTRUE) then
-    FPC_ThreadError;
+  { Reset of an already-reset event must be a no-op (other RTLs; Classes'
+    TMultiReadExclusiveWriteSynchronizer.Create resets after create). }
+  xSemaphoreTake(TSemaphoreHandle(AEvent), 0);
 end;
 
 
 {$DEFINE HAS_GETCPUCOUNT}
+{$PACKRECORDS C}
+type
+  Tesp_chip_info = record
+    model: longint;
+    features: dword;
+    revision: word;
+    cores: byte;
+  end;
+{$PACKRECORDS DEFAULT}
+
+procedure esp_chip_info(var out_info: Tesp_chip_info); cdecl; external name 'esp_chip_info';
+
 function GetCPUCount: LongWord;
+var
+  info: Tesp_chip_info;
 begin
-  // FreeRTOS doesn't have a GetCPUCount equivalent...
-  {$ifdef FPC_MCU_ESP32}
-  GetCPUCount := 2;
-  {$else}
-  GetCPUCount := 1;
-  {$endif}
+  FillByte(info, SizeOf(info), 0);
+  esp_chip_info(info);
+  if info.cores = 0 then
+    GetCPUCount := 1
+  else
+    GetCPUCount := info.cores;
 end;
 
 
