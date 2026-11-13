@@ -59,16 +59,17 @@ const
 
 var
   FreeRTOSThreadManager: TThreadManager;
-  TLSInitialized: boolean32 = false;
+  { longint-sized flag for InterLockedExchange (not a 1-byte boolean). }
+  TLSInitialized: longint = 0;
 
 procedure HandleError(Errno : Longint); external name 'FPC_HANDLEERROR';
 procedure fpc_threaderror; [external name 'FPC_THREADERROR'];
 
 procedure SysInitThreadvar (var Offset: dword; Size: dword);
 begin
-  {$ifdef CPUXTENSA}
+  { Align on all FreeRTOS targets. Guarding with CPUXTENSA left RISC-V
+    (e.g. ESP32-C3/S31) with unaligned dword threadvars that overlap. }
   ThreadVarBlockSize := align(ThreadVarBlockSize, 4);
-  {$endif CPUXTENSA}
   Offset := ThreadVarBlockSize;
   Inc(ThreadVarBlockSize, Size);
 end;
@@ -82,7 +83,7 @@ begin
   { exceptions which use threadvars but      }
   { these aren't allocated yet ...           }
   { allocate room on the heap for the thread vars }
-  if TLSAPISupported and TLSInitialized then // let's stick with the FreeRTOS TLS block for now
+  if TLSAPISupported and (TLSInitialized <> 0) then // let's stick with the FreeRTOS TLS block for now
   begin
     // TODO: Not sure whether it is safe to call GetMem or the OS provided routine...
     p := GetMem(ThreadVarBlockSize); // ThreadVarBlockSize is global, the TLS size is the same for all the threads;
@@ -114,25 +115,24 @@ end;
 
 procedure SysInitMultithreading;
 begin
-  // consider here only the FreeRTOS provided TLS space for now
-  //if InterLockedExchange(longint(TLSInitialized),ord(true)) = 0 then
+  { Once-only: every BeginThread re-enters here; re-running InitThreadVars
+    reassigns offsets and grows ThreadVarBlockSize. Guard was commented out
+    in 42d4b8e9 during demo bring-up — restore it. }
+  if InterLockedExchange(TLSInitialized, 1) = 0 then
   begin
-    begin
-      TLSAPISupported := true;
-      IsMultiThread := true;
-      TLSInitialized := true;
+    TLSAPISupported := true;
+    IsMultiThread := true;
 
-      // 1. Calls init_all_unit_threadvars which
-      //    a) Calls init_all_unit_threadvars which calls init_unit_threadvars in a loop which
-      //       i) Calls InitThreadvar which returns offset into threadvar block and increment ThreadBlockVarSize with size of variable
-      // 2. Calls AllocateThreadVars with the final block size stored in global variable ThreadBlockVarSize
-      //    a) Allocate memory for the TLS block
-      //    b) Store pointer to TLS data block with vTaskSetThreadLocalStoragePointer
-      // 3. Calls copy_all_unit_threadvars which iterates over copy_unit_threadvars which then:
-      //    a) Call RelocateThreadVar to get a destination pointer, and which should increment the pointer
-      //    b) Call Move to copy data from the original storage to the TLS block
-      InitThreadVars(@SysRelocateThreadVar);
-    end
+    // 1. Calls init_all_unit_threadvars which
+    //    a) Calls init_all_unit_threadvars which calls init_unit_threadvars in a loop which
+    //       i) Calls InitThreadvar which returns offset into threadvar block and increment ThreadBlockVarSize with size of variable
+    // 2. Calls AllocateThreadVars with the final block size stored in global variable ThreadBlockVarSize
+    //    a) Allocate memory for the TLS block
+    //    b) Store pointer to TLS data block with vTaskSetThreadLocalStoragePointer
+    // 3. Calls copy_all_unit_threadvars which iterates over copy_unit_threadvars which then:
+    //    a) Call RelocateThreadVar to get a destination pointer, and which should increment the pointer
+    //    b) Call Move to copy data from the original storage to the TLS block
+    InitThreadVars(@SysRelocateThreadVar);
   end;
 end;
 
@@ -363,8 +363,14 @@ end;
 
 procedure SysDoneCriticalSection(var CS);
 begin
-  xSemaphoreGiveRecursive(TSemaphoreHandle(CS));
-  vSemaphoreDelete(TSemaphoreHandle(CS));
+  { Created with xSemaphoreCreateMutex (non-recursive). Give + clear so a
+    repeated Done cannot delete the same handle twice. }
+  if pointer(CS) <> nil then
+  begin
+    xSemaphoreGive(TSemaphoreHandle(CS));
+    vSemaphoreDelete(TSemaphoreHandle(CS));
+    pointer(CS) := nil;
+  end;
 end;
 
 procedure SysEnterCriticalSection(var CS);
@@ -526,20 +532,35 @@ end;
 
 procedure SysRTLEventResetEvent (AEvent: PRTLEvent);
 begin
-  if not (xSemaphoreTake(TSemaphoreHandle(AEvent), 0) = pdTRUE) then
-    FPC_ThreadError;
+  { Reset of an already-reset event must be a no-op (other RTLs; Classes'
+    TMultiReadExclusiveWriteSynchronizer.Create resets after create). }
+  xSemaphoreTake(TSemaphoreHandle(AEvent), 0);
 end;
 
 
 {$DEFINE HAS_GETCPUCOUNT}
+{$PACKRECORDS C}
+type
+  Tesp_chip_info = record
+    model: longint;
+    features: dword;
+    revision: word;
+    cores: byte;
+  end;
+{$PACKRECORDS DEFAULT}
+
+procedure esp_chip_info(var out_info: Tesp_chip_info); cdecl; external name 'esp_chip_info';
+
 function GetCPUCount: LongWord;
+var
+  info: Tesp_chip_info;
 begin
-  // FreeRTOS doesn't have a GetCPUCount equivalent...
-  {$ifdef FPC_MCU_ESP32}
-  GetCPUCount := 2;
-  {$else}
-  GetCPUCount := 1;
-  {$endif}
+  FillByte(info, SizeOf(info), 0);
+  esp_chip_info(info);
+  if info.cores = 0 then
+    GetCPUCount := 1
+  else
+    GetCPUCount := info.cores;
 end;
 
 
